@@ -56,21 +56,27 @@ struct GenerateView: View {
                 tabSwitcher
                     .padding(.horizontal, Spacing.md)
                     .padding(.top, Spacing.sm)
-                ScrollView {
-                    VStack(alignment: .leading, spacing: Spacing.md) {
-                        if vm.activeTab == .achados {
+                if vm.activeTab == .achados {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: Spacing.md) {
                             shortcutsBar
                             achadosEditor
-                        } else {
-                            laudoEditor
+                            Color.clear.frame(height: 120)
                         }
-                        if !vm.sanityIssues.isEmpty && vm.activeTab == .laudo {
-                            sanityCard
-                        }
-                        Color.clear.frame(height: 120)
+                        .padding(.horizontal, Spacing.md)
+                        .padding(.top, Spacing.sm)
                     }
-                    .padding(.horizontal, Spacing.md)
-                    .padding(.top, Spacing.sm)
+                } else {
+                    laudoEditor
+                        .padding(.horizontal, Spacing.md)
+                        .padding(.top, Spacing.sm)
+                    if !vm.sanityIssues.isEmpty {
+                        sanityCard
+                            .padding(.horizontal, Spacing.md)
+                            .padding(.bottom, 96)
+                    } else {
+                        Color.clear.frame(height: 96)
+                    }
                 }
             }
 
@@ -173,18 +179,20 @@ struct GenerateView: View {
             HStack(spacing: Spacing.xs) {
                 Circle()
                     .fill(vm.category.tint)
-                    .frame(width: 8, height: 8)
-                    .shadow(color: vm.category.tint.opacity(0.65), radius: 4, x: 0, y: 0)
+                    .frame(width: 10, height: 10)
+                    .shadow(color: vm.category.tint.opacity(0.7), radius: 5, x: 0, y: 0)
                 Text(vm.category.label)
                     .font(TextStyle.bodyMedium)
                     .foregroundStyle(AppSurface.textPrimary)
                     .lineLimit(1)
+                    .truncationMode(.tail)
                 Image(systemName: "chevron.up.chevron.down")
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(AppSurface.textMuted)
             }
             .padding(.horizontal, Spacing.sm)
-            .frame(height: 32)
+            .frame(height: 36)
+            .frame(maxWidth: 200, alignment: .trailing)
         }
         .buttonStyle(PressableButtonStyle())
         .accessibilityLabel("Categoria \(vm.category.label). Toque para trocar.")
@@ -253,7 +261,7 @@ struct GenerateView: View {
         } label: {
             Text(shortcut.label)
                 .font(TextStyle.body)
-                .foregroundStyle(BrandColor.primary)
+                .foregroundStyle(AppSurface.textSecondary)
                 .underline(true, pattern: .solid)
         }
         .buttonStyle(PressableButtonStyle())
@@ -307,7 +315,7 @@ struct GenerateView: View {
                 .scrollContentBackground(.hidden)
                 .background(AppSurface.background)
                 .foregroundStyle(AppSurface.textPrimary)
-                .frame(minHeight: 360)
+                .frame(maxHeight: .infinity)
                 .overlay(alignment: .topLeading) {
                     if vm.editedLaudoText.isEmpty {
                         Text(vm.phase.isBusy ? "Gerando laudo…" : "O laudo gerado aparece aqui.")
@@ -319,6 +327,7 @@ struct GenerateView: View {
                     }
                 }
         }
+        .frame(maxHeight: .infinity)
     }
 
     private var laudoToolbar: some View {

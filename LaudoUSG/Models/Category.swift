@@ -130,7 +130,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .tireoide, .paratireoide: return "shield.lefthalf.filled"
         case .cervical, .glandulasSalivares: return "person.crop.circle.badge.checkmark"
         case .mamaria: return "heart.text.square"
-        case .pelveFeminina: return "figure.dress"
+        case .pelveFeminina: return "figure.stand"
         case .obstetrica, .dopplerObstetrico, .morfologico: return "figure.and.child.holdinghands"
         case .musculoesqueletico, .musculoesqueleticoV2, .musculoesqueleticoRaras: return "figure.run"
         case .escrotal, .regiaoInguinal, .paredeAbdominal, .partesMoles: return "circle.dashed"
