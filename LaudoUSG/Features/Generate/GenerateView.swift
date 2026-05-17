@@ -100,18 +100,9 @@ struct GenerateView: View {
         }
         .sheet(isPresented: Binding(get: { vm.isPlusSheetPresented }, set: { vm.isPlusSheetPresented = $0 })) {
             PlusSheet(
-                onPick: { vm.insertSnippet($0) },
+                categoryHint: vm.category,
+                onInsert: { vm.insertSnippet($0) },
                 onDismiss: { vm.isPlusSheetPresented = false }
-            )
-        }
-        .sheet(isPresented: Binding(get: { vm.isCalculatorsSheetPresented }, set: { vm.isCalculatorsSheetPresented = $0 })) {
-            CalculatorsSheet(
-                onInsert: { snippet in
-                    vm.insertSnippet(snippet)
-                    vm.isCalculatorsSheetPresented = false
-                    Haptics.success()
-                },
-                onDismiss: { vm.isCalculatorsSheetPresented = false }
             )
         }
         .overlay {
@@ -146,17 +137,7 @@ struct GenerateView: View {
 
             Spacer()
 
-            Button {
-                Haptics.tap()
-                vm.isPlusSheetPresented = true
-            } label: {
-                Image(systemName: "plus")
-                    .font(.system(size: 22, weight: .semibold))
-                    .foregroundStyle(AppSurface.textPrimary)
-                    .frame(width: 40, height: 40)
-            }
-            .buttonStyle(PressableButtonStyle())
-            .accessibilityLabel("Inserir trecho")
+            Color.clear.frame(width: 40, height: 40)
         }
         .padding(.horizontal, Spacing.md)
         .padding(.vertical, Spacing.xs)
@@ -387,17 +368,17 @@ struct GenerateView: View {
         HStack(spacing: Spacing.sm) {
             Button {
                 Haptics.tap()
-                vm.isCalculatorsSheetPresented = true
+                vm.isPlusSheetPresented = true
             } label: {
-                Image(systemName: "function")
-                    .font(.system(size: 20, weight: .semibold))
+                Image(systemName: "plus")
+                    .font(.system(size: 22, weight: .semibold))
                     .foregroundStyle(AppSurface.textSecondary)
                     .frame(width: 48, height: 48)
                     .background(Circle().fill(AppSurface.card))
                     .overlay(Circle().stroke(AppSurface.border, lineWidth: 1))
             }
             .buttonStyle(PressableButtonStyle())
-            .accessibilityLabel("Calculadoras (IG, Doppler)")
+            .accessibilityLabel("Adicionar ao laudo (calculadoras e frases)")
 
             PrimaryButton(
                 title: vm.phaseLabel,

@@ -17,7 +17,6 @@ final class GenerateViewModel {
     var isCategorySheetPresented = false
     var isMenuSheetPresented = false
     var isPlusSheetPresented = false
-    var isCalculatorsSheetPresented = false
     var isRecordingOverlayPresented = false
 
     let speech = SpeechService()

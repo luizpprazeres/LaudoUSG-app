@@ -31,6 +31,23 @@ struct SettingsView: View {
                         options: [0, 1, 2],
                         label: { String($0) }
                     )
+                    Divider().padding(.leading, Spacing.md)
+                    NavigationLink {
+                        MyPhrasesView()
+                    } label: {
+                        HStack {
+                            Text("Minhas frases")
+                                .font(TextStyle.bodyLargeMedium)
+                                .foregroundStyle(AppSurface.textPrimary)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(AppSurface.textMuted)
+                        }
+                        .padding(.horizontal, Spacing.md)
+                        .frame(minHeight: 52)
+                    }
+                    .buttonStyle(PressableButtonStyle())
                 }
 
                 section(title: "Aparência") {

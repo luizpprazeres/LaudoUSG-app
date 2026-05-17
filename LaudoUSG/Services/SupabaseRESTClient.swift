@@ -66,6 +66,27 @@ actor SupabaseRESTClient {
         _ = try await perform(request)
     }
 
+    func postRaw(
+        _ path: String,
+        query: [String: String],
+        body: Data
+    ) async throws {
+        var request = try makeRequest(path: path, method: "POST", query: query)
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
+        request.httpBody = body
+        _ = try await perform(request)
+    }
+
+    func delete(
+        _ path: String,
+        query: [String: String]
+    ) async throws {
+        var request = try makeRequest(path: path, method: "DELETE", query: query)
+        request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
+        _ = try await perform(request)
+    }
+
     private func makeRequest(
         path: String,
         method: String,
