@@ -1,0 +1,41 @@
+# Xcode
+**/xcuserdata/
+**/*.xcuserdatad/
+**/*.xcuserstate
+**/UserInterfaceState.xcuserstate
+**/IDEWorkspaceChecks.plist
+**/WorkspaceSettings.xcsettings
+
+# Build
+build/
+DerivedData/
+*.xcarchive
+*.ipa
+*.dSYM
+*.dSYM.zip
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+Package.pins
+Package.resolved
+*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
+
+# Carthage / CocoaPods (caso futuramente)
+Carthage/Build/
+Pods/
+
+# macOS
+.DS_Store
+
+# Secrets (NUNCA commit)
+*.env
+*.env.local
+.env.local
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
