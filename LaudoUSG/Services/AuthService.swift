@@ -77,6 +77,7 @@ actor AuthService {
 
     private let session: URLSession
     private let storageKey = "laudousg.session.v1"
+    private var refreshTask: Task<AuthSession, Error>?
 
     init() {
         let config = URLSessionConfiguration.default
@@ -124,6 +125,67 @@ actor AuthService {
             throw AuthError.server(message: message)
         }
         throw AuthError.invalidResponse
+    }
+
+    func refresh() async throws -> AuthSession {
+        if let refreshTask {
+            return try await refreshTask.value
+        }
+
+        let task = Task<AuthSession, Error> {
+            guard let storedData = UserDefaults.standard.data(forKey: storageKey),
+                  let stored = try? JSONDecoder().decode(StoredSession.self, from: storedData) else {
+                throw AuthError.invalidResponse
+            }
+
+            let url = AppConfig.supabaseURL.appendingPathComponent("/auth/v1/token")
+            var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+            components?.queryItems = [URLQueryItem(name: "grant_type", value: "refresh_token")]
+            guard let finalURL = components?.url else { throw AuthError.invalidResponse }
+
+            var request = URLRequest(url: finalURL)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue(AppConfig.supabaseAnonKey, forHTTPHeaderField: "apikey")
+            request.setValue("Bearer \(AppConfig.supabaseAnonKey)", forHTTPHeaderField: "Authorization")
+            request.httpBody = try JSONEncoder().encode(["refresh_token": stored.refreshToken])
+
+            let responseData: Data
+            let response: URLResponse
+
+            do {
+                (responseData, response) = try await session.data(for: request)
+            } catch {
+                throw AuthError.network(error)
+            }
+
+            guard let http = response as? HTTPURLResponse else { throw AuthError.invalidResponse }
+            guard (200..<300).contains(http.statusCode) else {
+                if let payload = try? JSONSerialization.jsonObject(with: responseData) as? [String: Any],
+                   let message = (payload["error_description"] as? String) ?? (payload["msg"] as? String) {
+                    throw AuthError.server(message: message)
+                }
+                throw AuthError.invalidResponse
+            }
+
+            let decoded = try JSONDecoder().decode(AuthSession.self, from: responseData)
+            persist(decoded)
+            await APIClient.shared.setToken(decoded.accessToken)
+            await SupabaseRESTClient.shared.setToken(decoded.accessToken)
+            return decoded
+        }
+
+        refreshTask = task
+
+        do {
+            let session = try await task.value
+            refreshTask = nil
+            return session
+        } catch {
+            refreshTask = nil
+            await signOut()
+            throw error
+        }
     }
 
     func signOut() async {

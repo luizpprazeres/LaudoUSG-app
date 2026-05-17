@@ -50,24 +50,23 @@ actor APIClient {
     }
 
     func get<T: Decodable>(_ path: String, as type: T.Type) async throws -> T {
-        let request = makeRequest(path: path)
-        let (data, response) = try await session.data(for: request)
-        try validate(response: response, data: data)
+        let data = try await performWithRefresh {
+            makeRequest(path: path)
+        }
         return try decode(data)
     }
 
     func patchRaw(_ path: String, body: Data) async throws -> Data {
-        let request = makeRequest(path: path, method: "PATCH", body: body)
-        let (data, response) = try await session.data(for: request)
-        try validate(response: response, data: data)
-        return data
+        try await performWithRefresh {
+            makeRequest(path: path, method: "PATCH", body: body)
+        }
     }
 
     func post<T: Decodable, B: Encodable>(_ path: String, body: B, as type: T.Type) async throws -> T {
         let encoded = try JSONEncoder.api.encode(body)
-        let request = makeRequest(path: path, method: "POST", body: encoded)
-        let (data, response) = try await session.data(for: request)
-        try validate(response: response, data: data)
+        let data = try await performWithRefresh {
+            makeRequest(path: path, method: "POST", body: encoded)
+        }
         return try decode(data)
     }
 
@@ -79,6 +78,33 @@ actor APIClient {
         mimeType: String,
         as type: T.Type
     ) async throws -> T {
+        let data = try await performWithRefresh {
+            try makeMultipartRequest(
+                path,
+                fileURL: fileURL,
+                fileName: fileName,
+                fieldName: fieldName,
+                mimeType: mimeType
+            )
+        }
+        return try decode(data)
+    }
+
+    func streamSSE(path: String, body: Data) async throws -> URLSession.AsyncBytes {
+        try await streamWithRefresh {
+            var request = makeRequest(path: path, method: "POST", body: body)
+            request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+            return request
+        }
+    }
+
+    private func makeMultipartRequest(
+        _ path: String,
+        fileURL: URL,
+        fileName: String,
+        fieldName: String,
+        mimeType: String
+    ) throws -> URLRequest {
         let boundary = "----LaudoUSGBoundary\(UUID().uuidString)"
         let url = AppConfig.apiBaseURL.appendingPathComponent(path)
         var request = URLRequest(url: url)
@@ -96,18 +122,57 @@ actor APIClient {
         body.append(try Data(contentsOf: fileURL))
         body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
         request.httpBody = body
-
-        let (data, response) = try await session.data(for: request)
-        try validate(response: response, data: data)
-        return try decode(data)
+        return request
     }
 
-    func streamSSE(path: String, body: Data) async throws -> URLSession.AsyncBytes {
-        var request = makeRequest(path: path, method: "POST", body: body)
-        request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
-        let (stream, response) = try await session.bytes(for: request)
-        try validate(response: response, data: nil)
-        return stream
+    private func performWithRefresh(_ makeRequest: () throws -> URLRequest) async throws -> Data {
+        do {
+            return try await perform(makeRequest())
+        } catch APIError.unauthorized {
+            try await refreshForRetry()
+            return try await perform(makeRequest())
+        }
+    }
+
+    private func streamWithRefresh(_ makeRequest: () throws -> URLRequest) async throws -> URLSession.AsyncBytes {
+        do {
+            return try await stream(makeRequest())
+        } catch APIError.unauthorized {
+            try await refreshForRetry()
+            return try await stream(makeRequest())
+        }
+    }
+
+    private func perform(_ request: URLRequest) async throws -> Data {
+        do {
+            let (data, response) = try await session.data(for: request)
+            try validate(response: response, data: data)
+            return data
+        } catch let error as APIError {
+            throw error
+        } catch {
+            throw APIError.transport(error)
+        }
+    }
+
+    private func stream(_ request: URLRequest) async throws -> URLSession.AsyncBytes {
+        do {
+            let (stream, response) = try await session.bytes(for: request)
+            try validate(response: response, data: nil)
+            return stream
+        } catch let error as APIError {
+            throw error
+        } catch {
+            throw APIError.transport(error)
+        }
+    }
+
+    private func refreshForRetry() async throws {
+        do {
+            _ = try await AuthService.shared.refresh()
+        } catch {
+            throw APIError.unauthorized
+        }
     }
 
     private func validate(response: URLResponse, data: Data?) throws {

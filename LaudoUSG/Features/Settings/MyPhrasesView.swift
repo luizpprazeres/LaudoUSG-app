@@ -32,6 +32,29 @@ final class MyPhrasesViewModel {
             Haptics.error()
         }
     }
+
+    func move(from source: IndexSet, to destination: Int) async {
+        phrases.move(fromOffsets: source, toOffset: destination)
+        await persistPositions()
+    }
+
+    private func persistPositions() async {
+        let snapshot = phrases.enumerated().map { ($0.element.id, $0.offset, $0.element) }
+        await withTaskGroup(of: Void.self) { group in
+            for (id, position, phrase) in snapshot where phrase.position != position {
+                let draft = UserPhraseDraft(
+                    title: phrase.title,
+                    body: phrase.body,
+                    categoryCode: phrase.categoryCode,
+                    position: position
+                )
+                group.addTask {
+                    try? await UserPhrasesService.update(id: id, draft: draft)
+                }
+            }
+        }
+        Haptics.tap()
+    }
 }
 
 struct MyPhrasesView: View {
@@ -66,6 +89,12 @@ struct MyPhrasesView: View {
                 }
                 .accessibilityLabel("Nova frase")
             }
+            if !vm.phrases.isEmpty {
+                ToolbarItem(placement: .topBarLeading) {
+                    EditButton()
+                        .foregroundStyle(BrandColor.primary)
+                }
+            }
         }
         .task { await vm.load() }
         .refreshable { await vm.load() }
@@ -90,15 +119,27 @@ struct MyPhrasesView: View {
     }
 
     private var list: some View {
-        ScrollView {
-            VStack(spacing: Spacing.xs) {
-                ForEach(vm.phrases) { phrase in
-                    phraseRow(phrase)
-                }
+        List {
+            ForEach(vm.phrases) { phrase in
+                phraseRow(phrase)
+                    .listRowBackground(AppSurface.background)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: Spacing.xxs, leading: Spacing.md, bottom: Spacing.xxs, trailing: Spacing.md))
+                    .swipeActions(edge: .trailing) {
+                        Button(role: .destructive) {
+                            Task { await vm.delete(id: phrase.id) }
+                        } label: {
+                            Label("Excluir", systemImage: "trash")
+                        }
+                    }
             }
-            .padding(.horizontal, Spacing.md)
-            .padding(.vertical, Spacing.md)
+            .onMove { source, destination in
+                Task { await vm.move(from: source, to: destination) }
+            }
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(AppSurface.background)
     }
 
     private func phraseRow(_ phrase: UserPhrase) -> some View {
@@ -142,13 +183,6 @@ struct MyPhrasesView: View {
             )
         }
         .buttonStyle(PressableButtonStyle())
-        .swipeActions(edge: .trailing) {
-            Button(role: .destructive) {
-                Task { await vm.delete(id: phrase.id) }
-            } label: {
-                Label("Excluir", systemImage: "trash")
-            }
-        }
     }
 
     private var emptyState: some View {

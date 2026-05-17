@@ -43,8 +43,9 @@ actor SupabaseRESTClient {
         query: [String: String],
         as type: T.Type
     ) async throws -> T {
-        let request = try makeRequest(path: path, method: "GET", query: query)
-        let data = try await perform(request)
+        let data = try await performWithRefresh {
+            try makeRequest(path: path, method: "GET", query: query)
+        }
 
         do {
             return try JSONDecoder.api.decode(T.self, from: data)
@@ -59,11 +60,13 @@ actor SupabaseRESTClient {
         body: B
     ) async throws {
         let encoded = try JSONEncoder.api.encode(body)
-        var request = try makeRequest(path: path, method: "PATCH", query: query)
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
-        request.httpBody = encoded
-        _ = try await perform(request)
+        _ = try await performWithRefresh {
+            var request = try makeRequest(path: path, method: "PATCH", query: query)
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
+            request.httpBody = encoded
+            return request
+        }
     }
 
     func postRaw(
@@ -71,20 +74,24 @@ actor SupabaseRESTClient {
         query: [String: String],
         body: Data
     ) async throws {
-        var request = try makeRequest(path: path, method: "POST", query: query)
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
-        request.httpBody = body
-        _ = try await perform(request)
+        _ = try await performWithRefresh {
+            var request = try makeRequest(path: path, method: "POST", query: query)
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
+            request.httpBody = body
+            return request
+        }
     }
 
     func delete(
         _ path: String,
         query: [String: String]
     ) async throws {
-        var request = try makeRequest(path: path, method: "DELETE", query: query)
-        request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
-        _ = try await perform(request)
+        _ = try await performWithRefresh {
+            var request = try makeRequest(path: path, method: "DELETE", query: query)
+            request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
+            return request
+        }
     }
 
     private func makeRequest(
@@ -115,6 +122,15 @@ actor SupabaseRESTClient {
         return request
     }
 
+    private func performWithRefresh(_ makeRequest: () throws -> URLRequest) async throws -> Data {
+        do {
+            return try await perform(makeRequest())
+        } catch SupabaseError.unauthorized {
+            try await refreshForRetry()
+            return try await perform(makeRequest())
+        }
+    }
+
     private func perform(_ request: URLRequest) async throws -> Data {
         let data: Data
         let response: URLResponse
@@ -139,6 +155,14 @@ actor SupabaseRESTClient {
         }
 
         return data
+    }
+
+    private func refreshForRetry() async throws {
+        do {
+            _ = try await AuthService.shared.refresh()
+        } catch {
+            throw SupabaseError.unauthorized
+        }
     }
 
     private func normalizedPath(_ path: String) -> String {

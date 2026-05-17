@@ -65,6 +65,7 @@ struct ReportDetailView: View {
     @State private var vm: ReportDetailViewModel
     @State private var selectedTab: Tab = .laudo
     @State private var didCopy: Bool = false
+    @StateObject private var editorBridge = MarkdownEditorBridge()
 
     init(reportId: String) {
         self.reportId = reportId
@@ -159,13 +160,12 @@ struct ReportDetailView: View {
                 .padding(.horizontal, Spacing.md)
                 .padding(.vertical, Spacing.xs)
             Divider()
-            TextEditor(text: Binding(get: { vm.editingText }, set: { vm.textChanged($0) }))
-                .font(TextStyle.bodyLarge)
-                .scrollContentBackground(.hidden)
-                .background(AppSurface.background)
-                .foregroundStyle(AppSurface.textPrimary)
-                .padding(.horizontal, Spacing.md)
-                .padding(.top, Spacing.xs)
+            MarkdownTextEditor(
+                text: Binding(get: { vm.editingText }, set: { vm.textChanged($0) }),
+                bridge: editorBridge
+            )
+            .padding(.horizontal, Spacing.md)
+            .padding(.top, Spacing.xs)
             Divider()
             bottomActions
                 .padding(.horizontal, Spacing.md)
@@ -175,8 +175,12 @@ struct ReportDetailView: View {
 
     private var formattingToolbar: some View {
         HStack(spacing: Spacing.xs) {
-            toolbarButton(systemImage: "bold", label: "Negrito", enabled: false) {}
-            toolbarButton(systemImage: "italic", label: "Itálico", enabled: false) {}
+            toolbarButton(systemImage: "bold", label: "Negrito") {
+                editorBridge.wrap(prefix: "**")
+            }
+            toolbarButton(systemImage: "italic", label: "Itálico") {
+                editorBridge.wrap(prefix: "*")
+            }
             Divider().frame(height: 22)
             Button {
                 Haptics.tap()
@@ -202,23 +206,23 @@ struct ReportDetailView: View {
         }
     }
 
-    private func toolbarButton(systemImage: String, label: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+    private func toolbarButton(systemImage: String, label: String, action: @escaping () -> Void) -> some View {
         Button {
-            if enabled { Haptics.tap(); action() }
+            Haptics.tap()
+            action()
         } label: {
             Image(systemName: systemImage)
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(enabled ? AppSurface.textPrimary : AppSurface.textMuted)
+                .foregroundStyle(AppSurface.textPrimary)
                 .frame(width: 36, height: 32)
         }
-        .disabled(!enabled)
-        .accessibilityLabel(enabled ? label : "\(label) — em breve")
+        .accessibilityLabel(label)
     }
 
     private func applyHeadingHighlights() {
         let next = MarkdownFormatter.highlightHeadings(vm.editingText)
         if next != vm.editingText {
-            vm.textChanged(next)
+            editorBridge.replaceAllText(next)
             Haptics.success()
         }
     }

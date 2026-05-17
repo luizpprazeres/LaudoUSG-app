@@ -15,12 +15,7 @@ struct GenerateView: View {
                     case .reportDetail(let id):
                         ReportDetailView(reportId: id)
                     case .analytics:
-                        PlaceholderView(
-                            title: "Analytics",
-                            icon: "chart.bar.fill",
-                            message: "Métricas dos seus laudos entram no Sprint 3."
-                        )
-                        .navigationTitle("Analytics")
+                        AnalyticsView()
                     case .library:
                         PlaceholderView(
                             title: "Biblioteca",
