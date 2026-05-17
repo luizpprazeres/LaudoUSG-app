@@ -194,6 +194,14 @@ actor AuthService {
         await SupabaseRESTClient.shared.setToken(nil)
     }
 
+    func currentUserId() -> String? {
+        guard let data = UserDefaults.standard.data(forKey: storageKey),
+              let session = try? JSONDecoder().decode(StoredSession.self, from: data) else {
+            return nil
+        }
+        return session.userId
+    }
+
     func restoreSession() async -> AuthSession? {
         guard let data = UserDefaults.standard.data(forKey: storageKey) else { return nil }
         guard let session = try? JSONDecoder().decode(StoredSession.self, from: data) else { return nil }

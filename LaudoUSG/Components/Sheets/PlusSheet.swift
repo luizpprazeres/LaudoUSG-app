@@ -14,6 +14,7 @@ struct PlusSheet: View {
     enum PlusDestination: Hashable {
         case gestationalAge
         case dopplerObstetrico
+        case imageAnalysis(ReportCategory)
     }
 
     var body: some View {
@@ -21,6 +22,7 @@ struct PlusSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: Spacing.lg) {
                     calculatorsSection
+                    imageAnalysisSection
                     phrasesSection
                 }
                 .padding(.horizontal, Spacing.md)
@@ -44,6 +46,12 @@ struct PlusSheet: View {
                     )
                 case .dopplerObstetrico:
                     DopplerCalculatorSheet(
+                        onInsert: { insert($0) },
+                        onDismiss: onDismiss
+                    )
+                case .imageAnalysis(let category):
+                    ImageAnalysisSheet(
+                        category: category,
                         onInsert: { insert($0) },
                         onDismiss: onDismiss
                     )
@@ -78,6 +86,23 @@ struct PlusSheet: View {
                     subtitle: "Em breve",
                     icon: "drop"
                 )
+            }
+        }
+    }
+
+    private var imageAnalysisSection: some View {
+        Group {
+            if let categoryHint, ImageAnalysisService.canAnalyze(category: categoryHint) {
+                VStack(alignment: .leading, spacing: Spacing.sm) {
+                    sectionTitle("Imagem")
+                    calculatorRow(
+                        title: "Analisar imagem de USG",
+                        subtitle: "Extrai biometria e Doppler de 1 a 3 imagens",
+                        icon: "camera.viewfinder",
+                        tint: categoryHint.tint,
+                        destination: .imageAnalysis(categoryHint)
+                    )
+                }
             }
         }
     }

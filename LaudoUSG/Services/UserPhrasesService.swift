@@ -34,7 +34,10 @@ enum UserPhrasesService {
     }
 
     static func create(_ draft: UserPhraseDraft) async throws {
-        let body = try JSONEncoder.api.encode(draft)
+        guard let userId = await AuthService.shared.currentUserId() else {
+            throw SupabaseError.unauthorized
+        }
+        let body = try JSONEncoder.api.encode(UserPhraseCreatePayload(userId: userId, draft: draft))
         try await SupabaseRESTClient.shared.postRaw(
             "/rest/v1/user_phrases",
             query: [:],
@@ -55,5 +58,21 @@ enum UserPhrasesService {
             "/rest/v1/user_phrases",
             query: ["id": "eq.\(id)"]
         )
+    }
+}
+
+private struct UserPhraseCreatePayload: Encodable {
+    let userId: String
+    let title: String
+    let body: String
+    let categoryCode: String?
+    let position: Int
+
+    init(userId: String, draft: UserPhraseDraft) {
+        self.userId = userId
+        self.title = draft.title
+        self.body = draft.body
+        self.categoryCode = draft.categoryCode
+        self.position = draft.position
     }
 }

@@ -62,6 +62,12 @@ actor APIClient {
         }
     }
 
+    func postRawJSON(_ path: String, body: Data) async throws -> Data {
+        try await performWithRefresh {
+            makeRequest(path: path, method: "POST", body: body)
+        }
+    }
+
     func post<T: Decodable, B: Encodable>(_ path: String, body: B, as type: T.Type) async throws -> T {
         let encoded = try JSONEncoder.api.encode(body)
         let data = try await performWithRefresh {
