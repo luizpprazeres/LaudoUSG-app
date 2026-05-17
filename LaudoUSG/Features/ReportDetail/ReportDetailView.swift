@@ -176,10 +176,10 @@ struct ReportDetailView: View {
     private var formattingToolbar: some View {
         HStack(spacing: Spacing.xs) {
             toolbarButton(systemImage: "bold", label: "Negrito") {
-                editorBridge.wrap(prefix: "**")
+                editorBridge.toggleBold()
             }
             toolbarButton(systemImage: "italic", label: "Itálico") {
-                editorBridge.wrap(prefix: "*")
+                editorBridge.toggleItalic()
             }
             Divider().frame(height: 22)
             Button {
