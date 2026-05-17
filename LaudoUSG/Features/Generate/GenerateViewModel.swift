@@ -1,6 +1,62 @@
 import SwiftUI
 import Observation
 
+enum GenerateTab: String, Hashable {
+    case achados
+    case laudo
+}
+
+struct GenerateShortcut: Identifiable, Hashable {
+    enum Action: Hashable {
+        case openIGCalculator
+        case openDopplerCalculator
+        case insertText(String)
+    }
+    let id = UUID()
+    let label: String
+    let action: Action
+
+    static func defaults(for category: ReportCategory) -> [GenerateShortcut] {
+        switch category {
+        case .obstetrica, .dopplerObstetrico, .morfologico:
+            return [
+                GenerateShortcut(label: "Calcular IG", action: .openIGCalculator),
+                GenerateShortcut(label: "Calcular Doppler", action: .openDopplerCalculator),
+                GenerateShortcut(label: "BCF presentes", action: .insertText("Feto único, em situação longitudinal e apresentação cefálica, com BCF presentes."))
+            ]
+        case .tireoide:
+            return [
+                GenerateShortcut(label: "Glândula normal", action: .insertText("Glândula tireoide tópica, contornos regulares, dimensões e ecotextura preservadas.")),
+                GenerateShortcut(label: "Doppler normal", action: .insertText("Vascularização ao Doppler colorido sem alterações.")),
+                GenerateShortcut(label: "Sem nódulos", action: .insertText("Sem nódulos detectados ao exame."))
+            ]
+        case .mamaria:
+            return [
+                GenerateShortcut(label: "Mamas normais", action: .insertText("Parênquima mamário sem alterações.")),
+                GenerateShortcut(label: "BI-RADS 1", action: .insertText("Categoria BI-RADS 1.")),
+                GenerateShortcut(label: "Sem nódulos", action: .insertText("Sem nódulos sólidos ou císticos identificados."))
+            ]
+        case .abdomenTotal, .abdomenSuperior, .abdomenTotalDoppler:
+            return [
+                GenerateShortcut(label: "Fígado normal", action: .insertText("Fígado de dimensões normais, contornos regulares, ecogenicidade preservada.")),
+                GenerateShortcut(label: "Vesícula sem cálculos", action: .insertText("Vesícula biliar de paredes finas, sem cálculos.")),
+                GenerateShortcut(label: "Rins normais", action: .insertText("Rins de dimensões e ecotextura normais."))
+            ]
+        default:
+            return [
+                GenerateShortcut(label: "Exame normal", action: .insertText("Exame sem alterações dignas de nota."))
+            ]
+        }
+    }
+}
+
+enum GenerateSaveStatus: Equatable {
+    case idle
+    case saving
+    case saved
+    case failed(String)
+}
+
 @Observable
 @MainActor
 final class GenerateViewModel {
@@ -14,17 +70,29 @@ final class GenerateViewModel {
     var lastError: String?
     var lastWarning: String?
 
+    var activeTab: GenerateTab = .achados
+    var editedLaudoText: String = ""
+    var saveStatus: GenerateSaveStatus = .idle
+
     var isCategorySheetPresented = false
     var isMenuSheetPresented = false
     var isPlusSheetPresented = false
+    var isSalaSheetPresented = false
+    var isIGCalculatorPresented = false
+    var isDopplerCalculatorPresented = false
     var isRecordingOverlayPresented = false
 
     let speech = SpeechService()
-    private var transcriptObserver: Task<Void, Never>?
+    private var saveTask: Task<Void, Never>?
 
     var canGenerate: Bool {
         !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && !phase.isBusy
+    }
+
+    var hasLaudoOutput: Bool {
+        !editedLaudoText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            || !streamedOutput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     var phaseLabel: String {
@@ -36,6 +104,10 @@ final class GenerateViewModel {
         }
     }
 
+    var shortcuts: [GenerateShortcut] {
+        GenerateShortcut.defaults(for: category)
+    }
+
     func insertSnippet(_ snippet: String) {
         if inputText.isEmpty {
             inputText = snippet
@@ -44,6 +116,17 @@ final class GenerateViewModel {
             inputText += separator + snippet
         }
         isPlusSheetPresented = false
+    }
+
+    func runShortcut(_ shortcut: GenerateShortcut) {
+        switch shortcut.action {
+        case .openIGCalculator:
+            isIGCalculatorPresented = true
+        case .openDopplerCalculator:
+            isDopplerCalculatorPresented = true
+        case .insertText(let text):
+            insertSnippet(text)
+        }
     }
 
     func startRecording() {
@@ -98,6 +181,8 @@ final class GenerateViewModel {
     func generate(writingStyleId: String) {
         guard canGenerate else { return }
         streamedOutput = ""
+        editedLaudoText = ""
+        saveStatus = .idle
         lastError = nil
         lastWarning = nil
         sanityIssues = []
@@ -129,6 +214,30 @@ final class GenerateViewModel {
         }
     }
 
+    func laudoTextChanged(_ newValue: String) {
+        editedLaudoText = newValue
+        saveStatus = .saving
+        saveTask?.cancel()
+        saveTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            guard !Task.isCancelled else { return }
+            await persistLaudo()
+        }
+    }
+
+    private func persistLaudo() async {
+        guard let reportId = lastReportId else {
+            saveStatus = .failed("Aguardando criação do laudo.")
+            return
+        }
+        do {
+            try await HistoryService.updateFinalOutput(reportId: reportId, finalText: editedLaudoText)
+            saveStatus = .saved
+        } catch {
+            saveStatus = .failed(error.localizedDescription)
+        }
+    }
+
     private func handle(event: GenerateSSEEvent) {
         switch event {
         case .open(let payload):
@@ -139,7 +248,7 @@ final class GenerateViewModel {
             break
         case .validator(let payload):
             if !payload.ok && payload.issuesCount > 0 {
-                // Sprint 4: tratar clarify questions
+                // Sprint 8: tratar clarify questions
             }
         case .clarify(let payload):
             phase = .clarifying(question: payload.questions.first?.text ?? "Esclarecimento necessário")
@@ -153,9 +262,11 @@ final class GenerateViewModel {
             break
         case .done(let payload):
             streamedOutput = payload.finalText
+            editedLaudoText = payload.finalText
             lastReportId = payload.reportId
             sanityIssues = SanityChecker.check(text: payload.finalText, category: category)
             phase = .done(reportId: payload.reportId)
+            activeTab = .laudo
         case .blocked(let payload):
             lastError = payload.reason
             phase = .error(message: payload.reason)
@@ -168,8 +279,11 @@ final class GenerateViewModel {
     func reset() {
         inputText = ""
         streamedOutput = ""
+        editedLaudoText = ""
         liveTranscript = ""
         phase = .idle
+        activeTab = .achados
+        saveStatus = .idle
         lastError = nil
     }
 }

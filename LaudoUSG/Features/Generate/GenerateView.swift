@@ -1,21 +1,22 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct GenerateView: View {
     @Environment(AppState.self) private var app
     @State private var vm = GenerateViewModel()
     @State private var path: [AppDestination] = []
+    @State private var didCopyLaudo: Bool = false
 
     var body: some View {
         NavigationStack(path: $path) {
             content
                 .navigationDestination(for: AppDestination.self) { destination in
                     switch destination {
-                    case .history:
-                        HistoryView()
-                    case .reportDetail(let id):
-                        ReportDetailView(reportId: id)
-                    case .analytics:
-                        AnalyticsView()
+                    case .history: HistoryView()
+                    case .reportDetail(let id): ReportDetailView(reportId: id)
+                    case .analytics: AnalyticsView()
                     case .library:
                         PlaceholderView(
                             title: "Biblioteca",
@@ -23,8 +24,7 @@ struct GenerateView: View {
                             message: "Frases e protocolos favoritos entram em sprints futuros."
                         )
                         .navigationTitle("Biblioteca")
-                    case .settings:
-                        SettingsView()
+                    case .settings: SettingsView()
                     case .security:
                         PlaceholderView(
                             title: "Segurança",
@@ -43,9 +43,6 @@ struct GenerateView: View {
 
             VStack(spacing: 0) {
                 header
-                categorySelector
-                    .padding(.horizontal, Spacing.md)
-                    .padding(.top, Spacing.xs)
                 if let error = vm.lastError {
                     errorCard(error)
                         .padding(.horizontal, Spacing.md)
@@ -56,14 +53,19 @@ struct GenerateView: View {
                         .padding(.horizontal, Spacing.md)
                         .padding(.top, Spacing.xs)
                 }
+                tabSwitcher
+                    .padding(.horizontal, Spacing.md)
+                    .padding(.top, Spacing.sm)
                 ScrollView {
-                    VStack(alignment: .leading, spacing: Spacing.lg) {
-                        editorArea
-                        if !vm.streamedOutput.isEmpty {
-                            outputArea
-                            if !vm.sanityIssues.isEmpty {
-                                sanityCard
-                            }
+                    VStack(alignment: .leading, spacing: Spacing.md) {
+                        if vm.activeTab == .achados {
+                            shortcutsBar
+                            achadosEditor
+                        } else {
+                            laudoEditor
+                        }
+                        if !vm.sanityIssues.isEmpty && vm.activeTab == .laudo {
+                            sanityCard
                         }
                         Color.clear.frame(height: 120)
                     }
@@ -100,6 +102,31 @@ struct GenerateView: View {
                 onDismiss: { vm.isPlusSheetPresented = false }
             )
         }
+        .sheet(isPresented: Binding(get: { vm.isIGCalculatorPresented }, set: { vm.isIGCalculatorPresented = $0 })) {
+            NavigationStack {
+                IGCalculatorSheet(
+                    onInsert: { snippet in
+                        vm.insertSnippet(snippet)
+                        vm.isIGCalculatorPresented = false
+                    },
+                    onDismiss: { vm.isIGCalculatorPresented = false }
+                )
+            }
+        }
+        .sheet(isPresented: Binding(get: { vm.isDopplerCalculatorPresented }, set: { vm.isDopplerCalculatorPresented = $0 })) {
+            NavigationStack {
+                DopplerCalculatorSheet(
+                    onInsert: { snippet in
+                        vm.insertSnippet(snippet)
+                        vm.isDopplerCalculatorPresented = false
+                    },
+                    onDismiss: { vm.isDopplerCalculatorPresented = false }
+                )
+            }
+        }
+        .sheet(isPresented: Binding(get: { vm.isSalaSheetPresented }, set: { vm.isSalaSheetPresented = $0 })) {
+            SalaPairingSheet(onDismiss: { vm.isSalaSheetPresented = false })
+        }
         .overlay {
             if vm.isRecordingOverlayPresented {
                 RecordingOverlay(
@@ -114,87 +141,137 @@ struct GenerateView: View {
     }
 
     private var header: some View {
-        HStack(spacing: Spacing.md) {
+        HStack(spacing: Spacing.sm) {
             Button {
+                Haptics.tap()
                 vm.isMenuSheetPresented = true
             } label: {
                 Image(systemName: "line.3.horizontal")
                     .font(.system(size: 22, weight: .semibold))
                     .foregroundStyle(AppSurface.textPrimary)
-                    .frame(width: 40, height: 40)
+                    .frame(width: 36, height: 36)
             }
             .buttonStyle(PressableButtonStyle())
             .accessibilityLabel("Menu")
-
-            Spacer()
 
             BrandLogo(size: .small)
 
             Spacer()
 
-            Color.clear.frame(width: 40, height: 40)
+            categoryChip
         }
         .padding(.horizontal, Spacing.md)
         .padding(.vertical, Spacing.xs)
         .background(AppSurface.background)
     }
 
-    private var categorySelector: some View {
+    private var categoryChip: some View {
         Button {
+            Haptics.tap()
             vm.isCategorySheetPresented = true
         } label: {
-            HStack(spacing: Spacing.sm) {
-                Image(systemName: vm.category.iconSystemName)
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(vm.category.tint)
-                    .frame(width: 36, height: 36)
-                    .background(
-                        RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
-                            .fill(vm.category.tint.opacity(0.12))
-                    )
-
-                VStack(alignment: .leading, spacing: Spacing.xxs) {
-                    Text("Categoria")
-                        .font(TextStyle.captionMedium)
-                        .foregroundStyle(AppSurface.textSecondary)
-                        .textCase(.uppercase)
-                    Text(vm.category.label)
-                        .font(TextStyle.bodyLargeSemibold)
-                        .foregroundStyle(AppSurface.textPrimary)
-                }
-
-                Spacer(minLength: Spacing.sm)
-
+            HStack(spacing: Spacing.xs) {
+                Circle()
+                    .fill(vm.category.tint)
+                    .frame(width: 8, height: 8)
+                    .shadow(color: vm.category.tint.opacity(0.65), radius: 4, x: 0, y: 0)
+                Text(vm.category.label)
+                    .font(TextStyle.bodyMedium)
+                    .foregroundStyle(AppSurface.textPrimary)
+                    .lineLimit(1)
                 Image(systemName: "chevron.up.chevron.down")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(AppSurface.textMuted)
             }
-            .padding(Spacing.sm)
+            .padding(.horizontal, Spacing.sm)
+            .frame(height: 32)
+        }
+        .buttonStyle(PressableButtonStyle())
+        .accessibilityLabel("Categoria \(vm.category.label). Toque para trocar.")
+    }
+
+    private var tabSwitcher: some View {
+        HStack(spacing: 0) {
+            tabButton(tab: .achados, label: "Achados")
+            tabButton(tab: .laudo, label: "Laudo")
+        }
+        .padding(4)
+        .background(
+            Capsule()
+                .fill(AppSurface.muted)
+        )
+        .overlay(
+            Capsule()
+                .stroke(AppSurface.border, lineWidth: 1)
+        )
+        .frame(maxWidth: 280)
+        .frame(maxWidth: .infinity)
+    }
+
+    private func tabButton(tab: GenerateTab, label: String) -> some View {
+        let isActive = vm.activeTab == tab
+        let isLaudoWithBadge = tab == .laudo && vm.hasLaudoOutput && !isActive
+        return Button {
+            Haptics.tap()
+            withAnimation(.easeOut(duration: 0.18)) { vm.activeTab = tab }
+        } label: {
+            HStack(spacing: Spacing.xxs) {
+                Text(label)
+                    .font(TextStyle.bodySemibold)
+                if isLaudoWithBadge {
+                    Circle()
+                        .fill(BrandColor.primary)
+                        .frame(width: 6, height: 6)
+                }
+            }
+            .foregroundStyle(isActive ? .white : AppSurface.textSecondary)
+            .frame(maxWidth: .infinity, minHeight: 36)
             .background(
-                RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
-                    .fill(AppSurface.card)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
-                    .stroke(AppSurface.border, lineWidth: 1)
+                Capsule()
+                    .fill(isActive ? BrandColor.primary : Color.clear)
             )
         }
         .buttonStyle(PressableButtonStyle())
-        .accessibilityLabel("Categoria atual: \(vm.category.label). Toque para trocar.")
     }
 
-    private var editorArea: some View {
+    private var shortcutsBar: some View {
+        Group {
+            if !vm.shortcuts.isEmpty {
+                FlowLayout(spacing: Spacing.sm, alignment: .leading) {
+                    ForEach(vm.shortcuts) { shortcut in
+                        shortcutLink(shortcut)
+                    }
+                }
+            }
+        }
+    }
+
+    private func shortcutLink(_ shortcut: GenerateShortcut) -> some View {
+        Button {
+            Haptics.tap()
+            vm.runShortcut(shortcut)
+        } label: {
+            Text(shortcut.label)
+                .font(TextStyle.body)
+                .foregroundStyle(BrandColor.primary)
+                .underline(true, pattern: .solid)
+        }
+        .buttonStyle(PressableButtonStyle())
+        .accessibilityLabel("Atalho: \(shortcut.label)")
+    }
+
+    private var achadosEditor: some View {
         ZStack(alignment: .topLeading) {
             TextEditor(text: Binding(get: { vm.inputText }, set: { vm.inputText = $0 }))
                 .font(TextStyle.bodyLarge)
                 .scrollContentBackground(.hidden)
                 .background(AppSurface.background)
                 .foregroundStyle(AppSurface.textPrimary)
-                .frame(minHeight: 320)
+                .frame(minHeight: 300)
                 .padding(.horizontal, -4)
 
             if vm.inputText.isEmpty {
-                Text("Dite ou digite os achados. Comandos do médico têm prioridade máxima.")
+                Text("Dite ou digite os achados.")
                     .font(TextStyle.bodyLarge)
                     .foregroundStyle(AppSurface.textMuted)
                     .padding(.top, Spacing.xs)
@@ -205,6 +282,7 @@ struct GenerateView: View {
                 HStack {
                     Spacer()
                     Button {
+                        Haptics.tap()
                         vm.inputText = ""
                     } label: {
                         Text("Limpar")
@@ -212,14 +290,115 @@ struct GenerateView: View {
                             .foregroundStyle(BrandColor.primary)
                             .padding(.horizontal, Spacing.xs)
                             .padding(.vertical, Spacing.xxs)
-                            .background(
-                                Capsule().fill(BrandColor.primaryTint)
-                            )
+                            .background(Capsule().fill(BrandColor.primaryTint))
                     }
                     .accessibilityLabel("Limpar achados")
                 }
                 .offset(y: -36)
             }
+        }
+    }
+
+    private var laudoEditor: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            laudoToolbar
+            TextEditor(text: Binding(get: { vm.editedLaudoText }, set: { vm.laudoTextChanged($0) }))
+                .font(TextStyle.bodyLarge)
+                .scrollContentBackground(.hidden)
+                .background(AppSurface.background)
+                .foregroundStyle(AppSurface.textPrimary)
+                .frame(minHeight: 360)
+                .overlay(alignment: .topLeading) {
+                    if vm.editedLaudoText.isEmpty {
+                        Text(vm.phase.isBusy ? "Gerando laudo…" : "O laudo gerado aparece aqui.")
+                            .font(TextStyle.bodyLarge)
+                            .foregroundStyle(AppSurface.textMuted)
+                            .padding(.top, Spacing.xs)
+                            .padding(.leading, Spacing.xs)
+                            .allowsHitTesting(false)
+                    }
+                }
+        }
+    }
+
+    private var laudoToolbar: some View {
+        HStack(spacing: Spacing.xs) {
+            saveIndicator
+            Spacer()
+            if vm.hasLaudoOutput {
+                Button {
+                    performCopyLaudo()
+                } label: {
+                    HStack(spacing: Spacing.xxs) {
+                        Image(systemName: didCopyLaudo ? "checkmark" : "doc.on.doc")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text(didCopyLaudo ? "Copiado" : "Copiar")
+                            .font(TextStyle.captionMedium)
+                    }
+                    .foregroundStyle(AppSurface.textSecondary)
+                    .padding(.horizontal, Spacing.sm)
+                    .frame(minHeight: 30)
+                    .background(Capsule().fill(AppSurface.card))
+                    .overlay(Capsule().stroke(AppSurface.border, lineWidth: 1))
+                }
+                .buttonStyle(PressableButtonStyle())
+
+                Button {
+                    Haptics.tap()
+                    vm.isSalaSheetPresented = true
+                } label: {
+                    HStack(spacing: Spacing.xxs) {
+                        Image(systemName: "paperplane.fill")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text("Enviar p/ Sala")
+                            .font(TextStyle.captionMedium)
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, Spacing.sm)
+                    .frame(minHeight: 30)
+                    .background(Capsule().fill(BrandColor.primary))
+                }
+                .buttonStyle(PressableButtonStyle())
+                .accessibilityLabel("Enviar laudo para Sala do Auxiliar")
+            }
+        }
+    }
+
+    private var saveIndicator: some View {
+        HStack(spacing: Spacing.xxs) {
+            switch vm.saveStatus {
+            case .idle:
+                if vm.hasLaudoOutput {
+                    Image(systemName: "pencil")
+                        .foregroundStyle(AppSurface.textMuted)
+                    Text("Edite e o app salva.")
+                }
+            case .saving:
+                ProgressView().controlSize(.mini)
+                Text("Salvando…")
+            case .saved:
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(SemanticColor.successText)
+                Text("Salvo")
+            case .failed(let err):
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(SemanticColor.errorText)
+                Text(err).lineLimit(1)
+            }
+        }
+        .font(TextStyle.caption)
+        .foregroundStyle(AppSurface.textSecondary)
+    }
+
+    private func performCopyLaudo() {
+        #if canImport(UIKit)
+        UIPasteboard.general.string = vm.editedLaudoText
+        Haptics.success()
+        #endif
+        withAnimation(.easeOut(duration: 0.15)) { didCopyLaudo = true }
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            withAnimation(.easeOut(duration: 0.15)) { didCopyLaudo = false }
         }
     }
 
@@ -323,42 +502,6 @@ struct GenerateView: View {
         )
     }
 
-    private var outputArea: some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            HStack(spacing: Spacing.xs) {
-                Rectangle()
-                    .fill(BrandColor.primary)
-                    .frame(width: 3)
-                    .frame(maxHeight: .infinity)
-                Text("Laudo gerado")
-                    .font(TextStyle.captionMedium)
-                    .foregroundStyle(BrandColor.primary)
-                    .textCase(.uppercase)
-                Spacer()
-                if vm.lastReportId != nil, !vm.phase.isBusy {
-                    Button {
-                        Haptics.tap()
-                        openReportAfterGeneration()
-                    } label: {
-                        HStack(spacing: Spacing.xxs) {
-                            Text("Abrir laudo")
-                                .font(TextStyle.captionMedium)
-                            Image(systemName: "arrow.up.right")
-                                .font(.system(size: 11, weight: .semibold))
-                        }
-                        .foregroundStyle(BrandColor.primary)
-                    }
-                }
-            }
-            .frame(height: 16)
-            Text(vm.streamedOutput)
-                .font(TextStyle.bodyLarge)
-                .foregroundStyle(AppSurface.textPrimary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .textSelection(.enabled)
-        }
-    }
-
     private var bottomToolbar: some View {
         HStack(spacing: Spacing.sm) {
             Button {
@@ -382,6 +525,7 @@ struct GenerateView: View {
                 isDisabled: !vm.canGenerate
             ) {
                 Haptics.press()
+                vm.activeTab = .achados
                 vm.generate(writingStyleId: app.defaultWritingStyleId)
             }
 
@@ -412,10 +556,50 @@ struct GenerateView: View {
         vm.isMenuSheetPresented = false
         path.append(destination)
     }
+}
 
-    private func openReportAfterGeneration() {
-        guard let reportId = vm.lastReportId else { return }
-        path.append(.reportDetail(id: reportId))
+struct FlowLayout: Layout {
+    var spacing: CGFloat
+    var alignment: HorizontalAlignment
+
+    init(spacing: CGFloat = 8, alignment: HorizontalAlignment = .leading) {
+        self.spacing = spacing
+        self.alignment = alignment
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let result = arrange(proposal: proposal, subviews: subviews)
+        return result.size
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let result = arrange(proposal: proposal, subviews: subviews)
+        for (index, position) in result.positions.enumerated() {
+            subviews[index].place(at: CGPoint(x: bounds.minX + position.x, y: bounds.minY + position.y), proposal: .unspecified)
+        }
+    }
+
+    private func arrange(proposal: ProposedViewSize, subviews: Subviews) -> (size: CGSize, positions: [CGPoint]) {
+        let maxWidth = proposal.width ?? .infinity
+        var positions: [CGPoint] = []
+        var currentX: CGFloat = 0
+        var currentY: CGFloat = 0
+        var lineHeight: CGFloat = 0
+
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if currentX + size.width > maxWidth && currentX > 0 {
+                currentX = 0
+                currentY += lineHeight + spacing
+                lineHeight = 0
+            }
+            positions.append(CGPoint(x: currentX, y: currentY))
+            currentX += size.width + spacing
+            lineHeight = max(lineHeight, size.height)
+        }
+
+        let totalHeight = currentY + lineHeight
+        return (CGSize(width: maxWidth.isFinite ? maxWidth : currentX, height: totalHeight), positions)
     }
 }
 
