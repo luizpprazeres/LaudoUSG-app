@@ -66,6 +66,7 @@ struct ReportDetailView: View {
     @State private var selectedTab: Tab = .laudo
     @State private var didCopy: Bool = false
     @StateObject private var editorBridge = MarkdownEditorBridge()
+    @State private var isSalaSheetPresented: Bool = false
 
     init(reportId: String) {
         self.reportId = reportId
@@ -94,6 +95,9 @@ struct ReportDetailView: View {
         .navigationTitle(vm.report?.category?.label ?? "Laudo")
         .navigationBarTitleDisplayMode(.inline)
         .task { await vm.load() }
+        .sheet(isPresented: $isSalaSheetPresented) {
+            SalaPairingSheet(onDismiss: { isSalaSheetPresented = false })
+        }
     }
 
     private var tabBar: some View {
@@ -235,6 +239,26 @@ struct ReportDetailView: View {
             ) {
                 performCopy()
             }
+            Button {
+                Haptics.tap()
+                isSalaSheetPresented = true
+            } label: {
+                HStack(spacing: Spacing.xs) {
+                    Image(systemName: "person.crop.rectangle.stack")
+                        .font(.system(size: 14, weight: .semibold))
+                    Text("Enviar p/ Sala")
+                        .font(TextStyle.bodyMedium)
+                }
+                .padding(.horizontal, Spacing.sm)
+                .frame(minHeight: 40)
+                .foregroundStyle(.white)
+                .background(
+                    RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
+                        .fill(BrandColor.primary)
+                )
+            }
+            .buttonStyle(PressableButtonStyle())
+            .accessibilityLabel("Enviar para Sala do Auxiliar")
             Spacer()
         }
     }
