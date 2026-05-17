@@ -6,6 +6,7 @@ struct SettingsView: View {
     @State private var measurementPrecision: Int = 1
     @State private var isSavingStyle: Bool = false
     @State private var saveMessage: String?
+    @State private var isSalaSheetPresented: Bool = false
 
     enum ThemeOption: String, CaseIterable, Identifiable {
         case auto, light, dark
@@ -35,17 +36,42 @@ struct SettingsView: View {
                     NavigationLink {
                         MyPhrasesView()
                     } label: {
-                        HStack {
-                            Text("Minhas frases")
-                                .font(TextStyle.bodyLargeMedium)
-                                .foregroundStyle(AppSurface.textPrimary)
+                        navRowLabel("Minhas frases")
+                    }
+                    .buttonStyle(PressableButtonStyle())
+                }
+
+                section(title: "Sala do Auxiliar") {
+                    Button {
+                        Haptics.tap()
+                        isSalaSheetPresented = true
+                    } label: {
+                        HStack(spacing: Spacing.sm) {
+                            Image(systemName: "person.crop.rectangle.stack")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundStyle(BrandColor.primary)
+                                .frame(width: 36, height: 36)
+                                .background(
+                                    RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
+                                        .fill(BrandColor.primaryTint)
+                                )
+                            VStack(alignment: .leading, spacing: Spacing.xxs) {
+                                Text("Sessão de turno")
+                                    .font(TextStyle.bodyLargeMedium)
+                                    .foregroundStyle(AppSurface.textPrimary)
+                                Text("Gere o código que o auxiliar usa pra entrar em laudousg.com/sala")
+                                    .font(TextStyle.caption)
+                                    .foregroundStyle(AppSurface.textSecondary)
+                                    .lineLimit(2)
+                                    .multilineTextAlignment(.leading)
+                            }
                             Spacer()
                             Image(systemName: "chevron.right")
                                 .font(.system(size: 12, weight: .semibold))
                                 .foregroundStyle(AppSurface.textMuted)
                         }
                         .padding(.horizontal, Spacing.md)
-                        .frame(minHeight: 52)
+                        .frame(minHeight: 64)
                     }
                     .buttonStyle(PressableButtonStyle())
                 }
@@ -77,6 +103,23 @@ struct SettingsView: View {
         .background(AppSurface.background.ignoresSafeArea())
         .navigationTitle("Preferências")
         .navigationBarTitleDisplayMode(.large)
+        .sheet(isPresented: $isSalaSheetPresented) {
+            SalaPairingSheet(onDismiss: { isSalaSheetPresented = false })
+        }
+    }
+
+    private func navRowLabel(_ title: String) -> some View {
+        HStack {
+            Text(title)
+                .font(TextStyle.bodyLargeMedium)
+                .foregroundStyle(AppSurface.textPrimary)
+            Spacer()
+            Image(systemName: "chevron.right")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(AppSurface.textMuted)
+        }
+        .padding(.horizontal, Spacing.md)
+        .frame(minHeight: 52)
     }
 
     private var writingStyleRow: some View {
