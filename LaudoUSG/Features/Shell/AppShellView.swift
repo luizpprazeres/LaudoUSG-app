@@ -2,8 +2,35 @@ import SwiftUI
 
 struct AppShellView: View {
     let app: AppState
-    @State private var presentingLegalAcceptance = false
-    @State private var presentingOnboarding = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var splashLogoScale: CGFloat = 0.96
+    @State private var splashLogoOpacity: Double = 0
+    @State private var splashStatusText = "Verificando sessão…"
+
+    // Apresentação reativa: modais aparecem/fecham automaticamente conforme
+    // o estado do AppState muda. Sem timing race entre loadPostLogin e UI.
+    private var showLegalGate: Binding<Bool> {
+        Binding(
+            get: {
+                app.session == .authenticated
+                && app.profile != nil
+                && app.needsLegalAcceptance
+            },
+            set: { _ in }
+        )
+    }
+
+    private var showOnboardingGate: Binding<Bool> {
+        Binding(
+            get: {
+                app.session == .authenticated
+                && app.profile != nil
+                && !app.needsLegalAcceptance
+                && app.needsOnboarding
+            },
+            set: { _ in }
+        )
+    }
 
     var body: some View {
         Group {
@@ -18,8 +45,10 @@ struct AppShellView: View {
         }
         .environment(app)
         .task {
+            splashStatusText = "Verificando sessão…"
             if let session = await AuthService.shared.restoreSession() {
                 app.signIn(email: session.email, name: nil)
+                splashStatusText = "Carregando perfil…"
                 await loadPostLogin()
             } else {
                 app.markChecked(signedIn: false)
@@ -30,17 +59,13 @@ struct AppShellView: View {
                 Task { await loadPostLogin() }
             }
         }
-        .fullScreenCover(isPresented: $presentingLegalAcceptance) {
-            DisclaimerAcceptModal {
-                presentOnboardingIfNeeded()
-            }
-            .environment(app)
+        .fullScreenCover(isPresented: showLegalGate) {
+            DisclaimerAcceptModal(onAccepted: {})
+                .environment(app)
         }
-        .fullScreenCover(isPresented: $presentingOnboarding) {
-            OnboardingView {
-                presentingOnboarding = false
-            }
-            .environment(app)
+        .fullScreenCover(isPresented: showOnboardingGate) {
+            OnboardingView(onCompleted: {})
+                .environment(app)
         }
     }
 
@@ -53,38 +78,51 @@ struct AppShellView: View {
         if let stylesValue = try? await styles {
             app.availableStyles = stylesValue
         }
-        presentRequiredPostLoginFlow()
-    }
-
-    private func presentRequiredPostLoginFlow() {
-        guard app.session == .authenticated else { return }
-        if app.needsLegalAcceptance {
-            presentingOnboarding = false
-            presentingLegalAcceptance = true
-        } else {
-            presentOnboardingIfNeeded()
-        }
-    }
-
-    private func presentOnboardingIfNeeded() {
-        presentingLegalAcceptance = false
-        guard app.session == .authenticated, app.needsOnboarding else { return }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-            presentingOnboarding = true
-        }
     }
 
     private var splashView: some View {
         ZStack {
             AppSurface.background.ignoresSafeArea()
-            VStack(spacing: Spacing.lg) {
-                Image("LaudoUSGLogoFont")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(maxWidth: 300)
-                    .accessibilityLabel("LaudoUSG")
-                ProgressView()
-                    .tint(BrandColor.primary)
+            VStack(spacing: Spacing.xl) {
+                VStack(spacing: Spacing.md) {
+                    Image("LaudoUSGLogoFont")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: 240)
+                        .accessibilityLabel("LaudoUSG")
+                        .scaleEffect(splashLogoScale)
+                        .opacity(splashLogoOpacity)
+
+                    Rectangle()
+                        .fill(AppSurface.textPrimary.opacity(0.08))
+                        .frame(width: 40, height: 0.5)
+                        .opacity(splashLogoOpacity)
+
+                    Text("Laudos em segundos.")
+                        .font(TextStyle.bodyMedium)
+                        .foregroundStyle(AppSurface.textPrimary)
+                        .opacity(splashLogoOpacity)
+                }
+
+                VStack(spacing: Spacing.sm) {
+                    DotTrioLoader()
+                    Text(splashStatusText)
+                        .font(TextStyle.caption)
+                        .foregroundStyle(AppSurface.textMuted)
+                        .animation(.easeInOut(duration: 0.25), value: splashStatusText)
+                }
+                .opacity(splashLogoOpacity)
+            }
+        }
+        .onAppear {
+            if reduceMotion {
+                splashLogoScale = 1.0
+                splashLogoOpacity = 1.0
+            } else {
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+                    splashLogoScale = 1.0
+                    splashLogoOpacity = 1.0
+                }
             }
         }
     }
