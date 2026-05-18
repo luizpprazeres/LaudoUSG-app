@@ -187,6 +187,7 @@ final class GenerateViewModel {
         lastWarning = nil
         sanityIssues = []
         phase = .generating
+        withAnimation(.easeOut(duration: 0.18)) { activeTab = .laudo }
 
         let req = GenerateRequest(
             rawInput: inputText,
@@ -257,6 +258,9 @@ final class GenerateViewModel {
         case .warning(let payload):
             lastWarning = payload.message
         case .token(let payload):
+            if activeTab != .laudo {
+                withAnimation(.easeOut(duration: 0.18)) { activeTab = .laudo }
+            }
             streamedOutput += payload.delta
         case .sanity:
             break

@@ -12,7 +12,10 @@ final class MyPhrasesViewModel {
         error = nil
         defer { isLoading = false }
         do {
-            phrases = try await UserPhrasesService.fetch()
+            let fetchedPhrases = try await UserPhrasesService.fetch()
+            withAnimation(.easeOut(duration: 0.25)) {
+                phrases = fetchedPhrases
+            }
         } catch let err as SupabaseError {
             error = err.errorDescription
             phrases = []
@@ -25,7 +28,9 @@ final class MyPhrasesViewModel {
     func delete(id: String) async {
         do {
             try await UserPhrasesService.delete(id: id)
-            phrases.removeAll { $0.id == id }
+            withAnimation(.easeOut(duration: 0.22)) {
+                phrases.removeAll { $0.id == id }
+            }
             Haptics.success()
         } catch {
             self.error = error.localizedDescription
@@ -34,7 +39,9 @@ final class MyPhrasesViewModel {
     }
 
     func move(from source: IndexSet, to destination: Int) async {
-        phrases.move(fromOffsets: source, toOffset: destination)
+        withAnimation(.easeInOut(duration: 0.2)) {
+            phrases.move(fromOffsets: source, toOffset: destination)
+        }
         await persistPositions()
     }
 

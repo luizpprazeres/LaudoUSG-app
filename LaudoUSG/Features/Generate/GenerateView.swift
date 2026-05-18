@@ -8,6 +8,7 @@ struct GenerateView: View {
     @State private var vm = GenerateViewModel()
     @State private var path: [AppDestination] = []
     @State private var didCopyLaudo: Bool = false
+    @Namespace private var tabNamespace
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -47,11 +48,19 @@ struct GenerateView: View {
                     errorCard(error)
                         .padding(.horizontal, Spacing.md)
                         .padding(.top, Spacing.xs)
+                        .transition(.asymmetric(
+                            insertion: .move(edge: .top).combined(with: .opacity),
+                            removal: .opacity.combined(with: .move(edge: .top))
+                        ))
                 }
                 if let warning = vm.lastWarning {
                     warningBanner(warning)
                         .padding(.horizontal, Spacing.md)
                         .padding(.top, Spacing.xs)
+                        .transition(.asymmetric(
+                            insertion: .move(edge: .top).combined(with: .opacity),
+                            removal: .opacity.combined(with: .move(edge: .top))
+                        ))
                 }
                 tabSwitcher
                     .padding(.horizontal, Spacing.md)
@@ -79,6 +88,8 @@ struct GenerateView: View {
                     }
                 }
             }
+            .animation(.easeOut(duration: 0.2), value: vm.lastError)
+            .animation(.easeOut(duration: 0.2), value: vm.lastWarning)
 
             bottomToolbar
         }
@@ -213,6 +224,7 @@ struct GenerateView: View {
                 .stroke(AppSurface.border, lineWidth: 1)
         )
         .frame(maxWidth: 280)
+        .frame(height: 44)
         .frame(maxWidth: .infinity)
     }
 
@@ -223,21 +235,26 @@ struct GenerateView: View {
             Haptics.tap()
             withAnimation(.easeOut(duration: 0.18)) { vm.activeTab = tab }
         } label: {
-            HStack(spacing: Spacing.xxs) {
-                Text(label)
-                    .font(TextStyle.bodySemibold)
-                if isLaudoWithBadge {
-                    Circle()
+            ZStack {
+                if isActive {
+                    Capsule()
                         .fill(BrandColor.primary)
-                        .frame(width: 6, height: 6)
+                        .matchedGeometryEffect(id: "tabPill", in: tabNamespace)
                 }
+                HStack(spacing: Spacing.xxs) {
+                    Text(label)
+                        .font(TextStyle.bodySemibold)
+                    if isLaudoWithBadge {
+                        Circle()
+                            .fill(BrandColor.primary)
+                            .frame(width: 6, height: 6)
+                    }
+                }
+                .foregroundStyle(isActive ? .white : AppSurface.textSecondary)
+                .frame(maxWidth: .infinity)
             }
-            .foregroundStyle(isActive ? .white : AppSurface.textSecondary)
-            .frame(maxWidth: .infinity, minHeight: 36)
-            .background(
-                Capsule()
-                    .fill(isActive ? BrandColor.primary : Color.clear)
-            )
+            .frame(maxWidth: .infinity)
+            .frame(height: 36)
         }
         .buttonStyle(PressableButtonStyle())
     }
@@ -375,28 +392,42 @@ struct GenerateView: View {
 
     private var saveIndicator: some View {
         HStack(spacing: Spacing.xxs) {
-            switch vm.saveStatus {
-            case .idle:
-                if vm.hasLaudoOutput {
-                    Image(systemName: "pencil")
-                        .foregroundStyle(AppSurface.textMuted)
-                    Text("Edite e o app salva.")
+            Group {
+                switch vm.saveStatus {
+                case .idle:
+                    if vm.hasLaudoOutput {
+                        Image(systemName: "pencil")
+                            .foregroundStyle(AppSurface.textMuted)
+                        Text("Edite e o app salva.")
+                    }
+                case .saving:
+                    ProgressView().controlSize(.mini)
+                    Text("Salvando…")
+                case .saved:
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(SemanticColor.successText)
+                    Text("Salvo")
+                case .failed(let err):
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(SemanticColor.errorText)
+                    Text(err).lineLimit(1)
                 }
-            case .saving:
-                ProgressView().controlSize(.mini)
-                Text("Salvando…")
-            case .saved:
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(SemanticColor.successText)
-                Text("Salvo")
-            case .failed(let err):
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundStyle(SemanticColor.errorText)
-                Text(err).lineLimit(1)
             }
+            .id(saveStateKey)
+            .transition(.opacity)
         }
         .font(TextStyle.caption)
         .foregroundStyle(AppSurface.textSecondary)
+        .animation(.easeOut(duration: 0.15), value: saveStateKey)
+    }
+
+    private var saveStateKey: String {
+        switch vm.saveStatus {
+        case .idle: return "idle"
+        case .saving: return "saving"
+        case .saved: return "saved"
+        case .failed(let err): return "failed-\(err.prefix(20))"
+        }
     }
 
     private func performCopyLaudo() {
@@ -424,7 +455,9 @@ struct GenerateView: View {
                     .foregroundStyle(SemanticColor.warningText)
             }
             Spacer(minLength: 0)
-            Button { vm.lastWarning = nil } label: {
+            Button {
+                withAnimation(.easeOut(duration: 0.18)) { vm.lastWarning = nil }
+            } label: {
                 Image(systemName: "xmark")
                     .foregroundStyle(SemanticColor.warningText)
             }
@@ -493,7 +526,7 @@ struct GenerateView: View {
             }
             Spacer(minLength: 0)
             Button {
-                vm.lastError = nil
+                withAnimation(.easeOut(duration: 0.18)) { vm.lastError = nil }
             } label: {
                 Image(systemName: "xmark")
                     .foregroundStyle(SemanticColor.errorText)
@@ -529,12 +562,11 @@ struct GenerateView: View {
 
             PrimaryButton(
                 title: vm.phaseLabel,
-                icon: vm.phase.isBusy ? nil : "sparkles",
+                icon: nil,
                 isLoading: vm.phase.isBusy,
                 isDisabled: !vm.canGenerate
             ) {
                 Haptics.press()
-                vm.activeTab = .achados
                 vm.generate(writingStyleId: app.defaultWritingStyleId)
             }
 

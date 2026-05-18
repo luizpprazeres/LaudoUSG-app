@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct AppShellView: View {
-    @State private var app = AppState()
+    let app: AppState
 
     var body: some View {
         Group {
@@ -33,9 +33,8 @@ struct AppShellView: View {
     private func loadPostLogin() async {
         async let profile = ProfileService.fetchProfile()
         async let styles = ProfileService.fetchWritingStyles()
-        if let profileValue = try? await profile,
-           let styleId = profileValue.defaultWritingStyleId {
-            app.defaultWritingStyleId = styleId
+        if let profileValue = try? await profile {
+            app.updateProfile(profileValue)
         }
         if let stylesValue = try? await styles {
             app.availableStyles = stylesValue
@@ -46,7 +45,11 @@ struct AppShellView: View {
         ZStack {
             AppSurface.background.ignoresSafeArea()
             VStack(spacing: Spacing.lg) {
-                BrandLogo(size: .large)
+                Image("LaudoUSGLogoFont")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: 300)
+                    .accessibilityLabel("LaudoUSG")
                 ProgressView()
                     .tint(BrandColor.primary)
             }
@@ -55,5 +58,5 @@ struct AppShellView: View {
 }
 
 #Preview {
-    AppShellView()
+    AppShellView(app: AppState())
 }

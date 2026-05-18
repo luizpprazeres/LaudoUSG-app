@@ -277,29 +277,43 @@ struct ReportDetailView: View {
 
     private var saveIndicator: some View {
         HStack(spacing: Spacing.xxs) {
-            if vm.isSaving {
-                ProgressView().controlSize(.mini)
-                Text("Salvando…")
-            } else {
-                switch vm.saveStatus {
-                case .saved:
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(SemanticColor.successText)
-                    Text("Salvo")
-                case .failed:
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundStyle(SemanticColor.errorText)
-                    Text("Falha ao salvar")
-                case .idle:
-                    Image(systemName: "pencil")
-                        .foregroundStyle(AppSurface.textMuted)
-                    Text("Edite e o app salva automaticamente.")
+            Group {
+                if vm.isSaving {
+                    ProgressView().controlSize(.mini)
+                    Text("Salvando…")
+                } else {
+                    switch vm.saveStatus {
+                    case .saved:
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(SemanticColor.successText)
+                        Text("Salvo")
+                    case .failed:
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(SemanticColor.errorText)
+                        Text("Falha ao salvar")
+                    case .idle:
+                        Image(systemName: "pencil")
+                            .foregroundStyle(AppSurface.textMuted)
+                        Text("Edite e o app salva automaticamente.")
+                    }
                 }
             }
+            .id(saveStateKey)
+            .transition(.opacity)
             Spacer()
         }
         .font(TextStyle.caption)
         .foregroundStyle(AppSurface.textSecondary)
+        .animation(.easeOut(duration: 0.15), value: saveStateKey)
+    }
+
+    private var saveStateKey: String {
+        if vm.isSaving { return "saving" }
+        switch vm.saveStatus {
+        case .idle: return "idle"
+        case .saved: return "saved"
+        case .failed: return "failed"
+        }
     }
 
     private var entendidoTab: some View {

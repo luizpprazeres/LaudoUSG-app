@@ -23,6 +23,8 @@ final class HistoryViewModel {
 
 struct HistoryView: View {
     @State private var vm = HistoryViewModel()
+    @State private var hasAppeared: Bool = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Group {
@@ -43,16 +45,24 @@ struct HistoryView: View {
         .navigationBarTitleDisplayMode(.large)
         .task { await vm.load() }
         .refreshable { await vm.load() }
+        .onChange(of: vm.reports.count) { _, newCount in
+            if newCount > 0 && !hasAppeared {
+                hasAppeared = true
+            }
+        }
     }
 
     private var list: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                ForEach(vm.reports) { report in
+                ForEach(Array(vm.reports.enumerated()), id: \.element.id) { index, report in
                     NavigationLink(value: AppDestination.reportDetail(id: report.id)) {
                         reportCard(report)
                     }
                     .buttonStyle(PressableButtonStyle())
+                    .opacity(hasAppeared || reduceMotion ? 1 : 0)
+                    .offset(y: hasAppeared || reduceMotion ? 0 : 12)
+                    .animation(.easeOut(duration: 0.28).delay(min(Double(index) * 0.05, 0.5)), value: hasAppeared)
                 }
             }
             .padding(.horizontal, Spacing.md)
