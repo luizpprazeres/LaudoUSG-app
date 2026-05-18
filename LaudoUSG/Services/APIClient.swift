@@ -215,7 +215,23 @@ extension JSONDecoder {
     static let api: JSONDecoder = {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
-        decoder.dateDecodingStrategy = .iso8601
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let value = try container.decode(String.self)
+
+            if let date = ISO8601DateFormatter.apiWithFractionalSeconds.date(from: value) {
+                return date
+            }
+
+            if let date = ISO8601DateFormatter.api.date(from: value) {
+                return date
+            }
+
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "Data inválida: \(value)"
+            )
+        }
         return decoder
     }()
 }
@@ -226,5 +242,19 @@ extension JSONEncoder {
         encoder.keyEncodingStrategy = .convertToSnakeCase
         encoder.dateEncodingStrategy = .iso8601
         return encoder
+    }()
+}
+
+extension ISO8601DateFormatter {
+    static let api: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
+
+    static let apiWithFractionalSeconds: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
     }()
 }

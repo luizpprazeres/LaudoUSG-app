@@ -108,6 +108,7 @@ enum ImageAnalysisService {
         )
         let encoder = JSONEncoder()
         let body = try encoder.encode(request)
+        logger.info("Image analysis request body: \(body.count, privacy: .public) bytes")
         let data = try await APIClient.shared.postRawJSON("/api/analyze-image", body: body)
         let response = try JSONDecoder().decode(AnalyzeImageResponse.self, from: data)
 
