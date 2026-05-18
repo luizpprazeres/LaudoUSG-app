@@ -6,18 +6,19 @@ struct ConfirmEmailView: View {
     let onCloseToLogin: () -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var cooldown = 60
     @State private var isSending = false
     @State private var errorMessage: String?
     @State private var successMessage: String?
+    @State private var badgePulse: CGFloat = 1.0
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
         VStack(spacing: Spacing.lg) {
             Spacer()
-            Image(systemName: "envelope.badge.fill")
-                .font(.system(size: 64, weight: .semibold))
-                .foregroundStyle(BrandColor.primary)
+
+            envelopeIcon
 
             VStack(spacing: Spacing.sm) {
                 Text("Confirme seu email")
@@ -25,15 +26,25 @@ struct ConfirmEmailView: View {
                     .foregroundStyle(AppSurface.textPrimary)
                     .multilineTextAlignment(.center)
 
-                Text("Enviamos um link de ativação para \(email). Toque no link recebido para ativar sua conta e fazer login.")
-                    .font(TextStyle.bodyLarge)
-                    .foregroundStyle(AppSurface.textSecondary)
-                    .multilineTextAlignment(.center)
+                VStack(spacing: Spacing.xxs) {
+                    Text("Enviamos um link pra")
+                        .font(TextStyle.bodyLarge)
+                        .foregroundStyle(AppSurface.textSecondary)
+                    Text(email)
+                        .font(TextStyle.bodyLargeMedium)
+                        .foregroundStyle(AppSurface.textPrimary)
+                        .underline(true, color: AppSurface.textPrimary.opacity(0.6))
+                    Text("Clique nele pra ativar e abrir o app direto.")
+                        .font(TextStyle.bodyLarge)
+                        .foregroundStyle(AppSurface.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, Spacing.xxs)
+                }
             }
 
             VStack(spacing: Spacing.sm) {
                 SecondaryButton(
-                    title: cooldown > 0 ? "Aguarde \(cooldown)s..." : "Reenviar email",
+                    title: cooldown > 0 ? "Reenviar em \(cooldown)s" : "Reenviar email",
                     icon: "arrow.clockwise"
                 ) {
                     resend()
@@ -71,6 +82,31 @@ struct ConfirmEmailView: View {
         .onReceive(timer) { _ in
             guard cooldown > 0 else { return }
             cooldown -= 1
+        }
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
+                badgePulse = 1.12
+            }
+        }
+    }
+
+    private var envelopeIcon: some View {
+        ZStack(alignment: .topTrailing) {
+            Image(systemName: "envelope.fill")
+                .font(.system(size: 64, weight: .semibold))
+                .foregroundStyle(BrandColor.primary)
+            Circle()
+                .fill(BrandColor.primaryDeep)
+                .frame(width: 18, height: 18)
+                .scaleEffect(badgePulse)
+                .offset(x: 4, y: -4)
+                .overlay(
+                    Circle()
+                        .stroke(AppSurface.background, lineWidth: 2)
+                        .scaleEffect(badgePulse)
+                        .offset(x: 4, y: -4)
+                )
         }
     }
 

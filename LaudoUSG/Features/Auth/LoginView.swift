@@ -5,6 +5,7 @@ import UIKit
 
 struct LoginView: View {
     @Environment(AppState.self) private var app
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var email: String = ""
     @State private var password: String = ""
@@ -13,8 +14,8 @@ struct LoginView: View {
     @State private var isResendingConfirmation: Bool = false
     @State private var errorMessage: String?
     @State private var loginNeedsEmailConfirmation: Bool = false
-    @State private var isTermsPresented: Bool = false
     @State private var isPrivacyPresented: Bool = false
+    @State private var shakeOffset: CGFloat = 0
     @FocusState private var focused: Field?
 
     enum Field { case email, password }
@@ -27,15 +28,10 @@ struct LoginView: View {
                 VStack(spacing: 0) {
                     Spacer()
 
-                        VStack(spacing: Spacing.xl) {
-                            Image("LaudoUSGLogoFont")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxWidth: 340)
-                                .accessibilityLabel("LaudoUSG")
-                                .padding(.bottom, Spacing.md)
+                    VStack(spacing: Spacing.xl) {
+                        header
 
-                            VStack(spacing: Spacing.md) {
+                        VStack(spacing: Spacing.md) {
                             labeledField(
                                 label: "Email",
                                 text: $email,
@@ -51,11 +47,23 @@ struct LoginView: View {
                                 field: .password,
                                 isSecure: true,
                                 content: .password,
-                                placeholder: "Sua senha"
+                                placeholder: ""
                             )
+
+                            HStack {
+                                Spacer()
+                                NavigationLink {
+                                    ForgotPasswordView()
+                                } label: {
+                                    Text("Esqueci a senha")
+                                        .font(TextStyle.bodyMedium)
+                                        .foregroundStyle(BrandColor.primary)
+                                }
+                            }
 
                             if let errorMessage {
                                 errorBanner(errorMessage)
+                                    .offset(x: shakeOffset)
                             }
 
                             PrimaryButton(
@@ -67,57 +75,28 @@ struct LoginView: View {
                                 performLogin()
                             }
 
-                            HStack {
-                                Spacer()
-                                NavigationLink {
-                                    ForgotPasswordView()
-                                } label: {
-                                    Text("Esqueci minha senha")
-                                        .font(TextStyle.bodyMedium)
-                                        .foregroundStyle(BrandColor.primary)
-                                }
+                            SecondaryButton(title: "Criar conta nova", icon: nil) {
+                                Haptics.tap()
+                                isSignUpPresented = true
                             }
-                            .padding(.top, Spacing.xs)
-
-                            HStack(spacing: Spacing.xxs) {
-                                Text("Não tem conta?")
-                                    .font(TextStyle.body)
-                                    .foregroundStyle(AppSurface.textSecondary)
-                                Button("Cadastre-se") {
-                                    Haptics.tap()
-                                    isSignUpPresented = true
-                                }
-                                .font(TextStyle.bodyMedium)
-                                .foregroundStyle(BrandColor.primary)
-                            }
-                            .padding(.top, Spacing.xs)
                         }
                     }
                     .padding(.horizontal, Spacing.lg)
 
                     Spacer()
 
-                    HStack(spacing: Spacing.xs) {
-                        Button("Termos") {
-                            Haptics.tap()
-                            isTermsPresented = true
+                    Button {
+                        Haptics.tap()
+                        isPrivacyPresented = true
+                    } label: {
+                        HStack(spacing: Spacing.xxs) {
+                            Image(systemName: "info.circle")
+                            Text("Privacidade")
                         }
-                        Text("•")
-                        Button("Privacidade") {
-                            Haptics.tap()
-                            isPrivacyPresented = true
-                        }
+                        .font(TextStyle.footnote)
+                        .foregroundStyle(AppSurface.textSecondary)
                     }
-                    .font(TextStyle.caption)
-                    .foregroundStyle(AppSurface.textMuted)
-                    .padding(.bottom, Spacing.xs)
-
-                    Text("Seus laudos são privados. Revise antes de assinar.")
-                        .multilineTextAlignment(.center)
-                        .font(TextStyle.caption)
-                        .foregroundStyle(AppSurface.textMuted)
-                        .padding(.horizontal, Spacing.lg)
-                        .padding(.bottom, Spacing.md)
+                    .padding(.bottom, Spacing.md)
                 }
             }
             .sheet(isPresented: $isSignUpPresented) {
@@ -125,17 +104,21 @@ struct LoginView: View {
                     SignUpView()
                 }
             }
-            .sheet(isPresented: $isTermsPresented) {
-                NavigationStack {
-                    TermsOfUseView()
-                }
-            }
             .sheet(isPresented: $isPrivacyPresented) {
-                NavigationStack {
-                    PrivacyPolicyView()
-                }
+                PrivacySheet()
+            }
+            .onChange(of: errorMessage) { _, newValue in
+                if newValue != nil { triggerShake() }
             }
         }
+    }
+
+    private var header: some View {
+        Image("LaudoUSGLogoFont")
+            .resizable()
+            .scaledToFit()
+            .frame(maxWidth: 340)
+            .accessibilityLabel("LaudoUSG")
     }
 
     private var isValid: Bool {
@@ -153,9 +136,8 @@ struct LoginView: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: Spacing.xxs) {
             Text(label)
-                .font(TextStyle.captionMedium)
-                .foregroundStyle(AppSurface.textSecondary)
-                .textCase(.uppercase)
+                .font(TextStyle.bodyMedium)
+                .foregroundStyle(AppSurface.textPrimary)
 
             Group {
                 if isSecure {
@@ -183,8 +165,13 @@ struct LoginView: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
-                    .stroke(focused == field ? BrandColor.primary : AppSurface.border, lineWidth: 1)
+                    .stroke(focused == field ? BrandColor.primary : AppSurface.border, lineWidth: 1.5)
             )
+            .shadow(
+                color: focused == field ? BrandColor.primary.opacity(0.16) : .clear,
+                radius: 8, x: 0, y: 0
+            )
+            .animation(.spring(response: 0.3, dampingFraction: 0.85), value: focused)
         }
     }
 
@@ -237,7 +224,7 @@ struct LoginView: View {
                     let message = error.errorDescription ?? "Erro ao entrar."
                     if isEmailNotConfirmed(message) {
                         loginNeedsEmailConfirmation = true
-                        errorMessage = "Email ainda não confirmado."
+                        errorMessage = "Confirme seu email pra entrar."
                     } else {
                         errorMessage = message
                     }
@@ -271,6 +258,18 @@ struct LoginView: View {
     private func isEmailNotConfirmed(_ message: String) -> Bool {
         let lower = message.lowercased()
         return lower.contains("email_not_confirmed") || lower.contains("email not confirmed")
+    }
+
+    private func triggerShake() {
+        guard !reduceMotion else { return }
+        let pattern: [CGFloat] = [6, -6, 5, -5, 3, -3, 0]
+        for (index, value) in pattern.enumerated() {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.05) {
+                withAnimation(.linear(duration: 0.05)) {
+                    shakeOffset = value
+                }
+            }
+        }
     }
 }
 
