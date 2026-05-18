@@ -88,7 +88,31 @@ struct SettingsView: View {
                 section(title: "Conta") {
                     infoRow(label: "Email", value: app.profile?.email ?? "—")
                     Divider().padding(.leading, Spacing.md)
-                    infoRow(label: "Plano", value: "Gratuito")
+                    infoRow(label: "Plano", value: app.profile?.planLabel ?? "Gratuito")
+                }
+
+                section(title: "Perfil") {
+                    NavigationLink(destination: EditProfileView()) {
+                        navRowLabel("Editar perfil")
+                    }
+                    .buttonStyle(PressableButtonStyle())
+                }
+
+                section(title: "Zona de risco") {
+                    NavigationLink(destination: DeleteAccountView()) {
+                        HStack {
+                            Text("Excluir minha conta")
+                                .font(TextStyle.bodyLargeMedium)
+                                .foregroundStyle(SemanticColor.errorAccent)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(SemanticColor.errorAccent.opacity(0.6))
+                        }
+                        .padding(.horizontal, Spacing.md)
+                        .frame(minHeight: 52)
+                    }
+                    .buttonStyle(PressableButtonStyle())
                 }
 
                 if let saveMessage {

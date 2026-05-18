@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct MenuSheet: View {
+    @Environment(AppState.self) private var app
+
     let onTapHistorico: () -> Void
     let onTapAnalytics: () -> Void
     let onTapBiblioteca: () -> Void
@@ -59,27 +61,35 @@ struct MenuSheet: View {
 
     private var header: some View {
         HStack(spacing: Spacing.md) {
-            Circle()
-                .fill(BrandColor.primarySoft)
-                .frame(width: 56, height: 56)
-                .overlay(
-                    Text("L")
-                        .font(TextStyle.h2)
-                        .foregroundStyle(BrandColor.primaryDeep)
-                )
+            Text(app.profile?.planLabel ?? "Gratuito")
+                .font(TextStyle.captionMedium)
+                .foregroundStyle(BrandColor.primaryDeep)
+                .padding(.horizontal, Spacing.sm)
+                .frame(minWidth: 76, minHeight: 36)
+                .background(Capsule().fill(BrandColor.primarySoft))
+                .overlay(Capsule().stroke(BrandColor.primaryBorder, lineWidth: 1))
 
             VStack(alignment: .leading, spacing: Spacing.xxs) {
-                Text("Médico Usuário")
+                Text(displayName)
                     .font(TextStyle.bodyLargeSemibold)
                     .foregroundStyle(AppSurface.textPrimary)
 
-                Text("medico@laudousg.com")
+                Text(app.profile?.email ?? "—")
                     .font(TextStyle.body)
                     .foregroundStyle(AppSurface.textSecondary)
             }
 
             Spacer()
         }
+    }
+
+    private var displayName: String {
+        let name = app.profile?.displayName.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !name.isEmpty && !name.contains("@") { return name }
+        if let email = app.profile?.email, let localPart = email.split(separator: "@").first {
+            return String(localPart)
+        }
+        return "Usuário"
     }
 
     private func menuRow(_ item: MenuSheetItem) -> some View {
@@ -116,13 +126,14 @@ private struct MenuSheetItem: Identifiable {
     let action: () -> Void
 }
 
-#Preview {
-    MenuSheet(
-        onTapHistorico: {},
+    #Preview {
+        MenuSheet(
+            onTapHistorico: {},
         onTapAnalytics: {},
         onTapBiblioteca: {},
         onTapPreferencias: {},
-        onTapSeguranca: {},
-        onLogout: {}
-    )
-}
+            onTapSeguranca: {},
+            onLogout: {}
+        )
+        .environment(AppState())
+    }

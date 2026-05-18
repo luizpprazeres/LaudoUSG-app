@@ -4,6 +4,8 @@ struct UserProfileRecord: Codable, Sendable, Hashable {
     let id: String
     let email: String?
     let name: String?
+    let crm: String?
+    let uf: String?
     let defaultWritingStyleId: String?
     let plan: String?
 }
@@ -38,5 +40,22 @@ enum ProfileService {
         let body = UpdateProfileBody(defaultWritingStyleId: styleId)
         let encoded = try JSONEncoder.api.encode(body)
         _ = try await APIClient.shared.patchRaw("/api/me/profile", body: encoded)
+    }
+
+    static func updateProfile(name: String, crm: String, uf: String) async throws {
+        guard let userId = await AuthService.shared.currentUserId() else {
+            throw AuthError.invalidResponse
+        }
+        let body = [
+            "name": name.trimmingCharacters(in: .whitespacesAndNewlines),
+            "crm": crm.trimmingCharacters(in: .whitespacesAndNewlines),
+            "uf": uf.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        ]
+        let encoded = try JSONEncoder().encode(body)
+        _ = try await SupabaseRESTClient.shared.patchRaw(
+            "/rest/v1/profiles",
+            query: ["id": "eq.\(userId)"],
+            body: encoded
+        )
     }
 }

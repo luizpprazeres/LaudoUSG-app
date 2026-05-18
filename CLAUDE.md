@@ -1,11 +1,31 @@
 # CLAUDE.md
 
 > Entrypoint para agentes (Claude Code, Codex/dex1) e devs retomando o projeto.
-> **Última atualização:** 2026-05-17 — Sprint 3 fechado.
+> **Última atualização:** 2026-05-18 — Sprint 10 funcional E2E.
 
 ## O que é
 
 App iOS nativo (SwiftUI) que permite médicos ultrassonografistas **ditarem achados e gerarem laudos por IA**. Frontend mobile de um produto que roda em produção em `laudousg.com`. Backend Next.js já existe e é consumido — **não recriar**.
+
+## Relação entre repos (LEIA — fonte comum de confusão)
+
+3 repos no `/Users/luizprazeres/`, com escopos bem distintos:
+
+| Path | O que é | Status |
+|---|---|---|
+| `laudousg/` | Web em PROD (laudousg.com) | **NÃO MEXER** — independente, não compartilha código |
+| `laudousg-swift/` | **VOCÊ ESTÁ AQUI** — app iOS nativo SwiftUI | Ativo, em desenvolvimento |
+| `laudousgmobile-def/` | Monorepo pnpm+turbo: `apps/api/` (backend Vivo em prod Vercel) + `apps/mobile/` (RN descontinuado, congelado) + `packages/db` + `packages/shared` | Backend vivo, RN congelado |
+
+**O que o app iOS consome do `laudousgmobile-def/apps/api/`:**
+- `POST /api/generate` (SSE), `POST /api/transcribe`, `GET /api/reports/[id]`, `GET|PATCH /api/me/profile`, `DELETE /api/me/delete-account`, `GET|POST /api/sala/*`
+
+**O que NÃO fazer:**
+- Não importar nem copiar literal de `laudousgmobile-def/apps/mobile/` — RN descontinuado, só serve de referência clínica (calculadoras IG/Doppler)
+- Não tentar consolidar com `~/laudousg/` — projetos separados por design
+- Não recriar backend — deploy em `laudousgmobile.vercel.app`, modificar via PR no monorepo
+
+Detalhes em `~/laudousgmobile-def/README.md`.
 
 ## Status atual
 
@@ -13,7 +33,9 @@ App iOS nativo (SwiftUI) que permite médicos ultrassonografistas **ditarem acha
 - ✅ Sprint 1: UI Shell navegável (Login, Generate, sheets, History/ReportDetail mock)
 - ✅ Sprint 2: **End-to-end Abdome Total funcionando** (login Supabase real, Whisper transcrição, SSE generate streaming, auto-save)
 - ✅ Sprint 3: Histórico real Supabase, edição inline auto-save, SettingsView style picker, SanityChecker (4 regras client-side, zero IA)
-- ⏳ Sprint 4 (próximo): Calculadoras (IG ACOG + Doppler FMF), fontes Inter+Barlow embarcadas, dark mode polimento, haptics, push do laudo gerado pro ReportDetail
+- ✅ Sprints 5-9 (commits): WYSIWYG editor, Sala do Auxiliar, redesign Generate, signup completo
+- ✅ Sprint 10 (2026-05-18): **Auth completa funcional E2E** — esqueci senha + editar perfil + excluir conta
+- ⏳ Sprint 11 (próximo): Termos de Uso + Política de Privacidade + Disclaimer expandido (App Store hygiene Parte 2)
 
 ## Leia ANTES de codar
 

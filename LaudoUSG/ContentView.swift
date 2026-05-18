@@ -1,11 +1,13 @@
 import SwiftUI
 
 struct ContentView: View {
+    let app: AppState
+
     var body: some View {
-        AppShellView()
+        AppShellView(app: app)
     }
 }
 
 #Preview {
-    ContentView()
+    ContentView(app: AppState())
 }

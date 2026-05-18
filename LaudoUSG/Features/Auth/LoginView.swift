@@ -9,83 +9,104 @@ struct LoginView: View {
     @State private var email: String = ""
     @State private var password: String = ""
     @State private var isLoading: Bool = false
+    @State private var isSignUpPresented: Bool = false
+    @State private var isResendingConfirmation: Bool = false
     @State private var errorMessage: String?
+    @State private var loginNeedsEmailConfirmation: Bool = false
     @FocusState private var focused: Field?
 
     enum Field { case email, password }
 
     var body: some View {
-        ZStack {
-            AppSurface.background.ignoresSafeArea()
+        NavigationStack {
+            ZStack {
+                AppSurface.background.ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                Spacer()
+                VStack(spacing: 0) {
+                    Spacer()
 
-                VStack(spacing: Spacing.xl) {
-                    VStack(spacing: Spacing.sm) {
-                        BrandLogo(size: .large)
+                        VStack(spacing: Spacing.xl) {
+                            Image("LaudoUSGLogoFont")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxWidth: 340)
+                                .accessibilityLabel("LaudoUSG")
+                                .padding(.bottom, Spacing.md)
 
-                        Text("Laudos de ultrassom com IA.")
-                            .font(TextStyle.bodyLargeMedium)
-                            .foregroundStyle(AppSurface.textSecondary)
-                    }
-                    .padding(.bottom, Spacing.md)
+                            VStack(spacing: Spacing.md) {
+                            labeledField(
+                                label: "Email",
+                                text: $email,
+                                field: .email,
+                                keyboard: .emailAddress,
+                                content: .username,
+                                placeholder: "voce@clinica.com"
+                            )
 
-                    VStack(spacing: Spacing.md) {
-                        labeledField(
-                            label: "Email",
-                            text: $email,
-                            field: .email,
-                            keyboard: .emailAddress,
-                            content: .username,
-                            placeholder: "voce@clinica.com"
-                        )
+                            labeledField(
+                                label: "Senha",
+                                text: $password,
+                                field: .password,
+                                isSecure: true,
+                                content: .password,
+                                placeholder: "Sua senha"
+                            )
 
-                        labeledField(
-                            label: "Senha",
-                            text: $password,
-                            field: .password,
-                            isSecure: true,
-                            content: .password,
-                            placeholder: "Sua senha"
-                        )
-
-                        if let errorMessage {
-                            errorBanner(errorMessage)
-                        }
-
-                        PrimaryButton(
-                            title: "Entrar",
-                            icon: nil,
-                            isLoading: isLoading,
-                            isDisabled: !isValid
-                        ) {
-                            performLogin()
-                        }
-
-                        HStack(spacing: Spacing.xxs) {
-                            Text("Sem conta?")
-                                .font(TextStyle.body)
-                                .foregroundStyle(AppSurface.textSecondary)
-                            Button("Crie em laudousg.com") {
-                                // Sprint 3: rota de signup ou link
+                            if let errorMessage {
+                                errorBanner(errorMessage)
                             }
-                            .font(TextStyle.bodyMedium)
-                            .foregroundStyle(BrandColor.primary)
+
+                            PrimaryButton(
+                                title: "Entrar",
+                                icon: nil,
+                                isLoading: isLoading,
+                                isDisabled: !isValid
+                            ) {
+                                performLogin()
+                            }
+
+                            HStack {
+                                Spacer()
+                                NavigationLink {
+                                    ForgotPasswordView()
+                                } label: {
+                                    Text("Esqueci minha senha")
+                                        .font(TextStyle.bodyMedium)
+                                        .foregroundStyle(BrandColor.primary)
+                                }
+                            }
+                            .padding(.top, Spacing.xs)
+
+                            HStack(spacing: Spacing.xxs) {
+                                Text("Não tem conta?")
+                                    .font(TextStyle.body)
+                                    .foregroundStyle(AppSurface.textSecondary)
+                                Button("Cadastre-se") {
+                                    Haptics.tap()
+                                    isSignUpPresented = true
+                                }
+                                .font(TextStyle.bodyMedium)
+                                .foregroundStyle(BrandColor.primary)
+                            }
+                            .padding(.top, Spacing.xs)
                         }
-                        .padding(.top, Spacing.xs)
                     }
-                }
-                .padding(.horizontal, Spacing.lg)
-
-                Spacer()
-
-                Text("Seus laudos são privados. Revise antes de assinar.")
-                    .multilineTextAlignment(.center)
-                    .font(TextStyle.caption)
-                    .foregroundStyle(AppSurface.textMuted)
                     .padding(.horizontal, Spacing.lg)
-                    .padding(.bottom, Spacing.md)
+
+                    Spacer()
+
+                    Text("Seus laudos são privados. Revise antes de assinar.")
+                        .multilineTextAlignment(.center)
+                        .font(TextStyle.caption)
+                        .foregroundStyle(AppSurface.textMuted)
+                        .padding(.horizontal, Spacing.lg)
+                        .padding(.bottom, Spacing.md)
+                }
+            }
+            .sheet(isPresented: $isSignUpPresented) {
+                NavigationStack {
+                    SignUpView()
+                }
             }
         }
     }
@@ -141,12 +162,22 @@ struct LoginView: View {
     }
 
     private func errorBanner(_ message: String) -> some View {
-        HStack(spacing: Spacing.xs) {
+        HStack(alignment: .top, spacing: Spacing.xs) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundStyle(SemanticColor.errorText)
-            Text(message)
-                .font(TextStyle.body)
-                .foregroundStyle(SemanticColor.errorText)
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                Text(message)
+                    .font(TextStyle.body)
+                    .foregroundStyle(SemanticColor.errorText)
+                if loginNeedsEmailConfirmation {
+                    Button(isResendingConfirmation ? "Reenviando…" : "Reenviar email de confirmação") {
+                        resendConfirmation()
+                    }
+                    .font(TextStyle.bodyMedium)
+                    .foregroundStyle(BrandColor.primary)
+                    .disabled(isResendingConfirmation)
+                }
+            }
             Spacer(minLength: 0)
         }
         .padding(Spacing.sm)
@@ -163,6 +194,7 @@ struct LoginView: View {
     private func performLogin() {
         guard isValid else { return }
         errorMessage = nil
+        loginNeedsEmailConfirmation = false
         isLoading = true
         focused = nil
         Task {
@@ -175,7 +207,13 @@ struct LoginView: View {
             } catch let error as AuthError {
                 await MainActor.run {
                     isLoading = false
-                    errorMessage = error.errorDescription
+                    let message = error.errorDescription ?? "Erro ao entrar."
+                    if isEmailNotConfirmed(message) {
+                        loginNeedsEmailConfirmation = true
+                        errorMessage = "Email ainda não confirmado."
+                    } else {
+                        errorMessage = message
+                    }
                 }
             } catch {
                 await MainActor.run {
@@ -184,6 +222,28 @@ struct LoginView: View {
                 }
             }
         }
+    }
+
+    private func resendConfirmation() {
+        guard !email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        isResendingConfirmation = true
+        Task { @MainActor in
+            do {
+                try await AuthService.shared.resendConfirmation(email: email)
+                Haptics.success()
+                errorMessage = "Email de confirmação reenviado."
+                loginNeedsEmailConfirmation = false
+            } catch {
+                Haptics.error()
+                errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            }
+            isResendingConfirmation = false
+        }
+    }
+
+    private func isEmailNotConfirmed(_ message: String) -> Bool {
+        let lower = message.lowercased()
+        return lower.contains("email_not_confirmed") || lower.contains("email not confirmed")
     }
 }
 

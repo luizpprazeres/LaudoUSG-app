@@ -10,7 +10,11 @@ enum APIError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidResponse: return "Resposta inválida do servidor."
-        case .http(let status, _): return "Erro do servidor (\(status))."
+        case .http(let status, let body):
+            if let body, !body.isEmpty {
+                return "Erro do servidor (\(status)): \(body)"
+            }
+            return "Erro do servidor (\(status))."
         case .decoding(let error): return "Falha ao ler resposta: \(error.localizedDescription)"
         case .transport(let error): return "Erro de conexão: \(error.localizedDescription)"
         case .unauthorized: return "Sessão expirada. Faça login novamente."
@@ -59,6 +63,12 @@ actor APIClient {
     func patchRaw(_ path: String, body: Data) async throws -> Data {
         try await performWithRefresh {
             makeRequest(path: path, method: "PATCH", body: body)
+        }
+    }
+
+    func delete(_ path: String) async throws {
+        _ = try await performWithRefresh {
+            makeRequest(path: path, method: "DELETE")
         }
     }
 

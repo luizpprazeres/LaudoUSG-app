@@ -9,9 +9,53 @@ import SwiftUI
 
 @main
 struct LaudoUSGApp: App {
+    @State private var appState = AppState()
+    @State private var linkErrorMessage: String?
+    @State private var recoverySession: AuthSession?
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(app: appState)
+                .onOpenURL { url in
+                    guard url.scheme == "laudousg" else { return }
+                    Task {
+                        do {
+                            let result = try await AuthService.shared.handleMagicLink(url)
+                            await MainActor.run {
+                                switch result {
+                                case .signedIn(let session):
+                                    appState.signIn(email: session.email, name: nil)
+                                    Haptics.success()
+                                case .passwordRecovery(let session):
+                                    recoverySession = session
+                                    Haptics.tap()
+                                }
+                            }
+                        } catch {
+                            await MainActor.run {
+                                linkErrorMessage = "Este link é inválido ou expirou."
+                                Haptics.error()
+                            }
+                        }
+                    }
+                }
+                .fullScreenCover(item: $recoverySession) { session in
+                    ResetPasswordView(session: session)
+                }
+                .alert("Link inválido", isPresented: Binding(
+                    get: { linkErrorMessage != nil },
+                    set: { if !$0 { linkErrorMessage = nil } }
+                )) {
+                    Button("OK", role: .cancel) {
+                        linkErrorMessage = nil
+                    }
+                } message: {
+                    Text(linkErrorMessage ?? "")
+                }
         }
     }
+}
+
+extension AuthSession: Identifiable {
+    var id: String { accessToken }
 }

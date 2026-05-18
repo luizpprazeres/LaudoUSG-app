@@ -69,6 +69,20 @@ actor SupabaseRESTClient {
         }
     }
 
+    func patchRaw(
+        _ path: String,
+        query: [String: String],
+        body: Data
+    ) async throws -> Data {
+        try await performWithRefresh {
+            var request = try makeRequest(path: path, method: "PATCH", query: query)
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
+            request.httpBody = body
+            return request
+        }
+    }
+
     func postRaw(
         _ path: String,
         query: [String: String],
