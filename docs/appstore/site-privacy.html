@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Política de Privacidade — LaudoUSG</title>
+<meta name="description" content="Política de Privacidade do LaudoUSG.">
+<style>
+:root {
+  --emerald: #059669;
+  --emerald-deep: #065F46;
+  --emerald-tint: #ECFDF5;
+  --gray-50: #F9FAFB;
+  --gray-200: #E5E7EB;
+  --gray-400: #9CA3AF;
+  --gray-600: #4B5563;
+  --gray-700: #374151;
+  --gray-900: #111827;
+  --warn: #B45309;
+  --warn-bg: #FFFBEB;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--gray-900);
+  background: var(--gray-50);
+  -webkit-font-smoothing: antialiased;
+}
+header.site {
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+  padding: 16px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+header.site .inner {
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+header.site a.brand {
+  color: var(--emerald);
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 18px;
+}
+header.site nav a {
+  color: var(--gray-600);
+  text-decoration: none;
+  margin-left: 16px;
+  font-size: 14px;
+}
+header.site nav a:hover { color: var(--emerald); }
+main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+  background: white;
+  border-left: 1px solid var(--gray-200);
+  border-right: 1px solid var(--gray-200);
+}
+h1 {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--gray-900);
+  margin: 0 0 24px 0;
+  letter-spacing: -0.02em;
+}
+h2 {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--gray-900);
+  margin: 40px 0 16px 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--gray-200);
+}
+h2:first-of-type { border-top: none; padding-top: 0; }
+h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 28px 0 12px 0;
+}
+h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin: 20px 0 8px 0;
+}
+p {
+  margin: 0 0 16px 0;
+  color: var(--gray-700);
+}
+strong { color: var(--gray-900); font-weight: 600; }
+em { font-style: italic; }
+ul {
+  margin: 0 0 16px 0;
+  padding-left: 24px;
+  color: var(--gray-700);
+}
+li { margin: 4px 0; }
+.numlist {
+  margin: 0 0 8px 0;
+  padding-left: 8px;
+  color: var(--gray-700);
+}
+a {
+  color: var(--emerald);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+a:hover { color: var(--emerald-deep); }
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 14px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 4px;
+  padding: 1px 6px;
+  color: var(--gray-900);
+}
+blockquote {
+  margin: 16px 0;
+  padding: 12px 20px;
+  background: var(--emerald-tint);
+  border-left: 3px solid var(--emerald);
+  border-radius: 4px;
+  color: var(--gray-700);
+  font-size: 15px;
+}
+blockquote p { margin: 0; color: var(--gray-700); }
+hr {
+  border: none;
+  border-top: 1px solid var(--gray-200);
+  margin: 32px 0;
+}
+.table-wrap {
+  overflow-x: auto;
+  margin: 16px 0;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+th, td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--gray-200);
+}
+th {
+  background: var(--gray-50);
+  font-weight: 600;
+  color: var(--gray-900);
+}
+tr:last-child td { border-bottom: none; }
+td { color: var(--gray-700); }
+.ok { color: var(--emerald); font-weight: 700; }
+.todo { color: var(--gray-400); }
+.warn { color: var(--warn); font-weight: 700; }
+footer.site {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+  text-align: center;
+  color: var(--gray-600);
+  font-size: 14px;
+}
+footer.site a { color: var(--gray-600); margin: 0 8px; }
+@media (max-width: 600px) {
+  h1 { font-size: 28px; }
+  h2 { font-size: 20px; }
+  main { padding: 24px 16px 48px; border-left: none; border-right: none; }
+}
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="inner">
+    <a href="/" class="brand">LaudoUSG</a>
+    <nav>
+      <a href="/terms">Termos</a>
+      <a href="/privacy">Privacidade</a>
+    </nav>
+  </div>
+</header>
+<main>
+<h1>Política de Privacidade — LaudoUSG</h1>
+<blockquote>
+<p><strong>Versão:</strong> 1.2 (draft Sprint 11 — aplicado P0 + 7 P1 prioritários da revisão jurídica interna)</p>
+<p><strong>Última atualização:</strong> 2026-05-18</p>
+<p><strong>Status:</strong> Rascunho profissional — REQUER revisão jurídica antes de produção</p>
+<p><strong>Conformidade:</strong> LGPD (Lei 13.709/2018), Marco Civil da Internet (Lei 12.965/2014), Apple App Store Review Guidelines §5.1</p>
+</blockquote>
+<hr>
+<h2>Status dos dados de identificação</h2>
+<ul>
+<li><span class="ok">✓</span> <strong>Controlador:</strong> Luiz Paulo de Souza Prazeres (Pessoa Física)</li>
+<li><span class="ok">✓</span> <strong>CPF:</strong> 108.964.194-20</li>
+<li><span class="ok">✓</span> <strong>Email institucional / DPO:</strong> contato@laudousg.com (criar alias <code>dpo@laudousg.com</code> quando possível)</li>
+<li><span class="ok">✓</span> <strong>Encarregado de Dados (DPO):</strong> Luiz Paulo de Souza Prazeres (acumula a função na fase inicial)</li>
+<li><span class="todo">○</span> <strong>CNPJ:</strong> pessoa jurídica em constituição (CNPJ ainda não emitido pela Receita Federal) — atualizar quando emitido</li>
+<li><span class="todo">○</span> <strong>Endereço:</strong> fornecido sob solicitação ao DPO (recomendação: não expor endereço residencial; quando formalizar CNPJ, usar endereço comercial)</li>
+<li><span class="ok">✓</span> <strong>Data de vigência:</strong> 2026-05-18</li>
+</ul>
+<hr>
+<h2>1. Introdução</h2>
+<p>Esta Política de Privacidade ("Política") descreve como <strong>Luiz Paulo de Souza Prazeres</strong> ("LaudoUSG", "nós", "Controlador"), CPF 108.964.194-20 (Pessoa Física; pessoa jurídica em constituição), coleta, utiliza, compartilha e protege os dados pessoais dos usuários do aplicativo <strong>LaudoUSG</strong>.</p>
+<p>Esta Política é parte integrante dos <a href="./TERMS_OF_USE.md">Termos de Uso</a> e está em conformidade com:</p>
+<ul>
+<li><strong>Lei Geral de Proteção de Dados Pessoais</strong> — LGPD (Lei nº 13.709/2018);</li>
+<li><strong>Marco Civil da Internet</strong> (Lei nº 12.965/2014);</li>
+<li><strong>Código de Defesa do Consumidor</strong> (Lei nº 8.078/1990);</li>
+<li><strong>Apple App Store Review Guidelines</strong> §5.1.</li>
+</ul>
+<h2>2. Quem somos (Controlador)</h2>
+<p><strong>Controlador dos dados:</strong> Luiz Paulo de Souza Prazeres <strong>CPF:</strong> 108.964.194-20 <strong>Natureza:</strong> Pessoa Física; pessoa jurídica em constituição (CNPJ ainda não emitido pela Receita Federal) <strong>Endereço:</strong> fornecido sob solicitação ao Encarregado de Dados (DPO) via email <strong>Email institucional:</strong> contato@laudousg.com</p>
+<p><strong>Encarregado de Proteção de Dados (DPO):</strong></p>
+<ul>
+<li><strong>Nome:</strong> Luiz Paulo de Souza Prazeres</li>
+<li><strong>Email:</strong> contato@laudousg.com</li>
+</ul>
+<h2>3. A quem se aplica esta Política</h2>
+<p>A todos os Usuários do LaudoUSG: profissionais médicos cadastrados e ativos, conforme <a href="./TERMS_OF_USE.md">Termos de Uso</a>.</p>
+<p><strong>Importante — Dados de Pacientes (minimização por design):</strong> o LaudoUSG é projetado para <strong>não solicitar, não coletar intencionalmente e não armazenar</strong> dados identificáveis de pacientes (nome, CPF, RG, endereço, foto, prontuário). As funcionalidades operam sobre <strong>achados clínicos despersonalizados</strong>.</p>
+<p>Os Termos de Uso (Cláusula 5.2) <strong>vedam expressamente</strong> que o Usuário insira dados identificáveis de paciente. Caso o Usuário descumpra esta vedação:</p>
+<ul>
+<li>O Usuário <strong>permanece como controlador exclusivo</strong> desses dados perante o titular e a ANPD (LGPD Art. 5º, VI);</li>
+<li>O Controlador poderá detectar, anonimizar ou excluir tais inserções, e suspender a Conta;</li>
+<li>Em qualquer cenário incidental, o Controlador atua <strong>estritamente nos limites técnicos necessários</strong> à prestação do Serviço, sem finalidade própria sobre tais dados.</li>
+</ul>
+<h2>4. Dados Pessoais que Coletamos</h2>
+<h3>4.1 Dados Cadastrais (informados pelo Usuário)</h3>
+<div class="table-wrap"><table><thead><tr>
+<th>Dado</th>
+<th>Finalidade</th>
+<th>Base Legal</th>
+</tr></thead><tbody>
+<tr>
+<td>Email</td>
+<td>Autenticação, comunicação transacional, recuperação de senha</td>
+<td>Execução de contrato (Art. 7º, V)</td>
+</tr>
+<tr>
+<td>Senha (hash)</td>
+<td>Autenticação</td>
+<td>Execução de contrato (Art. 7º, V)</td>
+</tr>
+<tr>
+<td>Nome completo</td>
+<td>Personalização da experiência, identificação no laudo</td>
+<td>Execução de contrato (Art. 7º, V)</td>
+</tr>
+<tr>
+<td>CRM</td>
+<td>Validação de elegibilidade profissional</td>
+<td>Execução de contrato (Art. 7º, V)</td>
+</tr>
+<tr>
+<td>UF do CRM</td>
+<td>Validação de elegibilidade profissional</td>
+<td>Execução de contrato (Art. 7º, V)</td>
+</tr>
+<tr>
+<td>Aceite dos Termos (data/hora)</td>
+<td>Comprovação legal</td>
+<td>Cumprimento de obrigação legal (Art. 7º, II)</td>
+</tr>
+</tbody></table></div>
+<h3>4.2 Conteúdo Produzido pelo Usuário (durante uso)</h3>
+<div class="table-wrap"><table><thead><tr>
+<th>Dado</th>
+<th>Finalidade</th>
+<th>Base Legal</th>
+</tr></thead><tbody>
+<tr>
+<td>Texto digitado/ditado de achados</td>
+<td>Geração de laudo</td>
+<td>Execução de contrato (Art. 7º, V)</td>
+</tr>
+<tr>
+<td>Áudio gravado (temporário)</td>
+<td>Transcrição via Whisper</td>
+<td>Execução de contrato (Art. 7º, V)</td>
+</tr>
+<tr>
+<td>Laudos gerados</td>
+<td>Armazenamento no histórico do Usuário</td>
+<td>Execução de contrato (Art. 7º, V)</td>
+</tr>
+<tr>
+<td>Frases customizadas</td>
+<td>Reutilização pelo Usuário</td>
+<td>Execução de contrato (Art. 7º, V)</td>
+</tr>
+<tr>
+<td>Configurações (estilo, idioma)</td>
+<td>Personalização</td>
+<td>Execução de contrato (Art. 7º, V)</td>
+</tr>
+</tbody></table></div>
+<p><strong>Áudio:</strong> o arquivo de áudio é <strong>enviado para transcrição</strong> e <strong>descartado imediatamente após</strong> a transcrição bem-sucedida. Não armazenamos áudios em nossos servidores.</p>
+<h3>4.3 Dados Técnicos (coletados automaticamente)</h3>
+<div class="table-wrap"><table><thead><tr>
+<th>Dado</th>
+<th>Finalidade</th>
+<th>Base Legal</th>
+</tr></thead><tbody>
+<tr>
+<td>Endereço IP (registro de acesso)</td>
+<td>Segurança, auditoria, cumprimento Marco Civil</td>
+<td>Cumprimento de obrigação legal (Art. 7º, II); Legítimo interesse (Art. 7º, IX)</td>
+</tr>
+<tr>
+<td>Modelo do dispositivo, versão iOS, versão do app</td>
+<td>Diagnóstico de erros, compatibilidade</td>
+<td>Legítimo interesse (Art. 7º, IX)</td>
+</tr>
+<tr>
+<td>Logs de erro e crash</td>
+<td>Diagnóstico técnico</td>
+<td>Legítimo interesse (Art. 7º, IX)</td>
+</tr>
+<tr>
+<td>Identificador de instalação do app</td>
+<td>Sessão e segurança</td>
+<td>Execução de contrato (Art. 7º, V)</td>
+</tr>
+</tbody></table></div>
+<h2>5. Dados que NÃO Coletamos (compromisso)</h2>
+<p><strong>O LaudoUSG NÃO coleta:</strong></p>
+<ul>
+<li>Dados identificáveis de <strong>pacientes</strong> (nome, CPF, RG, endereço, telefone, foto, prontuário). Os Termos de Uso vedam expressamente que o Usuário insira tais dados;</li>
+<li><strong>Imagens médicas</strong> (ultrassonografias, exames de imagem);</li>
+<li><strong>Localização geográfica</strong> precisa do Usuário (não solicitamos permissão de localização);</li>
+<li><strong>Contatos</strong>, calendário, biblioteca de fotos do dispositivo;</li>
+<li><strong>Identificadores publicitários</strong> (Apple IDFA);</li>
+<li><strong>Dados biométricos</strong> (Face ID/Touch ID são processados localmente pelo iOS, não saem do dispositivo);</li>
+<li><strong>Dados sensíveis</strong> além do estritamente necessário (Art. 5º, II LGPD).</li>
+</ul>
+<p><strong>Não realizamos:</strong> rastreamento publicitário, perfilhamento para marketing de terceiros, fingerprinting, web tracking.</p>
+<h2>6. Como Coletamos os Dados</h2>
+<p class="numlist">1. <strong>Diretamente do Usuário:</strong> ao se cadastrar, autenticar-se ou utilizar o Aplicativo;</p>
+<p class="numlist">2. <strong>Automaticamente:</strong> durante o uso do Aplicativo, por meios técnicos (logs de servidor, identificador de sessão);</p>
+<p class="numlist">3. <strong>De terceiros:</strong> <strong>NÃO coletamos dados de fontes terceiras</strong>.</p>
+<h2>7. Finalidades do Tratamento</h2>
+<p>Os dados coletados são utilizados exclusivamente para:</p>
+<ul>
+<li><strong>Prestar o Serviço:</strong> autenticação, geração de laudos, armazenamento de histórico, sincronização com a Sala do Auxiliar;</li>
+<li><strong>Comunicação transacional:</strong> confirmação de email, recuperação de senha, notificações operacionais críticas;</li>
+<li><strong>Segurança e prevenção de fraude:</strong> detecção de uso indevido, suspensão de contas comprometidas, registros para auditoria;</li>
+<li><strong>Melhorias do produto:</strong> análise estatística <strong>agregada e anonimizada</strong> sobre uso (não vinculada a Usuário identificável);</li>
+<li><strong>Cumprimento de obrigações legais:</strong> retenção mínima exigida por lei, atendimento a ordens judiciais.</li>
+</ul>
+<p><strong>Não utilizamos</strong> dados pessoais para marketing comportamental, perfilhamento ou venda a terceiros.</p>
+<h2>8. Compartilhamento com Terceiros (Operadores)</h2>
+<p>Para operar o Serviço, contratamos provedores que atuam como <strong>Operadores</strong> (LGPD Art. 5º, VII), processando dados <strong>em nosso nome</strong>, conforme nossas instruções:</p>
+<div class="table-wrap"><table><thead><tr>
+<th>Operador</th>
+<th>Função</th>
+<th>Local de processamento</th>
+<th>Dados</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>Supabase</strong></td>
+<td>Banco de dados, autenticação, armazenamento</td>
+<td>EUA (AWS us-east-1)</td>
+<td>Cadastrais, conteúdo, logs</td>
+</tr>
+<tr>
+<td><strong>Vercel</strong></td>
+<td>Hospedagem do backend Next.js</td>
+<td>EUA / multi-região</td>
+<td>Requisições, logs técnicos</td>
+</tr>
+<tr>
+<td><strong>OpenAI</strong></td>
+<td>Transcrição de áudio (Whisper), geração de texto (gpt-4.1-mini)</td>
+<td>EUA</td>
+<td>Áudio (temporário), texto do ditado</td>
+</tr>
+<tr>
+<td><strong>Groq</strong></td>
+<td>Fallback de geração de texto (llama-3.3-70b)</td>
+<td>EUA</td>
+<td>Texto do ditado</td>
+</tr>
+<tr>
+<td><strong>Resend</strong></td>
+<td>Envio de emails transacionais</td>
+<td>EUA / Europa</td>
+<td>Email, conteúdo do email</td>
+</tr>
+<tr>
+<td><strong>Apple</strong></td>
+<td>Distribuição do app e serviços da plataforma iOS</td>
+<td>Global, conforme termos da Apple</td>
+<td>Dados técnicos e de distribuição tratados pela Apple como provedora da plataforma</td>
+</tr>
+</tbody></table></div>
+<p><strong>Funcionalidades futuras</strong> (como push notifications, analytics adicionais ou billing) deverão ser <strong>refletidas nesta Política antes de entrarem em produção</strong>, quando envolverem novos dados, operadores ou finalidades.</p>
+<p>O Controlador busca utilizar fornecedores que disponibilizem termos, políticas, acordos de tratamento de dados ou mecanismos contratuais compatíveis com proteção de dados, segurança da informação e confidencialidade. Sempre que aplicável, tais fornecedores devem tratar dados apenas para as finalidades contratadas, adotar medidas técnicas e organizacionais adequadas e <strong>não vender</strong> dados pessoais tratados em nome do LaudoUSG.</p>
+<p><strong>Não vendemos seus dados.</strong> Nunca.</p>
+<h2>9. Transferência Internacional de Dados</h2>
+<p>Alguns Operadores armazenam ou processam dados <strong>fora do território brasileiro</strong> (predominantemente EUA). Tais transferências são realizadas com fundamento em:</p>
+<ul>
+<li><strong>Cláusulas contratuais padrão</strong> com os Operadores (LGPD Art. 33, II);</li>
+<li><strong>Garantias específicas</strong> de proteção equivalente à LGPD;</li>
+<li>Contratos que vinculam os Operadores aos princípios da LGPD.</li>
+</ul>
+<p>Você pode solicitar mais informações sobre as garantias por meio do contato@laudousg.com.</p>
+<h2>10. Tempo de Retenção</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Categoria</th>
+<th>Prazo de retenção</th>
+<th>Fundamento</th>
+</tr></thead><tbody>
+<tr>
+<td>Dados de Conta (perfil, email, CRM)</td>
+<td>Enquanto a Conta estiver ativa</td>
+<td>Execução de contrato</td>
+</tr>
+<tr>
+<td>Laudos e Conteúdo do Usuário</td>
+<td>Enquanto a Conta estiver ativa</td>
+<td>Execução de contrato</td>
+</tr>
+<tr>
+<td>Após exclusão da Conta</td>
+<td><strong>Removidos imediatamente em cascata</strong> (exceto logs técnicos abaixo)</td>
+<td>Solicitação do titular</td>
+</tr>
+<tr>
+<td>Logs de acesso (IP + timestamp)</td>
+<td><strong>6 meses</strong></td>
+<td>Marco Civil Art. 15</td>
+</tr>
+<tr>
+<td>Logs de erro / crash</td>
+<td>90 dias</td>
+<td>Legítimo interesse (segurança)</td>
+</tr>
+<tr>
+<td>Backups</td>
+<td>Rotação <strong>mensal</strong> (dados de Conta excluída saem do último backup em até 30 dias)</td>
+<td>Boas práticas de segurança</td>
+</tr>
+<tr>
+<td>Dados necessários a defesa em processos</td>
+<td>Até trânsito em julgado + prescrição</td>
+<td>Cumprimento de obrigação legal</td>
+</tr>
+</tbody></table></div>
+<p><strong>Exclusão de Conta:</strong> o Usuário pode excluir sua Conta a qualquer momento via <strong>Configurações → Zona de risco → "Excluir minha conta"</strong>. A exclusão é <strong>definitiva e em cascata</strong> (perfil, laudos, frases, sessões), restando apenas logs de acesso retidos pelo prazo legal mínimo.</p>
+<h2>11. Seus Direitos como Titular (LGPD Art. 18)</h2>
+<p>Você tem direito a, a qualquer momento e mediante requisição:</p>
+<p class="numlist">1. <strong>Confirmação</strong> da existência de tratamento de dados;</p>
+<p class="numlist">2. <strong>Acesso</strong> aos seus dados;</p>
+<p class="numlist">3. <strong>Correção</strong> de dados incompletos, inexatos ou desatualizados;</p>
+<p class="numlist">4. <strong>Anonimização, bloqueio ou eliminação</strong> de dados desnecessários, excessivos ou tratados em desconformidade;</p>
+<p class="numlist">5. <strong>Portabilidade</strong> dos dados a outro fornecedor (mediante requisição expressa);</p>
+<p class="numlist">6. <strong>Eliminação</strong> dos dados pessoais tratados com consentimento (exceto hipóteses do Art. 16 LGPD);</p>
+<p class="numlist">7. <strong>Informação</strong> sobre entidades públicas e privadas com as quais compartilhamos dados;</p>
+<p class="numlist">8. <strong>Informação</strong> sobre a possibilidade de não fornecer consentimento e as consequências;</p>
+<p class="numlist">9. <strong>Revogação do consentimento</strong> (quando aplicável);</p>
+<p class="numlist">10. <strong>Oposição</strong> ao tratamento realizado com base no legítimo interesse, em caso de descumprimento da LGPD;</p>
+<p class="numlist">11. <strong>Revisão</strong> de decisões automatizadas que afetem seus interesses (LGPD Art. 20).</p>
+<h3>Como exercer seus direitos:</h3>
+<ul>
+<li><strong>Exclusão imediata da Conta:</strong> dentro do app, em Configurações → "Excluir minha conta";</li>
+<li><strong>Outras solicitações:</strong> email contato@laudousg.com, com identificação por meio do email cadastrado.</li>
+</ul>
+<p><strong>Prazo de resposta:</strong> até <strong>15 (quinze) dias</strong> úteis para requisições recebidas via DPO.</p>
+<h2>12. Segurança dos Dados</h2>
+<p>Aplicamos medidas técnicas e organizacionais para proteger seus dados, incluindo:</p>
+<ul>
+<li><strong>Criptografia em trânsito</strong> (TLS 1.3) em todas as comunicações entre App e backend;</li>
+<li><strong>Criptografia em repouso</strong> (AES-256) no banco de dados Supabase;</li>
+<li><strong>Autenticação JWT</strong> com expiração curta e refresh tokens;</li>
+<li><strong>Row-Level Security (RLS)</strong> no banco de dados, garantindo que cada Usuário acesse <strong>apenas seus próprios dados</strong>;</li>
+<li><strong>Senhas armazenadas com hash</strong> (algoritmo bcrypt via Supabase Auth) — nunca em texto claro;</li>
+<li><strong>Auditoria de acessos</strong> e monitoramento de atividades suspeitas;</li>
+<li><strong>Backups regulares</strong> com retenção controlada;</li>
+<li><strong>Acesso restrito</strong> aos dados por colaboradores apenas quando estritamente necessário, sob obrigação contratual de confidencialidade.</li>
+</ul>
+<p><strong>Em caso de incidente de segurança</strong> (vazamento de dados), seguiremos o procedimento da LGPD Art. 48: comunicaremos a Autoridade Nacional de Proteção de Dados (ANPD) e os titulares afetados em prazo razoável, indicando natureza dos dados, titulares envolvidos, medidas adotadas e riscos.</p>
+<h2>13. Cookies e Identificadores</h2>
+<p>O LaudoUSG é um <strong>aplicativo nativo iOS</strong> — não utiliza cookies de navegação web.</p>
+<p>Utilizamos:</p>
+<ul>
+<li><strong>Identificador de instalação</strong> do app (gerado localmente, vinculado à Conta do Usuário) — necessário para sessão e segurança;</li>
+<li><strong>Tokens JWT</strong> armazenados localmente (UserDefaults) para manter sessão autenticada.</li>
+</ul>
+<p><strong>Não utilizamos:</strong></p>
+<ul>
+<li>Apple IDFA (Identifier for Advertisers) — não exibimos publicidade;</li>
+<li>Cookies de rastreamento publicitário de terceiros;</li>
+<li>SDK de analytics comportamental (Google Analytics, Facebook SDK, etc.).</li>
+</ul>
+<p><strong>App Tracking Transparency (Apple):</strong> o LaudoUSG <strong>não realiza rastreamento</strong> entre apps/websites de terceiros, portanto não exibimos o prompt de ATT.</p>
+<h2>14. Crianças e Adolescentes</h2>
+<p>O LaudoUSG é destinado <strong>exclusivamente a profissionais médicos maiores de 18 anos</strong> com registro ativo em Conselho Regional de Medicina. <strong>Não coletamos</strong> intencionalmente dados de menores.</p>
+<p>Caso tomemos conhecimento de cadastro indevido de menor, a Conta será <strong>imediatamente encerrada</strong> e os dados, <strong>eliminados</strong>.</p>
+<h2>15. Decisões Automatizadas</h2>
+<p>A geração de texto por IA do LaudoUSG <strong>não constitui decisão automatizada</strong> que afete direitos do Usuário, nos termos da LGPD Art. 20. A IA apenas <strong>propõe conteúdo</strong>; o médico Usuário <strong>revisa, edita e valida</strong> o laudo final, sendo o único responsável pela decisão clínica.</p>
+<p>Você tem o direito de solicitar revisão dos critérios e processos do tratamento de dados por IA enviando email a contato@laudousg.com.</p>
+<h2>16. Alterações desta Política</h2>
+<p>Esta Política pode ser atualizada periodicamente. Alterações materiais serão comunicadas:</p>
+<ul>
+<li>Por <strong>email</strong> cadastrado, com antecedência mínima de <strong>15 dias</strong>;</li>
+<li>Por <strong>banner in-app</strong>, no primeiro acesso após a alteração;</li>
+<li>Com atualização da data no topo desta Política.</li>
+</ul>
+<p>Recomenda-se revisar esta Política periodicamente.</p>
+<h2>17. Autoridade Nacional de Proteção de Dados (ANPD)</h2>
+<p>Caso entenda que seus direitos não foram atendidos, você pode reclamar diretamente à <strong>Autoridade Nacional de Proteção de Dados (ANPD)</strong>:</p>
+<ul>
+<li><strong>Website:</strong> https://www.gov.br/anpd</li>
+<li><strong>Canal de denúncias:</strong> Fala.BR</li>
+</ul>
+<h2>18. Contato</h2>
+<p>Dúvidas, solicitações ou exercício de direitos:</p>
+<ul>
+<li><strong>Encarregado de Dados (DPO):</strong> Luiz Paulo de Souza Prazeres</li>
+<li><strong>Email DPO:</strong> contato@laudousg.com</li>
+<li><strong>Email institucional:</strong> contato@laudousg.com</li>
+<li><strong>Endereço postal:</strong> fornecido sob solicitação ao Encarregado de Dados (DPO) via email</li>
+</ul>
+<hr>
+<p><strong>Data de vigência desta versão:</strong> 2026-05-18 <strong>Versão:</strong> 1.2</p>
+</main>
+<footer class="site">
+  <p>© 2026 Luiz Paulo de Souza Prazeres — LaudoUSG</p>
+  <p><a href="/">Início</a> · <a href="/terms">Termos de Uso</a> · <a href="/privacy">Política de Privacidade</a> · <a href="mailto:contato@laudousg.com">Contato</a></p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Termos de Uso — LaudoUSG</title>
+<meta name="description" content="Termos de Uso do LaudoUSG.">
+<style>
+:root {
+  --emerald: #059669;
+  --emerald-deep: #065F46;
+  --emerald-tint: #ECFDF5;
+  --gray-50: #F9FAFB;
+  --gray-200: #E5E7EB;
+  --gray-400: #9CA3AF;
+  --gray-600: #4B5563;
+  --gray-700: #374151;
+  --gray-900: #111827;
+  --warn: #B45309;
+  --warn-bg: #FFFBEB;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--gray-900);
+  background: var(--gray-50);
+  -webkit-font-smoothing: antialiased;
+}
+header.site {
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+  padding: 16px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+header.site .inner {
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+header.site a.brand {
+  color: var(--emerald);
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 18px;
+}
+header.site nav a {
+  color: var(--gray-600);
+  text-decoration: none;
+  margin-left: 16px;
+  font-size: 14px;
+}
+header.site nav a:hover { color: var(--emerald); }
+main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+  background: white;
+  border-left: 1px solid var(--gray-200);
+  border-right: 1px solid var(--gray-200);
+}
+h1 {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--gray-900);
+  margin: 0 0 24px 0;
+  letter-spacing: -0.02em;
+}
+h2 {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--gray-900);
+  margin: 40px 0 16px 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--gray-200);
+}
+h2:first-of-type { border-top: none; padding-top: 0; }
+h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 28px 0 12px 0;
+}
+h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin: 20px 0 8px 0;
+}
+p {
+  margin: 0 0 16px 0;
+  color: var(--gray-700);
+}
+strong { color: var(--gray-900); font-weight: 600; }
+em { font-style: italic; }
+ul {
+  margin: 0 0 16px 0;
+  padding-left: 24px;
+  color: var(--gray-700);
+}
+li { margin: 4px 0; }
+.numlist {
+  margin: 0 0 8px 0;
+  padding-left: 8px;
+  color: var(--gray-700);
+}
+a {
+  color: var(--emerald);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+a:hover { color: var(--emerald-deep); }
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 14px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 4px;
+  padding: 1px 6px;
+  color: var(--gray-900);
+}
+blockquote {
+  margin: 16px 0;
+  padding: 12px 20px;
+  background: var(--emerald-tint);
+  border-left: 3px solid var(--emerald);
+  border-radius: 4px;
+  color: var(--gray-700);
+  font-size: 15px;
+}
+blockquote p { margin: 0; color: var(--gray-700); }
+hr {
+  border: none;
+  border-top: 1px solid var(--gray-200);
+  margin: 32px 0;
+}
+.table-wrap {
+  overflow-x: auto;
+  margin: 16px 0;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+th, td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--gray-200);
+}
+th {
+  background: var(--gray-50);
+  font-weight: 600;
+  color: var(--gray-900);
+}
+tr:last-child td { border-bottom: none; }
+td { color: var(--gray-700); }
+.ok { color: var(--emerald); font-weight: 700; }
+.todo { color: var(--gray-400); }
+.warn { color: var(--warn); font-weight: 700; }
+footer.site {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+  text-align: center;
+  color: var(--gray-600);
+  font-size: 14px;
+}
+footer.site a { color: var(--gray-600); margin: 0 8px; }
+@media (max-width: 600px) {
+  h1 { font-size: 28px; }
+  h2 { font-size: 20px; }
+  main { padding: 24px 16px 48px; border-left: none; border-right: none; }
+}
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="inner">
+    <a href="/" class="brand">LaudoUSG</a>
+    <nav>
+      <a href="/terms">Termos</a>
+      <a href="/privacy">Privacidade</a>
+    </nav>
+  </div>
+</header>
+<main>
+<h1>Termos de Uso — LaudoUSG</h1>
+<blockquote>
+<p><strong>Versão:</strong> 1.2 (draft Sprint 11 — aplicado P0 + 7 P1 prioritários da revisão jurídica interna)</p>
+<p><strong>Última atualização:</strong> 2026-05-18</p>
+<p><strong>Status:</strong> Rascunho profissional — REQUER revisão jurídica antes de produção</p>
+</blockquote>
+<hr>
+<h2>Status dos dados de identificação</h2>
+<ul>
+<li><span class="ok">✓</span> <strong>Controlador:</strong> Luiz Paulo de Souza Prazeres (Pessoa Física)</li>
+<li><span class="ok">✓</span> <strong>CPF:</strong> 108.964.194-20</li>
+<li><span class="ok">✓</span> <strong>Email institucional:</strong> contato@laudousg.com</li>
+<li><span class="ok">✓</span> <strong>Email DPO:</strong> contato@laudousg.com (mesmo do institucional; criar alias <code>dpo@laudousg.com</code> quando possível)</li>
+<li><span class="todo">○</span> <strong>CNPJ:</strong> pessoa jurídica em constituição (CNPJ ainda não emitido pela Receita Federal) — atualizar quando emitido</li>
+<li><span class="todo">○</span> <strong>Endereço:</strong> fornecido sob solicitação ao DPO (recomendação de segurança: não expor endereço residencial; quando formalizar CNPJ, usar endereço comercial)</li>
+<li><span class="todo">○</span> <strong>Foro:</strong> definir cidade preferencial (sugestão: domicílio do Controlador)</li>
+<li><span class="ok">✓</span> <strong>Data de vigência:</strong> 2026-05-18</li>
+</ul>
+<hr>
+<h2>1. Aceitação dos Termos</h2>
+<p>Estes Termos de Uso ("Termos") regulam o acesso e uso do aplicativo <strong>LaudoUSG</strong> ("Aplicativo", "Serviço", "LaudoUSG") fornecido por <strong>Luiz Paulo de Souza Prazeres</strong>, CPF 108.964.194-20 (Pessoa Física; pessoa jurídica em constituição), com sede em fornecido sob solicitação ao Encarregado de Dados (DPO) via email ("Controlador", "nós").</p>
+<p>Ao criar uma conta, autenticar-se ou utilizar o LaudoUSG de qualquer forma, você declara que <strong>leu, compreendeu e aceita integralmente</strong> estes Termos, bem como nossa <a href="./PRIVACY_POLICY.md">Política de Privacidade</a> e o <a href="./MEDICAL_DISCLAIMER.md">Disclaimer Médico</a>.</p>
+<p>Se você não concorda com qualquer cláusula, <strong>não utilize o LaudoUSG</strong>.</p>
+<h2>2. Definições</h2>
+<ul>
+<li><strong>LaudoUSG:</strong> aplicativo móvel iOS de apoio à elaboração de laudos de ultrassonografia, incluindo geração assistida por inteligência artificial.</li>
+<li><strong>Usuário:</strong> profissional médico cadastrado e ativo, titular de registro válido no Conselho Regional de Medicina (CRM).</li>
+<li><strong>Laudo:</strong> documento médico elaborado pelo Usuário com auxílio do LaudoUSG.</li>
+<li><strong>Conta:</strong> cadastro pessoal e intransferível no LaudoUSG, vinculado ao email e CRM do Usuário.</li>
+<li><strong>Conteúdo do Usuário:</strong> ditados, textos, frases customizadas, edições e laudos produzidos pelo Usuário no LaudoUSG.</li>
+</ul>
+<h2>3. Elegibilidade</h2>
+<p>Você declara, sob as penas da lei, que:</p>
+<p class="numlist">1. É <strong>médico</strong> com registro <strong>ATIVO</strong> em Conselho Regional de Medicina brasileiro;</p>
+<p class="numlist">2. Possui <strong>CRM e UF válidos</strong>, conforme cadastrado;</p>
+<p class="numlist">3. É <strong>maior de 18 anos</strong> e tem plena <strong>capacidade civil</strong>;</p>
+<p class="numlist">4. Os dados fornecidos no cadastro são <strong>verdadeiros, completos e atualizados</strong>;</p>
+<p class="numlist">5. Tem <strong>autoridade legal</strong> para celebrar este contrato.</p>
+<p>O Controlador reserva-se o direito de verificar a validade do CRM informado junto ao respectivo Conselho. Cadastros com dados falsos ou inválidos serão <strong>encerrados sem aviso prévio</strong>.</p>
+<h2>4. Cadastro e Conta</h2>
+<h3>4.1 Criação</h3>
+<p>O cadastro requer email válido, senha, nome completo, CRM e UF. O cadastro só é finalizado após <strong>confirmação de email</strong> via link enviado por correio eletrônico.</p>
+<h3>4.2 Segurança da Conta</h3>
+<p>Você é o <strong>único responsável</strong> pela segurança da sua senha e por todas as atividades realizadas em sua Conta. Recomenda-se:</p>
+<ul>
+<li>Senha forte (mínimo 8 caracteres, com letras e números);</li>
+<li>Não compartilhar credenciais;</li>
+<li>Notificar imediatamente o Controlador em caso de uso não autorizado, pelo email contato@laudousg.com.</li>
+</ul>
+<h3>4.3 Conta Pessoal e Intransferível</h3>
+<p>A Conta é de uso <strong>estritamente pessoal</strong>. É vedado:</p>
+<ul>
+<li>Compartilhar credenciais com terceiros;</li>
+<li>Permitir uso da Conta por outro profissional;</li>
+<li>Transferir a Conta a outra pessoa.</li>
+</ul>
+<p>O LaudoUSG oferece o recurso <strong>"Sala do Auxiliar"</strong> como forma autorizada de compartilhamento temporário de sessões de laudo com auxiliares de consultório. O Usuário titular permanece responsável por <strong>autorizar, supervisionar e encerrar</strong> esse acesso, bem como por garantir que o auxiliar:</p>
+<ul>
+<li>esteja <strong>vinculado à sua rotina profissional</strong>;</li>
+<li>atue sob <strong>dever de confidencialidade</strong>;</li>
+<li>acesse <strong>apenas o conteúdo necessário</strong> à execução da atividade delegada.</li>
+</ul>
+<p>O compartilhamento da sessão <strong>não transfere</strong> ao auxiliar responsabilidade técnica pelo laudo nem reduz a responsabilidade profissional do médico Usuário.</p>
+<h2>5. Uso Aceitável</h2>
+<h3>5.1 Você concorda em usar o LaudoUSG <strong>exclusivamente</strong> para:</h3>
+<ul>
+<li>Apoiar a elaboração de laudos de ultrassonografia no exercício legítimo da medicina;</li>
+<li>Atividades clínicas conforme regulamentação do Conselho Federal de Medicina (CFM).</li>
+</ul>
+<h3>5.2 É <strong>expressamente proibido</strong>:</h3>
+<ul>
+<li>Inserir, no ditado ou em qualquer campo do LaudoUSG, <strong>dados identificáveis de pacientes</strong> (nome completo, CPF, RG, endereço, telefone, foto, prontuário). O Usuário <strong>deve anonimizar</strong> o conteúdo antes da inserção;</li>
+<li>Inserir <strong>imagens</strong> de ultrassonografia ou qualquer imagem médica;</li>
+<li>Utilizar o LaudoUSG para fins ilícitos, fraudulentos ou que violem direitos de terceiros;</li>
+<li>Realizar engenharia reversa, descompilar, decifrar ou tentar extrair o código-fonte do Aplicativo;</li>
+<li>Acessar o Serviço por meios automatizados (bots, scrapers) sem autorização expressa;</li>
+<li>Sobrecarregar deliberadamente os servidores ou comprometer a segurança;</li>
+<li>Fornecer dados cadastrais falsos ou de terceiros sem autorização;</li>
+<li>Utilizar o LaudoUSG para diagnóstico de condições de saúde do próprio Usuário ou de seus dependentes.</li>
+</ul>
+<h3>5.3 Tratamento de Dados de Pacientes — Minimização por Design</h3>
+<p>O LaudoUSG é projetado segundo o princípio da <strong>minimização por design</strong> (LGPD Art. 6º, III): o Controlador <strong>não solicita, não coleta intencionalmente e não armazena</strong> dados identificáveis de pacientes. As funcionalidades do Aplicativo são estruturadas para operar a partir de <strong>achados clínicos despersonalizados</strong> (medidas, características técnicas, descrição de imagem), sem necessidade de identificar paciente.</p>
+<p>Como <strong>profissional médico</strong>, o Usuário é o <strong>controlador</strong> dos dados de seus pacientes (LGPD Art. 5º, VI) no contexto da prestação clínica. Ao <strong>não inserir</strong> dados identificáveis de paciente no LaudoUSG, o Usuário cumpre seu dever legal de proteção desses dados.</p>
+<p>Caso o Usuário, em <strong>violação aos Termos</strong> (Cláusula 5.2), insira dados identificáveis de paciente no LaudoUSG:</p>
+<ul>
+<li>O Usuário <strong>permanece como controlador exclusivo</strong> desses dados perante o titular e a ANPD;</li>
+<li>O Usuário <strong>assume integral responsabilidade</strong> por eventual descumprimento da LGPD ou de norma do CFM;</li>
+<li>O Controlador poderá <strong>detectar, anonimizar ou excluir</strong> tais dados inseridos indevidamente, bem como <strong>suspender a Conta</strong> sem aviso prévio;</li>
+<li>Nas hipóteses em que o Controlador venha a processar incidentalmente tais dados, atuará <strong>estritamente nos limites técnicos necessários</strong> à prestação do Serviço, sem finalidade própria sobre os referidos dados.</li>
+</ul>
+<p>Esta cláusula é <strong>complementar</strong> às obrigações do Usuário previstas nos Termos e na legislação aplicável.</p>
+<h2>6. Funcionalidades do Serviço</h2>
+<p>O LaudoUSG oferece, entre outras funcionalidades:</p>
+<ul>
+<li><strong>Ditado e transcrição</strong> de achados via captura de áudio e processamento por IA (Whisper);</li>
+<li><strong>Geração de laudos</strong> estruturados por modelos de linguagem;</li>
+<li><strong>Edição e armazenamento</strong> de laudos no histórico pessoal do Usuário;</li>
+<li><strong>Frases customizadas</strong> reutilizáveis;</li>
+<li><strong>Sala do Auxiliar</strong> para sessões compartilhadas com auxiliares de consultório;</li>
+<li><strong>Verificação de sanidade</strong> determinística (sem IA) sobre o laudo gerado.</li>
+</ul>
+<p>O Controlador reserva-se o direito de <strong>modificar, adicionar ou remover</strong> funcionalidades, mediante comunicação prévia razoável.</p>
+<h2>7. Inteligência Artificial — Limitações</h2>
+<p>O LaudoUSG utiliza modelos de IA generativa de terceiros (OpenAI, Groq) para geração e transcrição. Você reconhece e aceita:</p>
+<p class="numlist">1. <strong>A IA pode produzir resultados incorretos, imprecisos ou inadequados.</strong> Toda saída deve ser <strong>revisada criticamente</strong> antes de uso clínico;</p>
+<p class="numlist">2. <strong>A IA não realiza diagnóstico</strong> nem pratica medicina;</p>
+<p class="numlist">3. <strong>A IA pode "alucinar"</strong> — gerar conteúdo plausível mas factualmente errado;</p>
+<p class="numlist">4. <strong>Você, médico, é o único responsável</strong> pela acurácia clínica do laudo final;</p>
+<p class="numlist">5. <strong>O LaudoUSG não se responsabiliza</strong> por erros de diagnóstico, conduta médica inadequada ou consequências decorrentes do uso clínico do conteúdo gerado.</p>
+<p>Consulte o <a href="./MEDICAL_DISCLAIMER.md">Disclaimer Médico</a> completo.</p>
+<h2>8. Propriedade Intelectual</h2>
+<h3>8.1 Do Controlador</h3>
+<p>O Aplicativo, sua marca, design, código-fonte, layout, identidade visual, base de conhecimento clínico e demais ativos intangíveis são de <strong>propriedade exclusiva</strong> do Controlador ou de seus licenciantes, protegidos por leis de propriedade intelectual brasileiras e internacionais.</p>
+<p>O Controlador concede ao Usuário licença <strong>limitada, pessoal, não-exclusiva, não-transferível e revogável</strong> para utilizar o LaudoUSG conforme estes Termos.</p>
+<h3>8.2 Do Usuário</h3>
+<p>Os <strong>laudos</strong> e <strong>frases customizadas</strong> produzidos pelo Usuário são de <strong>sua titularidade</strong>. O Controlador não reivindica propriedade sobre o conteúdo médico produzido pelo Usuário.</p>
+<h3>8.3 Licença Limitada ao Controlador</h3>
+<p>Para operar o Serviço, o Usuário concede ao Controlador licença <strong>mundial, não-exclusiva, gratuita</strong> para <strong>armazenar, processar, transmitir e exibir</strong> o Conteúdo do Usuário, <strong>exclusivamente</strong> para:</p>
+<ul>
+<li>Prestar o Serviço;</li>
+<li>Cumprir obrigações legais;</li>
+<li>Melhorar o produto, mediante <strong>agregação e anonimização</strong> dos dados.</li>
+</ul>
+<p>Esta licença <strong>não inclui</strong> o direito de comercializar ou divulgar o Conteúdo do Usuário.</p>
+<h2>9. Planos e Pagamento</h2>
+<blockquote>
+<p><strong>NOTA:</strong> funcionalidade de planos pagos ainda não implementada na versão atual.</p>
+</blockquote>
+<p>O Controlador poderá oferecer planos pagos no futuro. Quando disponíveis:</p>
+<ul>
+<li>Preços e condições serão informados claramente antes da contratação;</li>
+<li>Cobrança recorrente será comunicada com antecedência;</li>
+<li>Cancelamento poderá ser feito a qualquer momento, com efeito ao final do ciclo pago corrente;</li>
+<li>Não há reembolso proporcional após início de uso do ciclo, salvo por exigência legal.</li>
+</ul>
+<h2>10. Suspensão e Encerramento da Conta</h2>
+<h3>10.1 Pelo Controlador</h3>
+<p>O Controlador poderá <strong>suspender</strong> ou <strong>encerrar</strong> a Conta do Usuário, com ou sem aviso prévio, em caso de:</p>
+<ul>
+<li>Violação destes Termos;</li>
+<li>Suspeita de fraude, uso indevido ou conduta ilícita;</li>
+<li>Cadastro com dados falsos ou CRM inválido;</li>
+<li>Decisão judicial;</li>
+<li>Determinação regulatória.</li>
+</ul>
+<h3>10.2 Pelo Usuário</h3>
+<p>O Usuário pode encerrar sua Conta a qualquer momento por meio do próprio Aplicativo:</p>
+<p><strong>Configurações → Zona de risco → "Excluir minha conta"</strong></p>
+<p>A exclusão é <strong>definitiva e irreversível</strong>, com remoção em cascata de:</p>
+<ul>
+<li>Dados de perfil (nome, CRM, UF);</li>
+<li>Laudos gerados;</li>
+<li>Frases salvas;</li>
+<li>Sessões da Sala do Auxiliar;</li>
+<li>Demais dados vinculados.</li>
+</ul>
+<p>Logs técnicos podem ser retidos pelo prazo legal mínimo (Marco Civil da Internet, Lei 12.965/2014, Art. 15: 6 meses).</p>
+<h2>11. Disclaimer Médico — Responsabilidade Profissional</h2>
+<p>O LaudoUSG é <strong>ferramenta de apoio</strong>. <strong>NÃO substitui</strong>:</p>
+<ul>
+<li>Exame clínico;</li>
+<li>Avaliação direta do paciente;</li>
+<li>Julgamento médico profissional;</li>
+<li>Revisão crítica do laudo gerado.</li>
+</ul>
+<p>O <strong>Usuário médico</strong> é o <strong>único e final responsável</strong> por:</p>
+<ul>
+<li>Verificar a acurácia clínica do conteúdo gerado;</li>
+<li>Corrigir erros, omissões ou interpretações inadequadas;</li>
+<li>Validar e assinar o laudo final;</li>
+<li>Comunicar adequadamente os achados ao paciente ou solicitante.</li>
+</ul>
+<p>O Controlador atua em <strong>conformidade com a Resolução CFM 2.314/2022</strong> (Telemedicina) e o <strong>Código de Ética Médica</strong>, em particular o Capítulo III (Responsabilidade Profissional) e Capítulo IX (Sigilo Profissional).</p>
+<p>Versão completa em <a href="./MEDICAL_DISCLAIMER.md">MEDICAL_DISCLAIMER.md</a>.</p>
+<h2>12. Limitação de Responsabilidade</h2>
+<p>O Controlador atua com diligência razoável na prestação do Serviço. Sem prejuízo de suas obrigações legais, e na máxima extensão permitida pela legislação aplicável, o Controlador <strong>não se responsabiliza</strong> por:</p>
+<p class="numlist">1. <strong>Erros, omissões ou inadequações clínicas</strong> no conteúdo gerado pela inteligência artificial — a revisão crítica, validação clínica e assinatura do laudo são responsabilidade indeclinável do Usuário médico (Cláusula 11);</p>
+<p class="numlist">2. <strong>Indisponibilidade temporária do Serviço</strong> decorrente de manutenção programada (com aviso prévio razoável quando possível), força maior, falhas de infraestrutura de terceiros (Vercel, Supabase, OpenAI, Groq, Apple) ou ataques externos não-evitáveis com diligência razoável;</p>
+<p class="numlist">3. <strong>Conduta de terceiros</strong>, incluindo outros usuários, auxiliares de consultório, pacientes ou agentes externos;</p>
+<p class="numlist">4. <strong>Consequências de conteúdo inserido pelo Usuário</strong> em violação aos Termos (Cláusula 5.2), incluindo dados identificáveis de pacientes ou conteúdo ilícito.</p>
+<h3>12.1 Ressalvas — Responsabilidade Preservada</h3>
+<p>As exclusões acima <strong>não se aplicam</strong> e o Controlador <strong>responde integralmente</strong> por:</p>
+<ul>
+<li>Danos decorrentes de <strong>dolo</strong> ou <strong>culpa grave</strong> do Controlador;</li>
+<li><strong>Defeitos do Serviço</strong> caracterizados nos termos do Código de Defesa do Consumidor (Lei 8.078/1990);</li>
+<li>Falhas atribuíveis à <strong>violação das medidas técnicas e organizacionais de segurança</strong> legalmente exigidas;</li>
+<li><strong>Violação de direitos do titular de dados</strong> garantidos pela Lei Geral de Proteção de Dados (Lei 13.709/2018);</li>
+<li>Demais hipóteses imperativas em que a <strong>legislação consumerista, de proteção de dados ou de saúde</strong> não admita limitação contratual de responsabilidade.</li>
+</ul>
+<h3>12.2 Limite Máximo (quando juridicamente admissível)</h3>
+<p>Nos casos em que a limitação contratual de responsabilidade for juridicamente admissível, o valor máximo de eventual indenização <strong>limita-se ao maior</strong> entre:</p>
+<ul>
+<li>(a) o valor efetivamente pago pelo Usuário ao Controlador nos <strong>12 (doze) meses anteriores</strong> ao fato gerador, ou</li>
+<li>(b) <strong>R$ 500,00 (quinhentos reais)</strong>.</li>
+</ul>
+<p>Esta limitação <strong>não se aplica</strong> às hipóteses ressalvadas na Cláusula 12.1.</p>
+<h2>13. Indenização</h2>
+<p>O Usuário concorda em <strong>indenizar e isentar</strong> o Controlador, seus sócios, administradores, funcionários e parceiros de qualquer reclamação, dano, prejuízo, custo ou despesa (incluindo honorários advocatícios razoáveis) decorrentes de:</p>
+<ul>
+<li>Violação destes Termos pelo Usuário;</li>
+<li>Uso indevido do LaudoUSG;</li>
+<li>Inserção de dados de pacientes em violação às regras de uso (Cláusula 5.2);</li>
+<li>Violação de direitos de terceiros pelo Usuário;</li>
+<li>Imperícia, imprudência ou negligência médica do Usuário.</li>
+</ul>
+<h2>14. Privacidade e Proteção de Dados</h2>
+<p>O tratamento de dados pessoais pelo LaudoUSG observa a <strong>Lei Geral de Proteção de Dados</strong> (Lei 13.709/2018 — LGPD) e está detalhado em nossa <a href="./PRIVACY_POLICY.md">Política de Privacidade</a>, que <strong>integra estes Termos</strong>.</p>
+<h2>15. Modificações dos Termos</h2>
+<p>O Controlador poderá modificar estes Termos a qualquer momento. Modificações materiais serão comunicadas:</p>
+<ul>
+<li>Por email cadastrado, com antecedência mínima de <strong>15 (quinze) dias</strong>;</li>
+<li>Por banner no Aplicativo, exibido no primeiro acesso após a modificação;</li>
+<li>Com atualização da data de "Última atualização" no topo destes Termos.</li>
+</ul>
+<p>O uso continuado do Serviço após a entrada em vigor das modificações implica <strong>aceitação</strong> dos novos Termos. Caso o Usuário não concorde, deve <strong>encerrar sua Conta</strong>.</p>
+<h2>16. Disposições Gerais</h2>
+<h3>16.1 Independência das Cláusulas</h3>
+<p>A invalidade ou inexequibilidade de qualquer cláusula destes Termos não afetará as demais, que permanecerão em vigor.</p>
+<h3>16.2 Renúncia</h3>
+<p>A não-exigência, pelo Controlador, do cumprimento de qualquer obrigação por parte do Usuário não constitui renúncia ao direito de exigi-la futuramente.</p>
+<h3>16.3 Cessão</h3>
+<p>O Usuário <strong>não pode</strong> ceder ou transferir seus direitos e obrigações sob estes Termos. O Controlador pode ceder a terceiros, mediante notificação prévia.</p>
+<h3>16.4 Comunicações</h3>
+<p>Comunicações oficiais serão enviadas para o email cadastrado pelo Usuário. É responsabilidade do Usuário manter o email atualizado.</p>
+<h2>17. Lei Aplicável e Foro</h2>
+<p>Estes Termos são regidos pelas leis da <strong>República Federativa do Brasil</strong>.</p>
+<p>Fica eleito o foro da Comarca de <strong>domicílio do Controlador</strong> para dirimir quaisquer controvérsias decorrentes destes Termos, salvo direito do Usuário consumidor de optar pelo foro de seu domicílio (CDC Art. 101, I).</p>
+<h2>18. Contato</h2>
+<p>Dúvidas, sugestões ou solicitações relacionadas a estes Termos:</p>
+<ul>
+<li><strong>Email:</strong> contato@laudousg.com</li>
+<li><strong>Encarregado de Dados (DPO):</strong> contato@laudousg.com</li>
+<li><strong>Endereço postal:</strong> fornecido sob solicitação ao Encarregado de Dados (DPO) via email</li>
+</ul>
+<hr>
+<p><strong>Data de vigência desta versão:</strong> 2026-05-18 <strong>Versão:</strong> 1.2</p>
+</main>
+<footer class="site">
+  <p>© 2026 Luiz Paulo de Souza Prazeres — LaudoUSG</p>
+  <p><a href="/">Início</a> · <a href="/terms">Termos de Uso</a> · <a href="/privacy">Política de Privacidade</a> · <a href="mailto:contato@laudousg.com">Contato</a></p>
+</footer>
+</body>
+</html>
