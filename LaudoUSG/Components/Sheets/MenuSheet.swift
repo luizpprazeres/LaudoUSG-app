@@ -7,7 +7,7 @@ struct MenuSheet: View {
     let onTapAnalytics: () -> Void
     let onTapBiblioteca: () -> Void
     let onTapPreferencias: () -> Void
-    let onTapSeguranca: () -> Void
+    let onTapSobre: () -> Void
     let onLogout: () -> Void
 
     private var items: [MenuSheetItem] {
@@ -16,7 +16,7 @@ struct MenuSheet: View {
             MenuSheetItem(label: "Analytics", systemImage: "chart.bar", action: onTapAnalytics),
             MenuSheetItem(label: "Biblioteca", systemImage: "books.vertical", action: onTapBiblioteca),
             MenuSheetItem(label: "Preferências", systemImage: "slider.horizontal.3", action: onTapPreferencias),
-            MenuSheetItem(label: "Segurança", systemImage: "lock.shield", action: onTapSeguranca),
+            MenuSheetItem(label: "Sobre o LaudoUSG", systemImage: "info.circle", action: onTapSobre),
             MenuSheetItem(
                 label: "Sair",
                 systemImage: "rectangle.portrait.and.arrow.right",
@@ -132,7 +132,7 @@ private struct MenuSheetItem: Identifiable {
         onTapAnalytics: {},
         onTapBiblioteca: {},
         onTapPreferencias: {},
-            onTapSeguranca: {},
+            onTapSobre: {},
             onLogout: {}
         )
         .environment(AppState())

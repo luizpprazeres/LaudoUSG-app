@@ -26,13 +26,8 @@ struct GenerateView: View {
                         )
                         .navigationTitle("Biblioteca")
                     case .settings: SettingsView()
-                    case .security:
-                        PlaceholderView(
-                            title: "Segurança",
-                            icon: "lock.shield.fill",
-                            message: "Sessões, 2FA e auditoria entram em sprints futuros."
-                        )
-                        .navigationTitle("Segurança")
+                    case .about:
+                        AboutAppView()
                     }
                 }
         }
@@ -105,7 +100,7 @@ struct GenerateView: View {
                 onTapAnalytics: { navigate(to: .analytics) },
                 onTapBiblioteca: { navigate(to: .library) },
                 onTapPreferencias: { navigate(to: .settings) },
-                onTapSeguranca: { navigate(to: .security) },
+                onTapSobre: { navigate(to: .about) },
                 onLogout: {
                     vm.isMenuSheetPresented = false
                     app.signOut()

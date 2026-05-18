@@ -6,5 +6,5 @@ enum AppDestination: Hashable {
     case analytics
     case library
     case settings
-    case security
+    case about
 }
