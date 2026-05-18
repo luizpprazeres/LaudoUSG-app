@@ -9,13 +9,23 @@ import SwiftUI
 
 @main
 struct LaudoUSGApp: App {
+    @AppStorage("preferredColorScheme") private var preferredColorScheme: String = "light"
     @State private var appState = AppState()
     @State private var linkErrorMessage: String?
     @State private var recoverySession: AuthSession?
 
+    private var colorScheme: ColorScheme? {
+        switch preferredColorScheme {
+        case "light": return .light
+        case "dark": return .dark
+        default: return nil
+        }
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView(app: appState)
+                .preferredColorScheme(colorScheme)
                 .onOpenURL { url in
                     guard url.scheme == "laudousg" else { return }
                     Task {

@@ -7,6 +7,7 @@ struct LoginView: View {
     @Environment(AppState.self) private var app
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    @AppStorage("preferredColorScheme") private var preferredColorScheme: String = "light"
     @State private var email: String = ""
     @State private var password: String = ""
     @State private var isLoading: Bool = false
@@ -26,6 +27,13 @@ struct LoginView: View {
                 AppSurface.background.ignoresSafeArea()
 
                 VStack(spacing: 0) {
+                    HStack {
+                        Spacer()
+                        themeToggle
+                    }
+                    .padding(.horizontal, Spacing.lg)
+                    .padding(.top, Spacing.md)
+
                     Spacer()
 
                     VStack(spacing: Spacing.xl) {
@@ -111,6 +119,26 @@ struct LoginView: View {
                 if newValue != nil { triggerShake() }
             }
         }
+    }
+
+    private var themeToggle: some View {
+        Button {
+            Haptics.tap()
+            preferredColorScheme = preferredColorScheme == "dark" ? "light" : "dark"
+        } label: {
+            Image(systemName: preferredColorScheme == "dark" ? "sun.max.fill" : "moon.fill")
+                .font(.system(size: 18, weight: .medium))
+                .foregroundStyle(AppSurface.textSecondary)
+                .frame(width: 36, height: 36)
+                .background(
+                    Circle().fill(AppSurface.card)
+                )
+                .overlay(
+                    Circle().stroke(AppSurface.border, lineWidth: 1)
+                )
+        }
+        .buttonStyle(PressableButtonStyle())
+        .accessibilityLabel(preferredColorScheme == "dark" ? "Mudar para modo claro" : "Mudar para modo escuro")
     }
 
     private var header: some View {
