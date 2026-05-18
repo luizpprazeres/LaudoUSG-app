@@ -13,6 +13,8 @@ struct LoginView: View {
     @State private var isResendingConfirmation: Bool = false
     @State private var errorMessage: String?
     @State private var loginNeedsEmailConfirmation: Bool = false
+    @State private var isTermsPresented: Bool = false
+    @State private var isPrivacyPresented: Bool = false
     @FocusState private var focused: Field?
 
     enum Field { case email, password }
@@ -95,6 +97,21 @@ struct LoginView: View {
 
                     Spacer()
 
+                    HStack(spacing: Spacing.xs) {
+                        Button("Termos") {
+                            Haptics.tap()
+                            isTermsPresented = true
+                        }
+                        Text("•")
+                        Button("Privacidade") {
+                            Haptics.tap()
+                            isPrivacyPresented = true
+                        }
+                    }
+                    .font(TextStyle.caption)
+                    .foregroundStyle(AppSurface.textMuted)
+                    .padding(.bottom, Spacing.xs)
+
                     Text("Seus laudos são privados. Revise antes de assinar.")
                         .multilineTextAlignment(.center)
                         .font(TextStyle.caption)
@@ -106,6 +123,16 @@ struct LoginView: View {
             .sheet(isPresented: $isSignUpPresented) {
                 NavigationStack {
                     SignUpView()
+                }
+            }
+            .sheet(isPresented: $isTermsPresented) {
+                NavigationStack {
+                    TermsOfUseView()
+                }
+            }
+            .sheet(isPresented: $isPrivacyPresented) {
+                NavigationStack {
+                    PrivacyPolicyView()
                 }
             }
         }

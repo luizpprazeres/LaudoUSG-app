@@ -2,6 +2,8 @@ import SwiftUI
 
 struct AppShellView: View {
     let app: AppState
+    @State private var presentingLegalAcceptance = false
+    @State private var presentingOnboarding = false
 
     var body: some View {
         Group {
@@ -28,6 +30,18 @@ struct AppShellView: View {
                 Task { await loadPostLogin() }
             }
         }
+        .fullScreenCover(isPresented: $presentingLegalAcceptance) {
+            DisclaimerAcceptModal {
+                presentOnboardingIfNeeded()
+            }
+            .environment(app)
+        }
+        .fullScreenCover(isPresented: $presentingOnboarding) {
+            OnboardingView {
+                presentingOnboarding = false
+            }
+            .environment(app)
+        }
     }
 
     private func loadPostLogin() async {
@@ -38,6 +52,25 @@ struct AppShellView: View {
         }
         if let stylesValue = try? await styles {
             app.availableStyles = stylesValue
+        }
+        presentRequiredPostLoginFlow()
+    }
+
+    private func presentRequiredPostLoginFlow() {
+        guard app.session == .authenticated else { return }
+        if app.needsLegalAcceptance {
+            presentingOnboarding = false
+            presentingLegalAcceptance = true
+        } else {
+            presentOnboardingIfNeeded()
+        }
+    }
+
+    private func presentOnboardingIfNeeded() {
+        presentingLegalAcceptance = false
+        guard app.session == .authenticated, app.needsOnboarding else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            presentingOnboarding = true
         }
     }
 

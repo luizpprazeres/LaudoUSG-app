@@ -98,6 +98,13 @@ struct SettingsView: View {
                     .buttonStyle(PressableButtonStyle())
                 }
 
+                section(title: "Sobre") {
+                    NavigationLink(destination: AboutAppView()) {
+                        navRowLabel("Sobre o LaudoUSG")
+                    }
+                    .buttonStyle(PressableButtonStyle())
+                }
+
                 section(title: "Zona de risco") {
                     NavigationLink(destination: DeleteAccountView()) {
                         HStack {

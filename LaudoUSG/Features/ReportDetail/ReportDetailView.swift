@@ -170,6 +170,9 @@ struct ReportDetailView: View {
             )
             .padding(.horizontal, Spacing.md)
             .padding(.top, Spacing.xs)
+            MedicalDisclaimerFooter()
+                .padding(.horizontal, Spacing.md)
+                .padding(.vertical, Spacing.xs)
             Divider()
             bottomActions
                 .padding(.horizontal, Spacing.md)
