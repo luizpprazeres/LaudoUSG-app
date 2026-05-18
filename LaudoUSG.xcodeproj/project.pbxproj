@@ -250,6 +250,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Necessário para fotografar imagens de ultrassonografia e extrair medidas.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Necessário para capturar seu ditado dos achados de ultrassonografia.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Transcreve seu ditado para gerar o laudo. Pode rodar no dispositivo, sem enviar áudio.";
@@ -294,6 +295,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Necessário para fotografar imagens de ultrassonografia e extrair medidas.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Necessário para capturar seu ditado dos achados de ultrassonografia.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Transcreve seu ditado para gerar o laudo. Pode rodar no dispositivo, sem enviar áudio.";
