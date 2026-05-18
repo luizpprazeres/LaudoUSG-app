@@ -213,7 +213,7 @@ struct ImageAnalysisSheet: View {
 
     private func addImageData(_ data: Data) {
         #if canImport(UIKit)
-        guard images.count < 3, let uiImage = UIImage(data: data), let jpegData = uiImage.jpegData(compressionQuality: 0.82) else {
+        guard images.count < 3, let uiImage = UIImage(data: data), let jpegData = uiImage.compressedForUpload() else {
             errorMessage = "Não consegui ler a imagem selecionada."
             return
         }
@@ -224,7 +224,7 @@ struct ImageAnalysisSheet: View {
 
     #if canImport(UIKit)
     private func addCameraImage(_ image: UIImage) {
-        guard images.count < 3, let data = image.jpegData(compressionQuality: 0.82) else {
+        guard images.count < 3, let data = image.compressedForUpload() else {
             errorMessage = "Não consegui ler a imagem da câmera."
             return
         }

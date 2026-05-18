@@ -22,7 +22,7 @@ enum ImageAnalysisError: Error, LocalizedError {
 }
 
 enum ImageAnalysisService {
-    private static let logger = Logger(subsystem: "com.laudousg.LaudoUSG", category: "ImageAnalysis")
+    private static let logger = Logger(subsystem: "com.laudousg.LaudoUSG", category: "image-analysis")
 
     static func canAnalyze(category: ReportCategory) -> Bool {
         switch category {
@@ -99,6 +99,7 @@ enum ImageAnalysisService {
 
     private static func analyze(image: Data, category: ReportCategory) async throws -> BiometricData {
         guard !image.isEmpty else { throw ImageAnalysisError.emptyImage }
+        logger.info("Uploading compressed image: \(image.count, privacy: .public) bytes")
 
         let request = AnalyzeImageRequest(
             imageBase64: image.base64EncodedString(),

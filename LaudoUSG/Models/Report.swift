@@ -45,9 +45,9 @@ struct Measurement: Codable, Hashable {
 }
 
 struct SanityIssue: Identifiable, Codable, Hashable {
-    var id: String { code }
-    let code: String
-    let severity: String
+    var id: String { code ?? message }
+    let code: String?
+    let severity: String?
     let message: String
     let range: String?
 }
