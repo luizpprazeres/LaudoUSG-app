@@ -19,7 +19,10 @@
 LaudoUSG é um produto vertical médico: app iOS Swift + frontend web (laudousg.com) + backend Next.js (laudousgmobile.vercel.app), todos consumindo o mesmo endpoint principal `POST /api/generate` (SSE) pra geração de laudos de ultrassonografia com IA.
 
 - **App iOS Swift** (este repo `laudousg-swift/`): em vias de submit pra App Store v1.0 (em 2026-05-18 a 2026-05-20)
-- **Backend** (`laudousgmobile-def/apps/api/`): Vercel, vivo, usa Claude (Anthropic SDK) + Supabase + RAG via pgvector. 13 categorias de laudos suportadas. Streaming SSE com eventos `structured`, `validator`, `rag`, `token`, `sanity`, `done`, etc.
+- **Backend** (`laudousgmobile-def/apps/api/`): Vercel, vivo, usa Claude (Anthropic SDK) + Supabase. Streaming SSE com eventos `structured`, `validator`, `rag`, `token`, `sanity`, `done`, etc.
+- **Web em prod** (`laudousg/`): Next.js. Pipeline real de geração de laudos vive aqui hoje, com **34 categorias conhecidas** (27 ativas + 7 históricas/legado — não 13 como descrito originalmente neste ADR). Lista detalhada em ADR-0002.
+- **RAG status atual**: **NÃO existe RAG em produção pra geração de laudos**. pgvector está rodando, mas APENAS para o feed de Insights (`lib/insights/v2-runner.ts`). Geração usa few-shots **fixos** (apenas 20 exemplos validados manualmente em 10 categorias) + prompts nativos (`lib/categoryDefaults.ts` ~4835 linhas) + regras globais + sanity check síncrono.
+- **Sofisticação não óbvia do pipeline atual**: Chain-of-Thought interno, subspecialty overlay (ativado por keywords), style transform em camadas (classic/direct), negative prompting, custom phrases por usuário, regras globais customizáveis por usuário, regras por categoria customizáveis por usuário.
 - **Web em prod** (`laudousg/`): Next.js, fluxo similar ao iOS, mais maduro como UX médica
 - **Sanity check**: client-side, 100% determinístico, zero IA — decisão trancada (ver `CLAUDE.md` e `docs/ARCHITECTURE.md §9`)
 
@@ -298,7 +301,7 @@ App iOS (Swift)                          Web Pública (laudousg.com)
 | **0.5** | Observabilidade real | 1 semana | Tabela `generation_audit`, dashboard simples, coleta de ≥30 falhas reais analisadas | 30-50 falhas catalogadas por categoria de erro |
 | **1** | Categoria piloto (Abdome Total) + extração de prompts do `/laudousg` + Normalizer inicial | 3-4 semanas | Pipeline novo só pra Abdome, golden cases (20-50), comparação A/B em produção, painel Testbench MVP, regras YAML iniciais do Normalizer, templates/snippets extraídos do `/laudousg/` (read-only) | Laudo da nova arquitetura subjetivamente melhor que baseline em ≥70% dos casos |
 | **2** | Painel admin completo + expansão | 4-6 semanas | Editor + Reviewer + Feedback queue, 5-7 categorias na nova arquitetura | Luiz consegue iterar prompts/snippets sem precisar de dev |
-| **3** | Cobertura total (13 categorias) | 2-3 meses | Todas categorias migradas, métricas em produção | Migração concluída, métricas mostram qualidade estável ou melhor que baseline |
+| **3** | Cobertura total (27 categorias ativas) | 3-4 meses | Todas categorias ativas migradas, métricas em produção | Migração concluída, métricas mostram qualidade estável ou melhor que baseline |
 | **4** | IA-assisted refinement (longo prazo) | Indefinido | Sistema que sugere automaticamente quais snippets melhorar baseado em feedback agregado | Não definido neste ADR |
 
 ---
