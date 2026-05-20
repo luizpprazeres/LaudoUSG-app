@@ -2,8 +2,9 @@
 
 | Campo | Valor |
 |---|---|
-| **Status** | Proposed |
-| **Data** | 2026-05-20 |
+| **Status** | **Accepted** |
+| **Data proposto** | 2026-05-20 |
+| **Data aceito** | 2026-05-20 |
 | **Autores** | Luiz Prazeres (decisão), c1 (orquestrador), dex1 (revisor técnico) |
 | **Decisores** | Luiz (final), c1 + dex1 (recomendação) |
 | **Implementação prevista** | Fase 0.5 começa após v1.0 aprovado pela Apple |
@@ -56,6 +57,32 @@ Drivers explícitos:
 - Multi-tenant ou organizações de clínicas (escopo futuro)
 - Treinar modelo próprio (não justifica investimento neste momento)
 
+### 1.5 Constraints adicionais (informados pelo Luiz na aprovação)
+
+#### 1.5.1 `/laudousg` em produção é INVIOLÁVEL — usar apenas como fonte de consulta
+
+O repo `/Users/luizprazeres/laudousg/` contém prompts individuais por categoria, em uso em produção (laudousg.com). Esses prompts são a **base de conhecimento de partida** pra Fase 1 (categoria piloto) e fases seguintes.
+
+**Regra:** durante a migração, o app web `/laudousg/` deve continuar funcionando exatamente como hoje. Os prompts de lá são **consultados** (lidos) pra extrair templates e snippets pra `packages/knowledge/`, mas **nunca modificados**. Quando a nova arquitetura tomar o lugar do backend antigo pra uma categoria, o web em prod continuará apontando pro pipeline antigo até decisão explícita de migração.
+
+**Implicação prática:**
+- Fase 0.5 (observabilidade) loga laudos do backend atual sem alterar nada
+- Fase 1 (piloto) cria pipeline novo em paralelo. App iOS pode escolher pipeline por header/feature flag. Web continua no antigo.
+- Migração do web é tarefa **separada** e fora do escopo deste ADR — entrará em ADR-002 ou superseder.
+
+#### 1.5.2 Transcrição mais "burra" (Apple Speech.framework on-device)
+
+O app iOS hoje usa Whisper batch via `/api/transcribe` (escolhido no Sprint 2 porque `SFSpeechRecognizer` pt-BR falhava no Simulator iOS 26). Em iPhone físico real, `Speech.framework` (sistema nativo Apple, on-device, gratuito) é a escolha técnica preferida — zero custo de API, sem latência de upload, privacidade total.
+
+**Trade-off:** `Speech.framework` é mais "burra" que Whisper. Sintomas esperados:
+- Terminologia médica grafada errado ("eco textura" em vez de "ecotextura", "abdomê" em vez de "abdome")
+- Pontuação ausente ou colocada em lugares estranhos
+- Números falados ("oito milímetros") vs notação ("8mm") inconsistente
+- Palavras grudadas ou separadas erroneamente
+- Confusão entre termos similares ("hepatite" vs "hipertensão" em fluxo rápido)
+
+**Implicação na arquitetura:** o pipeline novo precisa de uma **etapa de normalização ANTES do Parser** — `Pre-processor / Normalizer` que aplica regras determinísticas pra corrigir erros típicos da Speech.framework antes de mandar pra IA. Detalhes em §2.4 (fluxo atualizado) e §2.3 (decisões técnicas).
+
 ---
 
 ## 2. Decisão
@@ -86,6 +113,9 @@ App iOS (Swift)                          Web Pública (laudousg.com)
                 │  Backend Next.js (apps/api/)           │
                 │                                         │
                 │  /api/generate (refatorado)             │
+                │   ├─ 0. Normalizer → limpa erros típicos│
+                │   │              de Apple Speech       │
+                │   │              (terminologia, pont.) │
                 │   ├─ 1. Parser → extrai dados          │
                 │   │              estruturados do input │
                 │   ├─ 2. RAG Retriever → busca templates│
@@ -156,6 +186,8 @@ App iOS (Swift)                          Web Pública (laudousg.com)
 
 | Componente | Decisão | Justificativa |
 |---|---|---|
+| **Normalizer (etapa 0)** | YAML com regras determinísticas em `packages/knowledge/normalizer/`: mapeamento de termos (`eco textura` → `ecotextura`), unidades (`oito milímetros` → `8mm`), correções de pontuação contextuais. Edição via painel admin. Aplicado ANTES do Parser. | Apple Speech.framework é "burra" comparada ao Whisper — precisa limpeza determinística pra não poluir contexto da LLM |
+| **Fonte de partida** | Prompts individuais de `/laudousg/` (read-only) → extraídos manualmente pra `packages/knowledge/templates/` + `snippets/` durante Fase 1 | Reusar conhecimento já validado em produção. NÃO modificar `/laudousg/` (continua servindo web em prod). |
 | **Templates** | Markdown com frontmatter YAML | Versionável no git, diffável, sem deps |
 | **Snippets (RAG curado)** | Markdown + frontmatter YAML em `packages/knowledge/snippets/` | Git como source of truth pra blocos críticos |
 | **RAG embedding** | Manter Supabase pgvector (já em produção) | Sem investimento adicional. Já integrado. |
@@ -173,10 +205,11 @@ App iOS (Swift)                          Web Pública (laudousg.com)
 
 ### 2.4 Fluxo end-to-end (exemplo Abdome Total)
 
-1. Médico dita: "fígado normal, vesícula com cálculo de 8mm, rins ok"
+1. Médico dita: "fígado normal vesícula com calculo de oito milímetros rins ok" (notar pontuação ausente e número falado — output típico Apple Speech)
 2. App envia `POST /api/generate` com input + categoria=`abdome-total` + estilo=`tradicional`
-3. **Parser** extrai: achados=[fígado: normal, vesícula: cálculo 8mm, rins: ok]
-4. **RAG retriever** (pgvector + tags markdown) busca:
+3. **Normalizer** (etapa 0, nova) limpa: "fígado normal. vesícula com cálculo de 8mm. rins ok." (correção de acento + pontuação + unidade). Loga transformações pra audit.
+4. **Parser** extrai: achados=[fígado: normal, vesícula: cálculo 8mm, rins: ok]
+5. **RAG retriever** (pgvector + tags markdown) busca:
    - Template estrutural: `templates/abdome-total/structure.md` (seções: técnica, achados, conclusão)
    - Snippets relevantes: `snippets/abdome-total/figado-normal.md`, `snippets/abdome-total/colelitiase-pequena.md`, `snippets/abdome-total/rins-normais.md`
    - Ranges: `ranges/abdome-total.yaml` (calculo biliar: <5mm=microlitíase, 5-10mm=pequeno, etc.)
@@ -190,12 +223,12 @@ App iOS (Swift)                          Web Pública (laudousg.com)
      - Colelitíase pequena (5-10mm): "Vesícula biliar com paredes finas..."
      - ...
    ```
-6. **LLM** monta o laudo seguindo restrições
-7. **Validator** confere: medidas dentro de ranges, terminologia conforme vocab, estrutura completa
-8. **Audit log** grava: prompt_version=v1.2.0, rag_blocks=[fig-normal-v3, colelit-pequena-v1, rins-normais-v2], output, etc.
-9. SSE stream emite cada chunk com `source` tag
-10. App recebe, mostra laudo + permite médico clicar em qualquer parte e ver fonte
-11. Se médico corrige um trecho → feedback estruturado → fila de aprovação manual
+7. **LLM** monta o laudo seguindo restrições
+8. **Validator** confere: medidas dentro de ranges, terminologia conforme vocab, estrutura completa
+9. **Audit log** grava: prompt_version=v1.2.0, rag_blocks=[fig-normal-v3, colelit-pequena-v1, rins-normais-v2], normalizer_diffs=[eco textura→ecotextura, oito milímetros→8mm], output, etc.
+10. SSE stream emite cada chunk com `source` tag
+11. App recebe, mostra laudo + permite médico clicar em qualquer parte e ver fonte
+12. Se médico corrige um trecho → feedback estruturado → fila de aprovação manual
 
 ---
 
@@ -263,7 +296,7 @@ App iOS (Swift)                          Web Pública (laudousg.com)
 |---|---|---|---|---|
 | **0** | Submit v1.0 + médicos usando em prod | Em curso (até ~2026-05-23) | App aprovado pela Apple, primeiros médicos usando | Versão 1.0 aprovada, ≥10 médicos cadastrados |
 | **0.5** | Observabilidade real | 1 semana | Tabela `generation_audit`, dashboard simples, coleta de ≥30 falhas reais analisadas | 30-50 falhas catalogadas por categoria de erro |
-| **1** | Categoria piloto (Abdome Total) | 3-4 semanas | Pipeline novo só pra Abdome, golden cases (20-50), comparação A/B em produção, painel Testbench MVP | Laudo da nova arquitetura subjetivamente melhor que baseline em ≥70% dos casos |
+| **1** | Categoria piloto (Abdome Total) + extração de prompts do `/laudousg` + Normalizer inicial | 3-4 semanas | Pipeline novo só pra Abdome, golden cases (20-50), comparação A/B em produção, painel Testbench MVP, regras YAML iniciais do Normalizer, templates/snippets extraídos do `/laudousg/` (read-only) | Laudo da nova arquitetura subjetivamente melhor que baseline em ≥70% dos casos |
 | **2** | Painel admin completo + expansão | 4-6 semanas | Editor + Reviewer + Feedback queue, 5-7 categorias na nova arquitetura | Luiz consegue iterar prompts/snippets sem precisar de dev |
 | **3** | Cobertura total (13 categorias) | 2-3 meses | Todas categorias migradas, métricas em produção | Migração concluída, métricas mostram qualidade estável ou melhor que baseline |
 | **4** | IA-assisted refinement (longo prazo) | Indefinido | Sistema que sugere automaticamente quais snippets melhorar baseado em feedback agregado | Não definido neste ADR |
@@ -271,6 +304,8 @@ App iOS (Swift)                          Web Pública (laudousg.com)
 ---
 
 ## 6. Open questions (a resolver durante implementação)
+
+0. **Como extrair prompts do `/laudousg/` em produção sem afetá-lo?** Recomendação: ler arquivos por path (`/Users/luizprazeres/laudousg/app/api/.../prompt-*.ts` ou wherever), copiar conteúdo manualmente pra `packages/knowledge/templates|snippets|prompts/{categoria}/`, anotar versão de origem no frontmatter. Nunca modificar o source. Documentar mapeamento numa migration log.
 
 1. **Onde mora `packages/knowledge/`?** No monorepo `laudousgmobile-def/` (consumido pelo `apps/api/`) ou repo separado (`laudousg-knowledge`)? Recomendação inicial: dentro do monorepo, ao lado de `apps/api/`.
 
@@ -285,6 +320,10 @@ App iOS (Swift)                          Web Pública (laudousg.com)
 6. **Como `golden_cases` lidam com aleatoriedade da LLM?** Temperatura zero? Comparação semântica via embedding em vez de string-match? Recomendação: temperatura 0.2 + comparação semântica + lista de essenciais que devem aparecer (não string-match exato).
 
 7. **Vai existir versão "draft" de snippet/prompt antes de publicar?** Recomendação: sim, status `draft|published|deprecated`.
+
+8. **Como o Normalizer evolui?** Recomendação: regras YAML versionadas no git em `packages/knowledge/normalizer/`. Editáveis via painel admin (Fase 2). Tipos de regras iniciais: (a) substituição literal (`eco textura` → `ecotextura`), (b) regex de unidades (`(\d+)\s*milímetros?` → `\1mm`), (c) pontuação contextual (após termos médicos comuns). Cada geração loga `normalizer_diffs` no audit pra debug.
+
+9. **Como Apple Speech vs Whisper batch coexistem?** Apple Speech.framework é preferido (zero custo, on-device, privacidade). Mas em Simulator iOS 26 ele quebra (`Failed to initialize recognizer`). Recomendação: Speech.framework em iPhone físico (release builds), Whisper batch como fallback no Simulator (debug builds). Documentar em `docs/ARCHITECTURE.md` quando implementar.
 
 ---
 
