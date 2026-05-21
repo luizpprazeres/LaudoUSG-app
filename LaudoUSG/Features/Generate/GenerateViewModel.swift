@@ -90,12 +90,19 @@ final class GenerateViewModel {
     private var typingTimer: Timer?
     private var statusIndex: Int = 0
 
+    // 10 mensagens únicas × 1.0s/cada = ~10s total. Backend leva 7-15s típico.
+    // Não ciclar — parar na última e ficar fixa até primeiro token chegar.
     private let statusMessages = [
         "Buscando bases de dados...",
-        "Lendo preferências do usuário...",
+        "Lendo suas preferências...",
         "Corrigindo vocabulário...",
         "Aplicando regras clínicas...",
-        "Estruturando achados..."
+        "Verificando faixas de normalidade...",
+        "Estruturando achados...",
+        "Selecionando frases padrão...",
+        "Montando a conclusão...",
+        "Validando coerência...",
+        "Finalizando..."
     ]
 
     var canGenerate: Bool {
@@ -325,7 +332,9 @@ final class GenerateViewModel {
     }
 
     private func startStatusRotation() {
-        statusRotationTimer = Timer.scheduledTimer(withTimeInterval: 0.6, repeats: true) { [weak self] _ in
+        // 1.0s por mensagem (legível). Lista tem 10 únicas → 10s totais.
+        // Quando chegar na última, fica fixa até primeiro token (NÃO cicla).
+        statusRotationTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.rotateStatusMessage()
             }
@@ -333,7 +342,8 @@ final class GenerateViewModel {
     }
 
     private func startTypingAnimation() {
-        typingTimer = Timer.scheduledTimer(withTimeInterval: 0.011, repeats: true) { [weak self] _ in
+        // 8ms × 3 chars = ~375 chars/s (visualmente bem rápido, fluido)
+        typingTimer = Timer.scheduledTimer(withTimeInterval: 0.008, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.advanceDisplayedOutput()
             }
@@ -341,14 +351,22 @@ final class GenerateViewModel {
     }
 
     private func rotateStatusMessage() {
-        statusIndex = (statusIndex + 1) % statusMessages.count
+        // Se já está na última mensagem, para de rodar (mantém última fixa).
+        // Evita repetição irritante quando backend leva mais que 10s.
+        if statusIndex >= statusMessages.count - 1 {
+            statusRotationTimer?.invalidate()
+            statusRotationTimer = nil
+            return
+        }
+        statusIndex += 1
         currentStatusMessage = statusMessages[statusIndex]
     }
 
     private func advanceDisplayedOutput() {
         guard displayedOutput.count < streamedOutput.count else { return }
 
-        let advanceBy = min(2, streamedOutput.count - displayedOutput.count)
+        // 3 chars por tick (em vez de 2) — mais sensação de "digitação rápida"
+        let advanceBy = min(3, streamedOutput.count - displayedOutput.count)
         let endIndex = streamedOutput.index(
             streamedOutput.startIndex,
             offsetBy: displayedOutput.count + advanceBy
