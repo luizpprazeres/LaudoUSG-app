@@ -328,10 +328,12 @@ App iOS (Swift)                          Web Pública (laudousg.com)
 
 9. **Como Apple Speech vs Whisper batch coexistem?** Apple Speech.framework é preferido (zero custo, on-device, privacidade). Mas em Simulator iOS 26 ele quebra (`Failed to initialize recognizer`). Recomendação: Speech.framework em iPhone físico (release builds), Whisper batch como fallback no Simulator (debug builds). Documentar em `docs/ARCHITECTURE.md` quando implementar.
 
-10. **Priority logic dos RAG blocks: universal vs contextual.** Descoberta empírica do Sprint P1 testes (2026-05-20): blocos `regra` precisam de 2 níveis de priority pra retriever escolher bem dentro da quota:
-    - **Universais (priority 90-100):** regras que TODO laudo da categoria precisa (ex: ordem-secoes=99, selecao-automatica-modelo=100, preservar-terminologia=94, dias-da-ig=92)
-    - **Contextuais (priority ~70):** regras que só aplicam em casos específicos (ex: calculo-dsm só pra inicial com DSM, gestacao-gemelar só pra ≥2 fetos, peso-fetal-percentil só pra percentil anormal)
-    Com universais 90+ e contextuais ~70, o retriever (quota=6 pra `regra`) sempre incluí TODAS as universais + top similarity das contextuais. Antes do fix, contextuais estavam em 80-95 e roubavam slots das universais OU das contextuais semanticamente relevantes ao caso atual.
+10. **Priority logic dos RAG blocks: universal vs contextual.** Descoberta empírica do Sprint P1 testes (2026-05-20/21): blocos `regra` precisam de 2 níveis de priority pra retriever escolher bem dentro da quota:
+    - **Universais (priority 90-100):** regras que TODO laudo da categoria precisa. Em OBSTETRICA hoje (commit `ca20f9a`): selecao-automatica-modelo=100, ordem-secoes=99, preservar-terminologia=94, frases-normais-quando-omitido=93, dias-da-ig=92 (5 universais kind=regra)
+    - **Contextuais (priority ~70):** regras que só aplicam em casos específicos. Em OBSTETRICA: calculo-dsm, modelo-inicial, gestacao-gemelar, peso-fetal-percentil, placenta-morfologicos (5 contextuais kind=regra)
+    - **Quotas atuais do retriever** (commit `f245406`, 2026-05-21): modelo=1, regra=**8** (era 5), frase=8, conclusao=**3** (era 2), excecao=3, comentario_tecnico=3, exemplo=2. Total máx por geração = 28 blocks (era ~19).
+    - **Cobertura com quota=8 pra regra OBSTETRICA:** TODAS as 5 universais sempre entram + top 3 das 5 contextuais por similarity. Permite caso RCIU (peso-fetal-percentil entra) + caso gemelar (gestacao-gemelar entra) + caso DSM (calculo-dsm entra) sem competição interna.
+    - **Reforço extra (header GATILHOS DE APLICAÇÃO):** em blocos contextuais críticos como peso-fetal-percentil, adicionar header inicial com keywords explícitas. Aumenta similarity quando input do médico tem essas keywords.
     **Aplicar:** mesma lógica nas próximas categorias (P3). Marcar no frontmatter `priority_tier: universal|contextual` pra documentar intenção.
 
 11. **Trilha forense de RAG (pra Painel Dissecador da Fase 3).** Hoje `generation_audit.rag_blocks_retrieved` jsonb guarda quais blocos foram puxados. Pro dissecador funcionar (clica no laudo → entende o porquê), precisamos saber também:
