@@ -322,24 +322,68 @@ struct GenerateView: View {
     private var laudoEditor: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             laudoToolbar
-            TextEditor(text: Binding(get: { vm.editedLaudoText }, set: { vm.laudoTextChanged($0) }))
-                .font(TextStyle.bodyLarge)
-                .scrollContentBackground(.hidden)
-                .background(AppSurface.background)
-                .foregroundStyle(AppSurface.textPrimary)
-                .frame(maxHeight: .infinity)
-                .overlay(alignment: .topLeading) {
-                    if vm.editedLaudoText.isEmpty {
-                        Text(vm.phase.isBusy ? "Gerando laudo…" : "O laudo gerado aparece aqui.")
+            // Durante o streaming dos tokens (phase.isBusy), exibimos streamedOutput
+            // num Text scrollável (não-editável) pra usuário ver o laudo sendo escrito
+            // em tempo real. Quando finaliza (done), troca pra TextEditor editável
+            // com editedLaudoText. Antes desse fix, o stream era acumulado em
+            // streamedOutput mas a UI só mostrava editedLaudoText (setado no done) —
+            // dava sensação de "súbito" pro usuário.
+            if vm.phase.isBusy && !vm.streamedOutput.isEmpty {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(vm.streamedOutput)
                             .font(TextStyle.bodyLarge)
-                            .foregroundStyle(AppSurface.textMuted)
+                            .foregroundStyle(AppSurface.textPrimary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .textSelection(.disabled)
                             .padding(.top, Spacing.xs)
                             .padding(.leading, Spacing.xs)
-                            .allowsHitTesting(false)
+                            // Cursor piscante no fim pra reforçar "está digitando"
+                        TypingCursor()
+                            .padding(.leading, Spacing.xs)
+                    }
+                }
+                .scrollIndicators(.hidden)
+                .background(AppSurface.background)
+                .frame(maxHeight: .infinity)
+            } else {
+                TextEditor(text: Binding(get: { vm.editedLaudoText }, set: { vm.laudoTextChanged($0) }))
+                    .font(TextStyle.bodyLarge)
+                    .scrollContentBackground(.hidden)
+                    .background(AppSurface.background)
+                    .foregroundStyle(AppSurface.textPrimary)
+                    .frame(maxHeight: .infinity)
+                    .overlay(alignment: .topLeading) {
+                        if vm.editedLaudoText.isEmpty {
+                            Text(vm.phase.isBusy ? "Gerando laudo…" : "O laudo gerado aparece aqui.")
+                                .font(TextStyle.bodyLarge)
+                                .foregroundStyle(AppSurface.textMuted)
+                                .padding(.top, Spacing.xs)
+                                .padding(.leading, Spacing.xs)
+                                .allowsHitTesting(false)
+                        }
+                    }
+            }
+        }
+        .frame(maxHeight: .infinity)
+    }
+
+    /// Cursor piscante inline mostrado no fim do streamedOutput durante a geração.
+    /// Reforça a sensação de "sendo digitado em tempo real".
+    private struct TypingCursor: View {
+        @State private var visible = true
+
+        var body: some View {
+            Text("▌")
+                .font(TextStyle.bodyLarge)
+                .foregroundStyle(BrandColor.primary)
+                .opacity(visible ? 1 : 0)
+                .onAppear {
+                    withAnimation(.easeInOut(duration: 0.5).repeatForever()) {
+                        visible = false
                     }
                 }
         }
-        .frame(maxHeight: .infinity)
     }
 
     private var laudoToolbar: some View {
