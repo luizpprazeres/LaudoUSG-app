@@ -328,6 +328,17 @@ App iOS (Swift)                          Web Pública (laudousg.com)
 
 9. **Como Apple Speech vs Whisper batch coexistem?** Apple Speech.framework é preferido (zero custo, on-device, privacidade). Mas em Simulator iOS 26 ele quebra (`Failed to initialize recognizer`). Recomendação: Speech.framework em iPhone físico (release builds), Whisper batch como fallback no Simulator (debug builds). Documentar em `docs/ARCHITECTURE.md` quando implementar.
 
+10. **Priority logic dos RAG blocks: universal vs contextual.** Descoberta empírica do Sprint P1 testes (2026-05-20): blocos `regra` precisam de 2 níveis de priority pra retriever escolher bem dentro da quota:
+    - **Universais (priority 90-100):** regras que TODO laudo da categoria precisa (ex: ordem-secoes=99, selecao-automatica-modelo=100, preservar-terminologia=94, dias-da-ig=92)
+    - **Contextuais (priority ~70):** regras que só aplicam em casos específicos (ex: calculo-dsm só pra inicial com DSM, gestacao-gemelar só pra ≥2 fetos, peso-fetal-percentil só pra percentil anormal)
+    Com universais 90+ e contextuais ~70, o retriever (quota=6 pra `regra`) sempre incluí TODAS as universais + top similarity das contextuais. Antes do fix, contextuais estavam em 80-95 e roubavam slots das universais OU das contextuais semanticamente relevantes ao caso atual.
+    **Aplicar:** mesma lógica nas próximas categorias (P3). Marcar no frontmatter `priority_tier: universal|contextual` pra documentar intenção.
+
+11. **Trilha forense de RAG (pra Painel Dissecador da Fase 3).** Hoje `generation_audit.rag_blocks_retrieved` jsonb guarda quais blocos foram puxados. Pro dissecador funcionar (clica no laudo → entende o porquê), precisamos saber também:
+    - **`rag_blocks_skipped`** jsonb (NEW) — blocos que match na similarity mas foram cortados por quota. Permite UI "quase entrou, mas saiu por quota". Crítico pra debugar regras mal calibradas (caso RCIU descoberto no Sprint P1).
+    - **`similarity_scores`** dentro de `rag_blocks_retrieved` (enhance) — score cosine de cada bloco puxado. Permite ranqueamento visual + debug "esse bloco entrou só por priority, não pela semântica".
+    - **Implementação:** adicionar campos no schema Drizzle `generationAudit.ts` + popular no retriever step. Coordenar com Fase 3 quando começar.
+
 ---
 
 ## 7. Plano de revisão deste ADR
