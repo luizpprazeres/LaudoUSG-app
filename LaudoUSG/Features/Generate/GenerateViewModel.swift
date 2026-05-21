@@ -64,6 +64,8 @@ final class GenerateViewModel {
     var writingStyle: WritingStyle = .tradicional
     var inputText: String = ""
     var streamedOutput: String = ""
+    var displayedOutput: String = ""
+    var currentStatusMessage: String = ""
     var liveTranscript: String = ""
 
     var phase: GenerationPhase = .idle
@@ -84,6 +86,17 @@ final class GenerateViewModel {
 
     let speech = SpeechService()
     private var saveTask: Task<Void, Never>?
+    private var statusRotationTimer: Timer?
+    private var typingTimer: Timer?
+    private var statusIndex: Int = 0
+
+    private let statusMessages = [
+        "Buscando bases de dados...",
+        "Lendo preferências do usuário...",
+        "Corrigindo vocabulário...",
+        "Aplicando regras clínicas...",
+        "Estruturando achados..."
+    ]
 
     var canGenerate: Bool {
         !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -181,12 +194,14 @@ final class GenerateViewModel {
     func generate(writingStyleId: String) {
         guard canGenerate else { return }
         streamedOutput = ""
+        displayedOutput = ""
         editedLaudoText = ""
         saveStatus = .idle
         lastError = nil
         lastWarning = nil
         sanityIssues = []
         phase = .generating
+        startStreamingFeedback()
         withAnimation(.easeOut(duration: 0.18)) { activeTab = .laudo }
 
         let req = GenerateRequest(
@@ -208,9 +223,11 @@ final class GenerateViewModel {
                     lastError = error.errorDescription
                 }
                 phase = .error(message: lastError ?? "Erro")
+                stopStreamingFeedback()
             } catch {
                 lastError = error.localizedDescription
                 phase = .error(message: lastError ?? "Erro")
+                stopStreamingFeedback()
             }
         }
     }
@@ -261,33 +278,93 @@ final class GenerateViewModel {
             if activeTab != .laudo {
                 withAnimation(.easeOut(duration: 0.18)) { activeTab = .laudo }
             }
+            stopStatusRotation()
             streamedOutput += payload.delta
         case .sanity:
             break
         case .done(let payload):
             streamedOutput = payload.finalText
+            displayedOutput = payload.finalText
             editedLaudoText = payload.finalText
             lastReportId = payload.reportId
             sanityIssues = SanityChecker.check(text: payload.finalText, category: category)
             phase = .done(reportId: payload.reportId)
             activeTab = .laudo
+            stopStreamingFeedback()
         case .blocked(let payload):
             lastError = payload.reason
             phase = .error(message: payload.reason)
+            stopStreamingFeedback()
         case .error(let payload):
             lastError = payload.message
             phase = .error(message: payload.message)
+            stopStreamingFeedback()
         }
     }
 
     func reset() {
+        stopStreamingFeedback()
         inputText = ""
         streamedOutput = ""
+        displayedOutput = ""
         editedLaudoText = ""
         liveTranscript = ""
         phase = .idle
         activeTab = .achados
         saveStatus = .idle
         lastError = nil
+        currentStatusMessage = ""
+    }
+
+    private func startStreamingFeedback() {
+        stopStreamingFeedback()
+        statusIndex = 0
+        currentStatusMessage = statusMessages[statusIndex]
+        startStatusRotation()
+        startTypingAnimation()
+    }
+
+    private func startStatusRotation() {
+        statusRotationTimer = Timer.scheduledTimer(withTimeInterval: 0.6, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.rotateStatusMessage()
+            }
+        }
+    }
+
+    private func startTypingAnimation() {
+        typingTimer = Timer.scheduledTimer(withTimeInterval: 0.011, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.advanceDisplayedOutput()
+            }
+        }
+    }
+
+    private func rotateStatusMessage() {
+        statusIndex = (statusIndex + 1) % statusMessages.count
+        currentStatusMessage = statusMessages[statusIndex]
+    }
+
+    private func advanceDisplayedOutput() {
+        guard displayedOutput.count < streamedOutput.count else { return }
+
+        let advanceBy = min(2, streamedOutput.count - displayedOutput.count)
+        let endIndex = streamedOutput.index(
+            streamedOutput.startIndex,
+            offsetBy: displayedOutput.count + advanceBy
+        )
+        displayedOutput = String(streamedOutput[..<endIndex])
+    }
+
+    private func stopStatusRotation() {
+        statusRotationTimer?.invalidate()
+        statusRotationTimer = nil
+        currentStatusMessage = ""
+    }
+
+    private func stopStreamingFeedback() {
+        stopStatusRotation()
+        typingTimer?.invalidate()
+        typingTimer = nil
     }
 }
