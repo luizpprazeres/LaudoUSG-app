@@ -332,9 +332,9 @@ final class GenerateViewModel {
     }
 
     private func startStatusRotation() {
-        // 1.0s por mensagem (legível). Lista tem 10 únicas → 10s totais.
+        // 1.4s por mensagem (legível confortável). Lista tem 10 únicas → 14s totais.
         // Quando chegar na última, fica fixa até primeiro token (NÃO cicla).
-        statusRotationTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+        statusRotationTimer = Timer.scheduledTimer(withTimeInterval: 1.4, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.rotateStatusMessage()
             }

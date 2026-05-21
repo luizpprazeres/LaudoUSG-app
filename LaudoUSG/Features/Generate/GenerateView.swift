@@ -342,7 +342,10 @@ struct GenerateView: View {
             } else if vm.phase.isBusy && !vm.displayedOutput.isEmpty {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        Text(vm.displayedOutput)
+                        // Renderiza laudo durante streaming com placeholders ____ em
+                        // destaque roxo (efeito hidrocor — "ponto a revisar" visualmente
+                        // marcado, fica profissional + fácil de identificar).
+                        Text(vm.displayedOutput.laudoHighlighted)
                             .font(TextStyle.bodyLarge)
                             .foregroundStyle(AppSurface.textPrimary)
                             .frame(maxWidth: .infinity, alignment: .leading)

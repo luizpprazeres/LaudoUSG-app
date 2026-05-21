@@ -25,9 +25,12 @@ struct BrandLogo: View {
 
     var body: some View {
         HStack(spacing: 0) {
+            // "Laudo" usa primaryDeep (#065F46) — dentro da paleta emerald oficial,
+            // alinhado com a logo da página de login (LaudoUSGLogoFont.png).
+            // Antes usava wordmark (#18533F) que estava fora da família emerald.
             Text("Laudo")
                 .font(BrandFont.display(.extraBold, size: size.fontSize))
-                .foregroundStyle(AppSurface.wordmark)
+                .foregroundStyle(BrandColor.primaryDeep)
             Text("USG")
                 .font(BrandFont.display(.extraBold, size: size.fontSize))
                 .foregroundStyle(BrandColor.primary)
