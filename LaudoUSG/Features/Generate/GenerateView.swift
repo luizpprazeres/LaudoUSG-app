@@ -8,6 +8,8 @@ struct GenerateView: View {
     @State private var vm = GenerateViewModel()
     @State private var path: [AppDestination] = []
     @State private var didCopyLaudo: Bool = false
+    @State private var isEditingLaudo: Bool = false  // toggle visualização (com highlight) vs edição (TextEditor)
+    @State private var isSanityExpanded: Bool = false // acordeão de pontos a revisar
     @Namespace private var tabNamespace
 
     var body: some View {
@@ -359,26 +361,43 @@ struct GenerateView: View {
                 .scrollIndicators(.hidden)
                 .background(AppSurface.background)
                 .frame(maxHeight: .infinity)
-            } else {
+            } else if vm.editedLaudoText.isEmpty {
+                // Estado inicial — laudo ainda não gerado
+                Text("O laudo gerado aparece aqui.")
+                    .font(TextStyle.bodyLarge)
+                    .foregroundStyle(AppSurface.textMuted)
+                    .padding(.top, Spacing.xs)
+                    .padding(.leading, Spacing.xs)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            } else if isEditingLaudo {
+                // Modo edição — TextEditor padrão (sem highlight, mas editável)
                 TextEditor(text: Binding(get: { vm.editedLaudoText }, set: { vm.laudoTextChanged($0) }))
                     .font(TextStyle.bodyLarge)
                     .scrollContentBackground(.hidden)
                     .background(AppSurface.background)
                     .foregroundStyle(AppSurface.textPrimary)
                     .frame(maxHeight: .infinity)
-                    .overlay(alignment: .topLeading) {
-                        if vm.editedLaudoText.isEmpty {
-                            Text("O laudo gerado aparece aqui.")
-                                .font(TextStyle.bodyLarge)
-                                .foregroundStyle(AppSurface.textMuted)
-                                .padding(.top, Spacing.xs)
-                                .padding(.leading, Spacing.xs)
-                                .allowsHitTesting(false)
-                        }
-                    }
+            } else {
+                // Modo visualização — Text(AttributedString) com linhas que contêm ____ destacadas em roxo
+                ScrollView {
+                    Text(vm.editedLaudoText.laudoHighlighted)
+                        .font(TextStyle.bodyLarge)
+                        .foregroundStyle(AppSurface.textPrimary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, Spacing.xs)
+                        .padding(.leading, Spacing.xs)
+                        .textSelection(.enabled) // permite copiar com seleção
+                }
+                .scrollIndicators(.hidden)
+                .background(AppSurface.background)
+                .frame(maxHeight: .infinity)
             }
         }
         .frame(maxHeight: .infinity)
+        // Auto-volta pra visualização quando uma nova geração inicia
+        .onChange(of: vm.phase.isBusy) { _, newValue in
+            if newValue { isEditingLaudo = false }
+        }
     }
 
     private struct TypingCursor: View {
@@ -402,6 +421,25 @@ struct GenerateView: View {
             saveIndicator
             Spacer()
             if vm.hasLaudoOutput {
+                // Botão toggle: visualização (com highlight roxo) ↔ edição (TextEditor)
+                Button {
+                    Haptics.tap()
+                    isEditingLaudo.toggle()
+                } label: {
+                    HStack(spacing: Spacing.xxs) {
+                        Image(systemName: isEditingLaudo ? "eye.fill" : "pencil")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text(isEditingLaudo ? "Visualizar" : "Editar")
+                            .font(TextStyle.captionMedium)
+                    }
+                    .foregroundStyle(AppSurface.textSecondary)
+                    .padding(.horizontal, Spacing.sm)
+                    .frame(minHeight: 30)
+                    .background(Capsule().fill(AppSurface.card))
+                    .overlay(Capsule().stroke(AppSurface.border, lineWidth: 1))
+                }
+                .buttonStyle(PressableButtonStyle())
+
                 Button {
                     performCopyLaudo()
                 } label: {
@@ -525,30 +563,52 @@ struct GenerateView: View {
     }
 
     private var sanityCard: some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            HStack(spacing: Spacing.xs) {
-                Image(systemName: "exclamationmark.bubble.fill")
-                    .foregroundStyle(SemanticColor.warningText)
-                Text("Pontos a revisar")
-                    .font(TextStyle.bodyLargeSemibold)
-                    .foregroundStyle(SemanticColor.warningText)
+        VStack(alignment: .leading, spacing: 0) {
+            // Header com toggle expansível — discreto, mostra contagem
+            Button {
+                Haptics.tap()
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isSanityExpanded.toggle()
+                }
+            } label: {
+                HStack(spacing: Spacing.xs) {
+                    Image(systemName: "exclamationmark.bubble.fill")
+                        .foregroundStyle(SemanticColor.warningText)
+                    Text("\(vm.sanityIssues.count) ponto\(vm.sanityIssues.count == 1 ? "" : "s") a revisar")
+                        .font(TextStyle.bodyLargeSemibold)
+                        .foregroundStyle(SemanticColor.warningText)
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(SemanticColor.warningText)
+                        .rotationEffect(.degrees(isSanityExpanded ? 180 : 0))
+                }
             }
-            ForEach(vm.sanityIssues) { issue in
-                HStack(alignment: .top, spacing: Spacing.xs) {
-                    Image(systemName: issue.severity == "critical" ? "xmark.octagon.fill" : "exclamationmark.triangle")
-                        .foregroundStyle(issue.severity == "critical" ? SemanticColor.errorText : SemanticColor.warningText)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(issue.message)
-                            .font(TextStyle.body)
-                            .foregroundStyle(AppSurface.textPrimary)
-                        if let range = issue.range, !range.isEmpty {
-                            Text("Trecho: \(range)")
-                                .font(TextStyle.caption)
-                                .foregroundStyle(AppSurface.textMuted)
-                                .lineLimit(1)
+            .buttonStyle(PressableButtonStyle())
+
+            // Lista expansível
+            if isSanityExpanded {
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Divider().padding(.vertical, Spacing.xs)
+                    ForEach(vm.sanityIssues) { issue in
+                        HStack(alignment: .top, spacing: Spacing.xs) {
+                            Image(systemName: issue.severity == "critical" ? "xmark.octagon.fill" : "exclamationmark.triangle")
+                                .foregroundStyle(issue.severity == "critical" ? SemanticColor.errorText : SemanticColor.warningText)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(issue.message)
+                                    .font(TextStyle.body)
+                                    .foregroundStyle(AppSurface.textPrimary)
+                                if let range = issue.range, !range.isEmpty {
+                                    Text("Trecho: \(range)")
+                                        .font(TextStyle.caption)
+                                        .foregroundStyle(AppSurface.textMuted)
+                                        .lineLimit(1)
+                                }
+                            }
                         }
                     }
                 }
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .padding(Spacing.md)
