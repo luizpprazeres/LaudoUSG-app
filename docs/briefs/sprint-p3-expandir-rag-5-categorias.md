@@ -65,10 +65,16 @@ packages/knowledge/snippets/{CATEGORIA}/
 ### 3.2 Padrão de priorities
 
 **Universais (priority 90-100):** todo laudo da categoria precisa
-- ordem-secoes (99) — estrutura inviolável
-- preservar-terminologia (94)
-- frases-normais-quando-omitido (93)
-- 1-3 regras universais específicas da categoria
+- ordem-secoes / selecao-roteamento (99) — estrutura inviolável
+- **preservar-terminologia-do-medico (94) — CROSS-CATEGORY OBRIGATÓRIA**
+- **frases-normais-quando-omitido (93) — CROSS-CATEGORY OBRIGATÓRIA**
+- 1-3 regras universais específicas da categoria (priorities 95-100)
+
+**⚠️ LIÇÃO APRENDIDA NO PELVE_FEMININA:** as 2 regras marcadas como CROSS-CATEGORY OBRIGATÓRIAS devem ser criadas em CADA categoria (não só OBSTETRICA). Adaptar conteúdo pra contexto da categoria mas manter estrutura e propósito. Sem essas regras, LLM reapresenta bugs conhecidos (substituir termo do médico, deixar placeholder em descritor).
+
+Conteúdo adaptado por categoria:
+- `preservar-terminologia-do-medico`: listar termos clinicamente próximos da categoria que o médico diferencia conscientemente (ex: TIREOIDE = nódulo vs cisto vs lesão + classificação Domingos vs TI-RADS; MAMARIA = nódulo vs cisto vs lesão + BI-RADS; ABDOMEN = cálculo vs concreção vs litíase)
+- `frases-normais-quando-omitido`: listar frases normais default por estrutura da categoria (ex: ABDOMEN = "Fígado de aspecto normal", "Vesícula biliar de paredes finas, sem cálculos"; TIREOIDE = "Tireoide de dimensões e ecotextura normais")
 
 **Contextuais (priority 70):** só aplicam em casos específicos
 - Marcar com `priority_tier: contextual` no frontmatter
