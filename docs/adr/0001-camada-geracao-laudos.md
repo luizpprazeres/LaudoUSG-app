@@ -331,10 +331,15 @@ App iOS (Swift)                          Web Pública (laudousg.com)
 10. **Priority logic dos RAG blocks: universal vs contextual.** Descoberta empírica do Sprint P1 testes (2026-05-20/21): blocos `regra` precisam de 2 níveis de priority pra retriever escolher bem dentro da quota:
     - **Universais (priority 90-100):** regras que TODO laudo da categoria precisa. Em OBSTETRICA hoje (commit `ca20f9a`): selecao-automatica-modelo=100, ordem-secoes=99, preservar-terminologia=94, frases-normais-quando-omitido=93, dias-da-ig=92 (5 universais kind=regra)
     - **Contextuais (priority ~70):** regras que só aplicam em casos específicos. Em OBSTETRICA: calculo-dsm, modelo-inicial, gestacao-gemelar, peso-fetal-percentil, placenta-morfologicos (5 contextuais kind=regra)
-    - **Quotas atuais do retriever** (commit `f245406`, 2026-05-21): modelo=1, regra=**8** (era 5), frase=8, conclusao=**3** (era 2), excecao=3, comentario_tecnico=3, exemplo=2. Total máx por geração = 28 blocks (era ~19).
+    - **Quotas atuais do retriever** (commit `afe4d91`, 2026-05-21): modelo=**2** (era 1), regra=**10** (era 8), frase=8, conclusao=**3** (era 2), excecao=3, comentario_tecnico=3, exemplo=2. Total máx por geração = 31 blocks (era ~19).
     - **Cobertura com quota=8 pra regra OBSTETRICA:** TODAS as 5 universais sempre entram + top 3 das 5 contextuais por similarity. Permite caso RCIU (peso-fetal-percentil entra) + caso gemelar (gestacao-gemelar entra) + caso DSM (calculo-dsm entra) sem competição interna.
-    - **Reforço extra (header GATILHOS DE APLICAÇÃO):** em blocos contextuais críticos como peso-fetal-percentil, adicionar header inicial com keywords explícitas. Aumenta similarity quando input do médico tem essas keywords.
-    **Aplicar:** mesma lógica nas próximas categorias (P3). Marcar no frontmatter `priority_tier: universal|contextual` pra documentar intenção.
+    - **Reforço extra (header GATILHOS DE APLICAÇÃO):** em blocos contextuais críticos, adicionar header inicial com keywords explícitas. Aumenta similarity quando input do médico tem essas keywords.
+    - **⚠️ Descoberta empírica (commit `afe4d91`, validada E2E em 4 laudos PELVE):** o header `GATILHOS DE APLICAÇÃO` no BODY do bloco **não move o embedding o suficiente** pra superar regras concorrentes com vocabulário genérico (ex: pólipo-endometrial, endometrioma, calcificação). Mesmo com texto explicativo "Aplica quando o input mencionar X", o ranking de similarity mantém perdedoras.
+    - **Padrão consolidado (3 níveis de priority pra regra):**
+      - Universal (90-100): sempre entra
+      - **Contextual com vocabulário difícil (75)** + header GATILHOS: entra MAS o LLM (gpt-4.1-mini) lê o header e filtra aplicação no output final. **Validado: ZERO falsos positivos em PELVE com regra-miomas e regra-SOP sempre entrando, LLM respeita header.**
+      - Contextual com vocabulário forte (70): só entra quando similarity match
+    **Aplicar:** mesma lógica nas próximas categorias (P3+). Marcar no frontmatter `priority_tier: universal|contextual` + considerar bump pra 75 quando vocabulário do bloco é genérico e ele está perdendo slots pra blocos mais "específicos linguisticamente".
 
 11. **Trilha forense de RAG (pra Painel Dissecador da Fase 3).** Hoje `generation_audit.rag_blocks_retrieved` jsonb guarda quais blocos foram puxados. Pro dissecador funcionar (clica no laudo → entende o porquê), precisamos saber também:
     - **`rag_blocks_skipped`** jsonb (NEW) — blocos que match na similarity mas foram cortados por quota. Permite UI "quase entrou, mas saiu por quota". Crítico pra debugar regras mal calibradas (caso RCIU descoberto no Sprint P1).
