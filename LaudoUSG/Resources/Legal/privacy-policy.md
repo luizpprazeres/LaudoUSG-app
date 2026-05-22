@@ -1,20 +1,22 @@
 # Política de Privacidade — LaudoUSG
 
-> **Versão:** 2.0 (Sprint 11 — pronto pra exibição em produção, ainda requer revisão jurídica externa antes de submit final ao App Store)
-> **Última atualização:** 2026-05-22
-> **Conformidade:** LGPD (Lei 13.709/2018), Marco Civil da Internet (Lei 12.965/2014), Apple App Store Review Guidelines §5.1
+> **Versão:** 2.0
+> **Última atualização:** 22/05/2026
+> **Conformidade declarada:** LGPD (Lei 13.709/2018), Marco Civil da Internet (Lei 12.965/2014), Apple App Store Review Guidelines §5.1.
+
+<!--
+Nota interna (não-renderizada): conteúdo desta v2.0 aguarda revisão jurídica externa antes do submit final ao App Store.
+Identificação do Controlador atual: Pessoa Física, CPF 108.964.194-20. Pessoa jurídica em constituição — atualizar quando CNPJ emitido.
+-->
 
 ---
 
-## Status dos dados de identificação
+## Identificação do Controlador
 
-- ✅ **Controlador:** Luiz Paulo de Souza Prazeres (Pessoa Física)
-- ✅ **CPF:** 108.964.194-20
-- ✅ **Email institucional / DPO:** contato@laudousg.com (criar alias `dpo@laudousg.com` quando possível)
-- ✅ **Encarregado de Dados (DPO):** Luiz Paulo de Souza Prazeres (acumula a função na fase inicial)
-- ⏳ **CNPJ:** pessoa jurídica em constituição (CNPJ ainda não emitido pela Receita Federal) — atualizar quando emitido
-- ⏳ **Endereço:** fornecido sob solicitação ao DPO (recomendação: não expor endereço residencial; quando formalizar CNPJ, usar endereço comercial)
-- ✅ **Data de vigência:** 2026-05-18
+- **Controlador:** Luiz Paulo de Souza Prazeres (CPF 108.964.194-20)
+- **Encarregado de Dados (DPO):** Luiz Paulo de Souza Prazeres
+- **Email institucional / DPO:** contato@laudousg.com
+- **Endereço postal:** fornecido sob solicitação ao DPO via email
 
 ---
 
@@ -257,5 +259,5 @@ Dúvidas, solicitações ou exercício de direitos:
 
 ---
 
-**Data de vigência desta versão:** 2026-05-18
-**Versão:** 1.2
+**Data de vigência desta versão:** 2026-05-22
+**Versão:** 2.0
