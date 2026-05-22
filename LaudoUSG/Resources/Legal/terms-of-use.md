@@ -1,8 +1,7 @@
 # Termos de Uso — LaudoUSG
 
-> **Versão:** 1.2 (draft Sprint 11 — aplicado P0 + 7 P1 prioritários da revisão jurídica interna)
-> **Última atualização:** 2026-05-18
-> **Status:** Rascunho profissional — REQUER revisão jurídica antes de produção
+> **Versão:** 2.0 (Sprint 11 — pronto pra exibição em produção, ainda requer revisão jurídica externa antes de submit final ao App Store)
+> **Última atualização:** 2026-05-22
 
 ---
 
