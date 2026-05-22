@@ -16,10 +16,26 @@ struct LoginView: View {
     @State private var errorMessage: String?
     @State private var loginNeedsEmailConfirmation: Bool = false
     @State private var isPrivacyPresented: Bool = false
+    @State private var presentedLegalDoc: LegalDocKind?
     @State private var shakeOffset: CGFloat = 0
     @FocusState private var focused: Field?
 
     enum Field { case email, password }
+
+    private func legalFooterButton(_ doc: LegalDocKind, icon: String) -> some View {
+        Button {
+            Haptics.tap()
+            presentedLegalDoc = doc
+        } label: {
+            HStack(spacing: Spacing.xxs) {
+                Image(systemName: icon)
+                    .font(.system(size: 11, weight: .medium))
+                Text(doc.title)
+            }
+            .font(TextStyle.footnote)
+            .foregroundStyle(AppSurface.textSecondary)
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -93,16 +109,10 @@ struct LoginView: View {
 
                     Spacer()
 
-                    Button {
-                        Haptics.tap()
-                        isPrivacyPresented = true
-                    } label: {
-                        HStack(spacing: Spacing.xxs) {
-                            Image(systemName: "info.circle")
-                            Text("Privacidade")
-                        }
-                        .font(TextStyle.footnote)
-                        .foregroundStyle(AppSurface.textSecondary)
+                    HStack(spacing: Spacing.md) {
+                        legalFooterButton(.termsOfUse, icon: "doc.text")
+                        legalFooterButton(.privacyPolicy, icon: "lock.shield")
+                        legalFooterButton(.medicalDisclaimer, icon: "stethoscope")
                     }
                     .padding(.bottom, Spacing.md)
                 }
@@ -112,8 +122,15 @@ struct LoginView: View {
                     SignUpView()
                 }
             }
-            .sheet(isPresented: $isPrivacyPresented) {
-                PrivacySheet()
+            .sheet(item: $presentedLegalDoc) { doc in
+                NavigationStack {
+                    MarkdownDocumentView(title: doc.title, resourceName: doc.bundleResourceName)
+                        .toolbar {
+                            ToolbarItem(placement: .topBarTrailing) {
+                                Button("Fechar") { presentedLegalDoc = nil }
+                            }
+                        }
+                }
             }
             .onChange(of: errorMessage) { _, newValue in
                 if newValue != nil { triggerShake() }

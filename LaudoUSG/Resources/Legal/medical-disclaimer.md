@@ -76,8 +76,8 @@ O LaudoUSG é desenvolvido em conformidade com:
 - **Resolução CFM 2.314/2022** — Define e disciplina a Telemedicina, dispondo sobre seu exercício;
 - **Demais normas do Conselho Federal de Medicina** aplicáveis ao uso de inteligência artificial em medicina, conforme regulamentação vigente;
 - **Código de Ética Médica** (Resolução CFM 2.217/2018), em especial:
-  - **Capítulo III** (Responsabilidade Profissional): vedação ao médico de "deixar de assumir responsabilidade sobre procedimento médico que indicou ou do qual participou" (Art. 1º);
-  - **Capítulo IX** (Sigilo Profissional): obrigação de manter sigilo das informações de seus pacientes (Art. 73);
+  - **Capítulo III — Responsabilidade Profissional**: vedação ao médico de "deixar de assumir responsabilidade sobre procedimento médico que indicou ou do qual participou" (Art. 4º);
+  - **Capítulo IX — Sigilo Profissional**: vedação ao médico de "revelar fato de que tenha conhecimento em virtude do exercício de sua profissão" (Art. 73);
 - **Lei Geral de Proteção de Dados** (Lei 13.709/2018);
 - **Marco Civil da Internet** (Lei 12.965/2014).
 
