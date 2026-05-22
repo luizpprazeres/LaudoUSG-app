@@ -4,6 +4,7 @@ import SwiftUI
 struct DopplerCalculatorSheet: View {
     let onInsert: (String) -> Void
     let onDismiss: () -> Void
+    var prefillFrom: String? = nil
 
     @State private var weeks = 28
     @State private var days = 0
@@ -13,6 +14,7 @@ struct DopplerCalculatorSheet: View {
     @State private var ipUterinaEsquerda = ""
     @State private var result: DopplerCalculator.DopplerResult?
     @State private var errorMessage: String?
+    @State private var didPrefill = false
 
     private var igResult: GestationalAgeCalculator.IGResult {
         let label = "\(weeks) semana\(weeks == 1 ? "" : "s")\(days > 0 ? " e \(days) dia\(days == 1 ? "" : "s")" : "")"
@@ -44,6 +46,25 @@ struct DopplerCalculatorSheet: View {
         .background(AppSurface.background.ignoresSafeArea())
         .navigationTitle("Doppler obstétrico")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear(perform: prefillIfNeeded)
+    }
+
+    private func prefillIfNeeded() {
+        guard !didPrefill, let source = prefillFrom, !source.isEmpty else { return }
+        didPrefill = true
+        let findings = DopplerParser.parse(achados: source)
+        if let ig = findings.ig {
+            weeks = ig.weeks
+            days = ig.days
+        }
+        if let v = findings.umbilicalIP { ipUmbilical = formatPrefill(v) }
+        if let v = findings.cerebralMediaIP { ipMCA = formatPrefill(v) }
+        if let v = findings.uterinaDireitaIP { ipUterinaDireita = formatPrefill(v) }
+        if let v = findings.uterinaEsquerdaIP { ipUterinaEsquerda = formatPrefill(v) }
+    }
+
+    private func formatPrefill(_ value: Double) -> String {
+        String(format: "%.2f", value).replacingOccurrences(of: ".", with: ",")
     }
 
     private var inputCard: some View {

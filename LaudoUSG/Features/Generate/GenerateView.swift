@@ -134,7 +134,8 @@ struct GenerateView: View {
                         vm.insertSnippet(snippet)
                         vm.isDopplerCalculatorPresented = false
                     },
-                    onDismiss: { vm.isDopplerCalculatorPresented = false }
+                    onDismiss: { vm.isDopplerCalculatorPresented = false },
+                    prefillFrom: vm.inputText
                 )
             }
         }
