@@ -10,6 +10,7 @@ struct GenerateShortcut: Identifiable, Hashable {
     enum Action: Hashable {
         case openIGCalculator
         case openDopplerCalculator
+        case calcularPercentis
         case insertText(String)
     }
     let id = UUID()
@@ -21,7 +22,7 @@ struct GenerateShortcut: Identifiable, Hashable {
         case .obstetrica, .dopplerObstetrico, .morfologico:
             return [
                 GenerateShortcut(label: "Calcular IG", action: .openIGCalculator),
-                GenerateShortcut(label: "Calcular Doppler", action: .openDopplerCalculator),
+                GenerateShortcut(label: "Calcular percentis", action: .calcularPercentis),
                 GenerateShortcut(label: "BCF presentes", action: .insertText("Feto único, em situação longitudinal e apresentação cefálica, com BCF presentes."))
             ]
         case .tireoide:
@@ -144,9 +145,57 @@ final class GenerateViewModel {
             isIGCalculatorPresented = true
         case .openDopplerCalculator:
             isDopplerCalculatorPresented = true
+        case .calcularPercentis:
+            calcularPercentis()
         case .insertText(let text):
             insertSnippet(text)
         }
+    }
+
+    func calcularPercentis() {
+        let findings = DopplerParser.parse(achados: inputText)
+        guard let ig = findings.ig, ig.weeks >= 20 && ig.weeks <= 41 else {
+            // Sem IG ou IG fora da faixa de tabelas (20-41 sem) — abre calculator pra inserir manual
+            isDopplerCalculatorPresented = true
+            return
+        }
+
+        let weeks = ig.weeks
+        var pieces: [String] = []
+        if let ip = findings.umbilicalIP,
+           let result = DopplerPercentileTable.calculate(artery: .umbilical, ip: ip, igWeeks: weeks) {
+            pieces.append("AU IP \(formatIP(ip)) (\(result.estimatedPercentile))")
+        }
+        if let ip = findings.cerebralMediaIP,
+           let result = DopplerPercentileTable.calculate(artery: .cerebralMedia, ip: ip, igWeeks: weeks) {
+            pieces.append("ACM IP \(formatIP(ip)) (\(result.estimatedPercentile))")
+        }
+        if let ip = findings.uterinasMediaIP,
+           let result = DopplerPercentileTable.calculate(artery: .uterinasMedia, ip: ip, igWeeks: weeks) {
+            pieces.append("Uterinas média IP \(formatIP(ip)) (\(result.estimatedPercentile))")
+        } else if let dir = findings.uterinaDireitaIP, let esq = findings.uterinaEsquerdaIP {
+            let media = (dir + esq) / 2
+            if let result = DopplerPercentileTable.calculate(artery: .uterinasMedia, ip: media, igWeeks: weeks) {
+                pieces.append("Uterinas média IP \(formatIP(media)) (\(result.estimatedPercentile))")
+            }
+        }
+
+        if pieces.isEmpty {
+            // Sem IPs reconhecidos — abre calculator pra digitar
+            isDopplerCalculatorPresented = true
+            return
+        }
+
+        let summary = "\n→ Percentis (\(weeks)s\(ig.days)d, Gratacós/FMF): " + pieces.joined(separator: " · ")
+        insertSnippet(summary)
+    }
+
+    private func formatIP(_ value: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.locale = Locale(identifier: "pt_BR")
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
+        return formatter.string(from: NSNumber(value: value)) ?? String(format: "%.2f", value)
     }
 
     func startRecording() {
