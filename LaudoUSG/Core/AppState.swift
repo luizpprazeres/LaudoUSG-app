@@ -144,6 +144,17 @@ struct UserProfile: Equatable {
         }
     }
 
+    var hasEssencialOrAbove: Bool {
+        switch plan?.lowercased() {
+        case "essential", "essencial", "pro": return true
+        default: return false
+        }
+    }
+
+    var hasPro: Bool {
+        plan?.lowercased() == "pro"
+    }
+
     var avatarInitial: String {
         let trimmed = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? "?" : String(trimmed.prefix(1)).uppercased()
