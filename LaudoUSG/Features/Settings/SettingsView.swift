@@ -89,6 +89,15 @@ struct SettingsView: View {
                     infoRow(label: "Email", value: app.profile?.email ?? "—")
                     Divider().padding(.leading, Spacing.md)
                     infoRow(label: "Plano", value: app.profile?.planLabel ?? "Gratuito")
+                    Divider().padding(.leading, Spacing.md)
+                    Button {
+                        if let url = URL(string: "itms-apps://apps.apple.com/account/subscriptions") {
+                            UIApplication.shared.open(url)
+                        }
+                    } label: {
+                        navRowLabel("Gerenciar assinatura")
+                    }
+                    .buttonStyle(PressableButtonStyle())
                 }
 
                 section(title: "Perfil") {

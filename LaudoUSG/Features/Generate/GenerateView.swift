@@ -116,7 +116,11 @@ struct GenerateView: View {
                 onDismiss: { vm.isPlusSheetPresented = false },
                 onOpenConsultor: vm.canOpenConsultor ? {
                     vm.isPlusSheetPresented = false
-                    vm.isConsultorSheetPresented = true
+                    if app.profile?.hasPro == true {
+                        vm.isConsultorSheetPresented = true
+                    } else {
+                        vm.isPaywallPresented = true
+                    }
                 } : nil
             )
         }
@@ -129,6 +133,15 @@ struct GenerateView: View {
                     reportId: vm.lastReportId
                 ),
                 onDismiss: { vm.isConsultorSheetPresented = false }
+            )
+        }
+        .sheet(isPresented: Binding(get: { vm.isPaywallPresented }, set: { vm.isPaywallPresented = $0 })) {
+            PaywallSheet(
+                onSuccess: {
+                    vm.isPaywallPresented = false
+                    Task { await app.refreshProfile() }
+                },
+                onDismiss: { vm.isPaywallPresented = false }
             )
         }
         .sheet(isPresented: Binding(get: { vm.isIGCalculatorPresented }, set: { vm.isIGCalculatorPresented = $0 })) {

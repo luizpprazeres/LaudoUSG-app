@@ -93,6 +93,7 @@ final class GenerateViewModel {
     var isDopplerCalculatorPresented = false
     var isRecordingOverlayPresented = false
     var isConsultorSheetPresented = false
+    var isPaywallPresented = false
 
     var canOpenConsultor: Bool {
         if case .done = phase {

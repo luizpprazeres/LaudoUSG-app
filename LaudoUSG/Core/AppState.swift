@@ -39,6 +39,15 @@ final class AppState {
         session = .authenticated
     }
 
+    func refreshProfile() async {
+        do {
+            let record = try await ProfileService.fetchProfile()
+            updateProfile(record)
+        } catch {
+            // Falha silenciosa — UI segue com profile anterior.
+        }
+    }
+
     func updateProfile(_ record: UserProfileRecord) {
         profile = UserProfile(
             email: record.email ?? profile?.email ?? "",
