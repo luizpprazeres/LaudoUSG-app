@@ -5,6 +5,7 @@ struct PlusSheet: View {
     let categoryHint: ReportCategory?
     let onInsert: (String) -> Void
     let onDismiss: () -> Void
+    var onOpenConsultor: (() -> Void)? = nil
 
     @State private var path: [PlusDestination] = []
     @State private var phrases: [UserPhrase] = []
@@ -23,6 +24,7 @@ struct PlusSheet: View {
                 VStack(alignment: .leading, spacing: Spacing.lg) {
                     calculatorsSection
                     imageAnalysisSection
+                    consultorSection
                     phrasesSection
                 }
                 .padding(.horizontal, Spacing.md)
@@ -86,6 +88,54 @@ struct PlusSheet: View {
                     subtitle: "Em breve",
                     icon: "drop"
                 )
+            }
+        }
+    }
+
+    private var consultorSection: some View {
+        Group {
+            if let onOpenConsultor {
+                VStack(alignment: .leading, spacing: Spacing.sm) {
+                    sectionTitle("IA")
+                    Button {
+                        Haptics.tap()
+                        onOpenConsultor()
+                    } label: {
+                        HStack(spacing: Spacing.sm) {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundStyle(Color(hex: "8B5CF6"))
+                                .frame(width: 40, height: 40)
+                                .background(
+                                    RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
+                                        .fill(Color(hex: "8B5CF6").opacity(0.12))
+                                )
+                            VStack(alignment: .leading, spacing: Spacing.xxs) {
+                                Text("Consultor IA")
+                                    .font(TextStyle.bodyLargeMedium)
+                                    .foregroundStyle(AppSurface.textPrimary)
+                                Text("Diagnósticos diferenciais e conduta com IA")
+                                    .font(TextStyle.footnote)
+                                    .foregroundStyle(AppSurface.textSecondary)
+                            }
+                            Spacer(minLength: Spacing.sm)
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(AppSurface.textMuted)
+                        }
+                        .padding(Spacing.sm)
+                        .background(
+                            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
+                                .fill(AppSurface.card)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
+                                .stroke(AppSurface.border, lineWidth: 1)
+                        )
+                    }
+                    .buttonStyle(PressableButtonStyle())
+                    .accessibilityLabel("Abrir Consultor IA")
+                }
             }
         }
     }

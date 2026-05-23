@@ -113,7 +113,22 @@ struct GenerateView: View {
             PlusSheet(
                 categoryHint: vm.category,
                 onInsert: { vm.insertSnippet($0) },
-                onDismiss: { vm.isPlusSheetPresented = false }
+                onDismiss: { vm.isPlusSheetPresented = false },
+                onOpenConsultor: vm.canOpenConsultor ? {
+                    vm.isPlusSheetPresented = false
+                    vm.isConsultorSheetPresented = true
+                } : nil
+            )
+        }
+        .sheet(isPresented: Binding(get: { vm.isConsultorSheetPresented }, set: { vm.isConsultorSheetPresented = $0 })) {
+            ConsultorSheet(
+                vm: ConsultorViewModel(
+                    report: vm.displayedOutput,
+                    findings: vm.inputText,
+                    category: vm.category,
+                    reportId: vm.lastReportId
+                ),
+                onDismiss: { vm.isConsultorSheetPresented = false }
             )
         }
         .sheet(isPresented: Binding(get: { vm.isIGCalculatorPresented }, set: { vm.isIGCalculatorPresented = $0 })) {

@@ -85,6 +85,14 @@ final class GenerateViewModel {
     var isIGCalculatorPresented = false
     var isDopplerCalculatorPresented = false
     var isRecordingOverlayPresented = false
+    var isConsultorSheetPresented = false
+
+    var canOpenConsultor: Bool {
+        if case .done = phase {
+            return !displayedOutput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        return false
+    }
 
     let speech = SpeechService()
     private var saveTask: Task<Void, Never>?

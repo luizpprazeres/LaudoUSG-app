@@ -1,7 +1,9 @@
 import Foundation
 
 enum SSEStreamer {
-    static func stream(from bytes: URLSession.AsyncBytes) -> AsyncThrowingStream<GenerateSSEEvent, Error> {
+    static func stream<Event: Decodable & Sendable>(
+        from bytes: URLSession.AsyncBytes
+    ) -> AsyncThrowingStream<Event, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
                 var frameBytes: [UInt8] = []
@@ -52,9 +54,9 @@ enum SSEStreamer {
         }
     }
 
-    private static func decodeFrame(
+    private static func decodeFrame<Event: Decodable & Sendable>(
         _ frameBytes: [UInt8],
-        continuation: AsyncThrowingStream<GenerateSSEEvent, Error>.Continuation
+        continuation: AsyncThrowingStream<Event, Error>.Continuation
     ) {
         guard let frame = String(bytes: frameBytes, encoding: .utf8) else {
             print("SSEStreamer: frame UTF-8 inválido ignorado.")
@@ -77,7 +79,7 @@ enum SSEStreamer {
         }
 
         do {
-            let event = try JSONDecoder.api.decode(GenerateSSEEvent.self, from: data)
+            let event = try JSONDecoder.api.decode(Event.self, from: data)
             continuation.yield(event)
         } catch {
             print("SSEStreamer: falha ao decodificar frame SSE: \(error)")
