@@ -20,29 +20,36 @@ struct GenerateShortcut: Identifiable, Hashable {
 
     static func defaults(for category: ReportCategory) -> [GenerateShortcut] {
         switch category {
-        case .obstetrica, .dopplerObstetrico, .morfologico:
+        case .obstetrica, .morfologico:
             return [
                 GenerateShortcut(label: "Calcular IG pela DUM", action: .calcularIGporDUM),
                 GenerateShortcut(label: "Calcular percentis", action: .calcularPercentis),
                 GenerateShortcut(label: "BCF presentes", action: .insertText("Feto único, em situação longitudinal e apresentação cefálica, com BCF presentes."))
             ]
+        case .dopplerObstetrico:
+            return [
+                GenerateShortcut(label: "Calcular IG pela DUM", action: .calcularIGporDUM),
+                GenerateShortcut(label: "Calcular percentis", action: .calcularPercentis)
+            ]
         case .tireoide:
             return [
-                GenerateShortcut(label: "Glândula normal", action: .insertText("Glândula tireoide tópica, contornos regulares, dimensões e ecotextura preservadas.")),
-                GenerateShortcut(label: "Doppler normal", action: .insertText("Vascularização ao Doppler colorido sem alterações.")),
-                GenerateShortcut(label: "Sem nódulos", action: .insertText("Sem nódulos detectados ao exame."))
+                GenerateShortcut(label: "Normal", action: .insertText("Glândula tireoide tópica, contornos regulares, dimensões e ecotextura preservadas, sem nódulos. Vascularização ao Doppler colorido sem alterações.")),
+                GenerateShortcut(label: "Hashimoto", action: .insertText("Glândula tireoide tópica, dimensões normais, com ecotextura heterogênea e padrão micronodular difuso, vascularização aumentada ao Doppler colorido — padrão ecográfico compatível com tireoidite crônica linfocítica (Hashimoto)."))
             ]
         case .mamaria:
             return [
-                GenerateShortcut(label: "Mamas normais", action: .insertText("Parênquima mamário sem alterações.")),
-                GenerateShortcut(label: "BI-RADS 1", action: .insertText("Categoria BI-RADS 1.")),
-                GenerateShortcut(label: "Sem nódulos", action: .insertText("Sem nódulos sólidos ou císticos identificados."))
+                GenerateShortcut(label: "Prótese", action: .insertText("Paciente com próteses mamárias. Próteses íntegras, sem sinais de ruptura intra ou extracapsular.")),
+                GenerateShortcut(label: "Linfonodos axilares", action: .insertText("Imagens ovais, com a periferia hipoecoica e o centro hiperecoico nas axilas, compatíveis com linfonodos de morfologia preservada."))
             ]
         case .abdomenTotal, .abdomenSuperior, .abdomenTotalDoppler:
             return [
-                GenerateShortcut(label: "Fígado normal", action: .insertText("Fígado de dimensões normais, contornos regulares, ecogenicidade preservada.")),
-                GenerateShortcut(label: "Vesícula sem cálculos", action: .insertText("Vesícula biliar de paredes finas, sem cálculos.")),
-                GenerateShortcut(label: "Rins normais", action: .insertText("Rins de dimensões e ecotextura normais."))
+                GenerateShortcut(label: "Esteatose leve", action: .insertText("Fígado de dimensões normais, contornos regulares, apresentando ecogenicidade discretamente aumentada, com leve atenuação sonora posterior, compatível com esteatose hepática leve.")),
+                GenerateShortcut(label: "Colecistectomia", action: .insertText("Paciente com colecistectomia prévia. Loja vesicular sem coleções ou imagens hipoecoicas residuais."))
+            ]
+        case .pelveFeminina:
+            return [
+                GenerateShortcut(label: "Menopausa", action: .insertText("Paciente em menopausa — ovários atróficos. Aplicar substituições padronizadas: (1) no CORPO, descrever cada ovário como \"Ovário direito medindo X x Y x Z cm, apresentando poucas imagens anecoicas.\" e idem pro esquerdo (NUNCA usar apenas \"imagens anecoicas\" — usar SEMPRE \"poucas imagens anecoicas\"); (2) na CONCLUSÃO, item do endométrio: \"O endométrio tem espessura normal para a faixa etária da menopausa.\"; (3) na CONCLUSÃO, item dos ovários: \"Ovários ecograficamente normais (o direito com X cm³ e o esquerdo com Y cm³), ambos praticamente sem folículos.\"")),
+                GenerateShortcut(label: "Miomatoso", action: .insertText("Útero miomatoso — múltiplos nódulos coalescentes não individualizáveis. Aplicar substituições: (1) no CORPO, substituir a frase do miométrio por: \"Miométrio apresentando múltiplas imagens hipoecoicas e heterogêneas, coalescentes, ocasionando atenuação sonora, que impede a avaliação individualizada.\"; (2) na CONCLUSÃO, substituir o item de volume + miométrio por: \"Útero globoso (miomatoso), de volume acentuadamente aumentado (X cm³).\" sem classificação FIGO individual."))
             ]
         default:
             return [

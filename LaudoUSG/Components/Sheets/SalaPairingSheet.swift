@@ -109,7 +109,7 @@ struct SalaPairingSheet: View {
                 .font(TextStyle.subtitle)
                 .foregroundStyle(AppSurface.textPrimary)
                 .multilineTextAlignment(.center)
-            Text("Gere a sessão no início do turno. O auxiliar digita o código UMA VEZ em laudousg.com/sala e fica conectado pelo resto do dia. Cada laudo que você enviar aparece automaticamente lá.")
+            Text("Gere a sessão no início do turno. O auxiliar digita o código UMA VEZ em sala.laudousg.com e fica conectado pelo resto do dia. Cada laudo que você enviar aparece automaticamente lá.")
                 .font(TextStyle.body)
                 .foregroundStyle(AppSurface.textSecondary)
                 .multilineTextAlignment(.center)
@@ -166,7 +166,7 @@ struct SalaPairingSheet: View {
                 .font(TextStyle.captionMedium)
                 .foregroundStyle(AppSurface.textSecondary)
                 .textCase(.uppercase)
-            instructionRow(number: "1", text: "O auxiliar abre laudousg.com/sala uma vez (em qualquer navegador)")
+            instructionRow(number: "1", text: "O auxiliar abre sala.laudousg.com uma vez (em qualquer navegador)")
             instructionRow(number: "2", text: "Digita o código e deixa a aba aberta o turno inteiro")
             instructionRow(number: "3", text: "Cada laudo que você enviar via 'Enviar p/ Sala' aparece lá em segundos")
         }
@@ -224,7 +224,7 @@ struct SalaPairingSheet: View {
             } label: {
                 actionLabel(
                     icon: vm.didCopyURL ? "checkmark" : "link",
-                    title: vm.didCopyURL ? "URL copiada" : "Copiar URL (laudousg.com/sala)"
+                    title: vm.didCopyURL ? "URL copiada" : "Copiar URL (sala.laudousg.com)"
                 )
             }
             .buttonStyle(PressableButtonStyle())
