@@ -7,13 +7,17 @@ final class AnalyticsViewModel {
     var isLoading = false
     var error: String?
     var summary: AnalyticsSummary?
+    var reports: [Report] = []
 
     func load() async {
         isLoading = true
         error = nil
 
         do {
-            summary = try await AnalyticsService.fetch()
+            async let fetchedSummary = AnalyticsService.fetch()
+            async let fetchedReports = HistoryService.fetchRecentReports(limit: 500)
+            summary = try await fetchedSummary
+            reports = try await fetchedReports
         } catch let apiError as APIError {
             error = apiError.errorDescription
         } catch let other {
@@ -104,6 +108,14 @@ struct AnalyticsView: View {
                 }
 
                 topCategories(summary.topCategories)
+
+                analyticsSection(title: "Calendário") {
+                    DailyCalendarView(reports: vm.reports, month: Date())
+                }
+
+                analyticsSection(title: "Patologias frequentes") {
+                    PathologyListView(aggregations: PathologyExtractor.extract(reports: vm.reports))
+                }
 
                 footer(summary)
             }
@@ -212,11 +224,21 @@ struct AnalyticsView: View {
         )
     }
 
-    private func footer(_ summary: AnalyticsSummary) -> some View {
-        HStack(spacing: Spacing.sm) {
-            footerItem(title: "Custo total", value: String(format: "$%.2f", summary.totalCostUsd))
-            footerItem(title: "Taxa de edição", value: "\(Int((summary.editsRatio * 100).rounded()))%")
+    private func analyticsSection<Content: View>(
+        title: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Text(title)
+                .font(TextStyle.subtitle)
+                .foregroundStyle(AppSurface.textPrimary)
+
+            content()
         }
+    }
+
+    private func footer(_ summary: AnalyticsSummary) -> some View {
+        footerItem(title: "Taxa de edição", value: "\(Int((summary.editsRatio * 100).rounded()))%")
     }
 
     private func footerItem(title: String, value: String) -> some View {
