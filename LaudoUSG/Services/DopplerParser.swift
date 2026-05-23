@@ -66,6 +66,13 @@ public enum DopplerParser {
         )
     }
 
+    /// Extrai a data da DUM do input livre. Reusa o mesmo parser interno
+    /// usado pelo `parse(achados:)`. Útil pra atalhos que precisam da Date
+    /// original (não da IG calculada).
+    public static func extractDUM(achados: String) -> Date? {
+        parseDUM(in: achados)
+    }
+
     private static func parseGestationalAge(in text: String, today: Date) -> GestationalAge? {
         if let dum = parseDUM(in: text),
            let result = GestationalAgeCalculator.calcByDUM(dum: dum, today: today) {

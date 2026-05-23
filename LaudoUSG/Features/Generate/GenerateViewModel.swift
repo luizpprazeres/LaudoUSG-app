@@ -11,6 +11,7 @@ struct GenerateShortcut: Identifiable, Hashable {
         case openIGCalculator
         case openDopplerCalculator
         case calcularPercentis
+        case calcularIGporDUM
         case insertText(String)
     }
     let id = UUID()
@@ -21,7 +22,7 @@ struct GenerateShortcut: Identifiable, Hashable {
         switch category {
         case .obstetrica, .dopplerObstetrico, .morfologico:
             return [
-                GenerateShortcut(label: "Calcular IG", action: .openIGCalculator),
+                GenerateShortcut(label: "Calcular IG pela DUM", action: .calcularIGporDUM),
                 GenerateShortcut(label: "Calcular percentis", action: .calcularPercentis),
                 GenerateShortcut(label: "BCF presentes", action: .insertText("Feto único, em situação longitudinal e apresentação cefálica, com BCF presentes."))
             ]
@@ -147,9 +148,26 @@ final class GenerateViewModel {
             isDopplerCalculatorPresented = true
         case .calcularPercentis:
             calcularPercentis()
+        case .calcularIGporDUM:
+            calcularIGporDUM()
         case .insertText(let text):
             insertSnippet(text)
         }
+    }
+
+    func calcularIGporDUM() {
+        guard let dum = DopplerParser.extractDUM(achados: inputText) else {
+            // Sem DUM detectada — fallback: abre IGCalculator pra usuário digitar manualmente
+            isIGCalculatorPresented = true
+            return
+        }
+        guard let result = GestationalAgeCalculator.calcByDUM(dum: dum) else {
+            // DUM no futuro ou diff inválido — fallback pra calculator
+            isIGCalculatorPresented = true
+            return
+        }
+        // Insere o bloco já formatado: "Idade gestacional de X semanas e Y dias (DUM: DD/MM/AAAA). DPP: DD/MM/AAAA."
+        insertSnippet(result.insertBloco)
     }
 
     func calcularPercentis() {
