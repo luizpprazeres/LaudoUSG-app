@@ -44,7 +44,7 @@ struct GenerateShortcut: Identifiable, Hashable {
         case .abdomenTotal, .abdomenSuperior, .abdomenTotalDoppler:
             return [
                 GenerateShortcut(label: "Esteatose leve", action: .insertText("Fígado de dimensões normais, contornos regulares, apresentando ecogenicidade discretamente aumentada, com leve atenuação sonora posterior, compatível com esteatose hepática leve.")),
-                GenerateShortcut(label: "Colecistectomia", action: .insertText("Paciente com colecistectomia prévia. Loja vesicular sem coleções ou imagens hipoecoicas residuais."))
+                GenerateShortcut(label: "Colecistectomia", action: .insertText("Ausência da imagem da vesícula biliar (paciente previamente submetida a colecistectomia)."))
             ]
         case .pelveFeminina:
             return [
