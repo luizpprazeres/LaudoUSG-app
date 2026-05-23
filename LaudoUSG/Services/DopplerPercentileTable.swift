@@ -69,12 +69,21 @@ public enum DopplerPercentileTable {
         let tolerance = 0.0005
 
         if ip < range.p5 - tolerance { return "<P5" }
+        if ip > range.p95 + tolerance { return ">P95" }
         if abs(ip - range.p5) <= tolerance { return "P5" }
-        if ip < range.p50 - tolerance { return "P25" }
         if abs(ip - range.p50) <= tolerance { return "P50" }
-        if ip < range.p95 - tolerance { return "P75" }
         if abs(ip - range.p95) <= tolerance { return "P95" }
-        return ">P95"
+
+        // P5/P95 cobrem ±1.6449σ na curva normal; reusa zTable do DopplerCalculator
+        // pra mapear z → percentil contínuo (P6..P94).
+        let sigma = (range.p95 - range.p5) / (2 * 1.6449)
+        guard sigma > 0 else { return "P50" }
+        let z = (ip - range.p50) / sigma
+        let p = DopplerCalculator.zToPercentile(z)
+        let rounded = Int(p.rounded())
+        if rounded <= 5 { return "P5" }
+        if rounded >= 95 { return "P95" }
+        return "P\(rounded)"
     }
 
     // Weekly p5, p50 and p95 derived from the Fetal Medicine Barcelona/FMF formulas already used by DopplerCalculator for UA PI.

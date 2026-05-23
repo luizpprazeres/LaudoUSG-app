@@ -50,6 +50,36 @@ struct SanityIssue: Identifiable, Codable, Hashable {
     let severity: String?
     let message: String
     let range: String?
+
+    // Backend (deterministicSanity.ts) emite `detail` no lugar de `message` e `type` no
+    // lugar de `code`. Decode tolerante pra aceitar ambos — alinhamento futuro fica no
+    // backend, mas o stream não pode quebrar pra issues sanity.
+    private enum CodingKeys: String, CodingKey {
+        case code, severity, message, range
+        case type, detail, trechoLaudo = "trecho_laudo"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let codeValue = try c.decodeIfPresent(String.self, forKey: .code)
+        let typeValue = try c.decodeIfPresent(String.self, forKey: .type)
+        self.code = codeValue ?? typeValue
+        self.severity = try c.decodeIfPresent(String.self, forKey: .severity)
+        let messageValue = try c.decodeIfPresent(String.self, forKey: .message)
+        let detailValue = try c.decodeIfPresent(String.self, forKey: .detail)
+        self.message = messageValue ?? detailValue ?? ""
+        let rangeValue = try c.decodeIfPresent(String.self, forKey: .range)
+        let trechoValue = try c.decodeIfPresent(String.self, forKey: .trechoLaudo)
+        self.range = rangeValue ?? trechoValue
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encodeIfPresent(code, forKey: .code)
+        try c.encodeIfPresent(severity, forKey: .severity)
+        try c.encode(message, forKey: .message)
+        try c.encodeIfPresent(range, forKey: .range)
+    }
 }
 
 struct SanityResult: Codable, Hashable {
