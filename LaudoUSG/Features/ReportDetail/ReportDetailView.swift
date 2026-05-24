@@ -67,6 +67,9 @@ struct ReportDetailView: View {
     @State private var didCopy: Bool = false
     @StateObject private var editorBridge = MarkdownEditorBridge()
     @State private var isSalaSheetPresented: Bool = false
+    // Default visualização (highlight roxo nas linhas com ____) — espelha
+    // UX do Generate. Toggle pencil pra entrar em edição WYSIWYG.
+    @State private var isEditingLaudo: Bool = false
 
     init(reportId: String) {
         self.reportId = reportId
@@ -164,12 +167,27 @@ struct ReportDetailView: View {
                 .padding(.horizontal, Spacing.md)
                 .padding(.vertical, Spacing.xs)
             Divider()
-            MarkdownTextEditor(
-                text: Binding(get: { vm.editingText }, set: { vm.textChanged($0) }),
-                bridge: editorBridge
-            )
-            .padding(.horizontal, Spacing.md)
-            .padding(.top, Spacing.xs)
+            if isEditingLaudo {
+                MarkdownTextEditor(
+                    text: Binding(get: { vm.editingText }, set: { vm.textChanged($0) }),
+                    bridge: editorBridge
+                )
+                .padding(.horizontal, Spacing.md)
+                .padding(.top, Spacing.xs)
+            } else {
+                ScrollView {
+                    Text(vm.editingText.laudoHighlighted)
+                        .font(TextStyle.bodyLarge)
+                        .foregroundStyle(AppSurface.textPrimary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, Spacing.md)
+                        .padding(.top, Spacing.xs)
+                        .textSelection(.enabled)
+                }
+                .scrollIndicators(.hidden)
+                .background(AppSurface.background)
+                .frame(maxHeight: .infinity)
+            }
             MedicalDisclaimerFooter()
                 .padding(.horizontal, Spacing.md)
                 .padding(.vertical, Spacing.xs)
@@ -182,32 +200,54 @@ struct ReportDetailView: View {
 
     private var formattingToolbar: some View {
         HStack(spacing: Spacing.xs) {
-            toolbarButton(systemImage: "bold", label: "Negrito") {
-                editorBridge.toggleBold()
+            if isEditingLaudo {
+                toolbarButton(systemImage: "bold", label: "Negrito") {
+                    editorBridge.toggleBold()
+                }
+                toolbarButton(systemImage: "italic", label: "Itálico") {
+                    editorBridge.toggleItalic()
+                }
+                Divider().frame(height: 22)
             }
-            toolbarButton(systemImage: "italic", label: "Itálico") {
-                editorBridge.toggleItalic()
-            }
-            Divider().frame(height: 22)
             Button {
                 Haptics.tap()
-                applyHeadingHighlights()
+                isEditingLaudo.toggle()
             } label: {
                 HStack(spacing: Spacing.xxs) {
-                    Image(systemName: "textformat.size.larger")
-                        .font(.system(size: 14, weight: .semibold))
-                    Text("Destacar títulos")
+                    Image(systemName: isEditingLaudo ? "eye.fill" : "pencil")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text(isEditingLaudo ? "Visualizar" : "Editar")
                         .font(TextStyle.captionMedium)
                 }
-                .foregroundStyle(BrandColor.primary)
+                .foregroundStyle(AppSurface.textSecondary)
                 .padding(.horizontal, Spacing.sm)
-                .frame(minHeight: 32)
-                .background(
-                    Capsule().fill(BrandColor.primaryTint)
-                )
+                .frame(minHeight: 30)
+                .background(Capsule().fill(AppSurface.card))
+                .overlay(Capsule().stroke(AppSurface.border, lineWidth: 1))
+            }
+            .buttonStyle(PressableButtonStyle())
+            if isEditingLaudo {
+                Divider().frame(height: 22)
+                Button {
+                    Haptics.tap()
+                    applyHeadingHighlights()
+                } label: {
+                    HStack(spacing: Spacing.xxs) {
+                        Image(systemName: "textformat.size.larger")
+                            .font(.system(size: 14, weight: .semibold))
+                        Text("Destacar títulos")
+                            .font(TextStyle.captionMedium)
+                    }
+                    .foregroundStyle(BrandColor.primary)
+                    .padding(.horizontal, Spacing.sm)
+                    .frame(minHeight: 32)
+                    .background(
+                        Capsule().fill(BrandColor.primaryTint)
+                    )
             }
             .buttonStyle(PressableButtonStyle())
             .accessibilityLabel("Destacar títulos do laudo em negrito")
+            }
             Spacer()
             saveIndicator
         }
