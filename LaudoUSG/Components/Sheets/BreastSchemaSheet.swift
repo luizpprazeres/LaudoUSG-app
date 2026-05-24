@@ -12,6 +12,8 @@ struct BreastSchemaSheet: View {
     @State private var findings: [BreastFinding] = []
     @State private var didAutoImport: Bool = false
     @State private var lastImportCount: Int? = nil
+    @State private var shareURL: URL? = nil
+    @State private var isExporting: Bool = false
 
     private var hasReport: Bool {
         !(reportText?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
@@ -61,9 +63,14 @@ struct BreastSchemaSheet: View {
                 BreastSchemaEditor(findings: $findings)
                     .padding(.horizontal, Spacing.md)
 
-                Text("Próximo passo: exportar imagem do esquema em PDF (paisagem).")
+                exportBar
+                    .padding(.horizontal, Spacing.md)
+
+                Text("Esquema didático — posição aproximada. Não substitui o laudo.")
                     .font(TextStyle.caption)
                     .foregroundStyle(AppSurface.textMuted)
+                    .italic()
+                    .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.horizontal, Spacing.md)
             }
             .padding(.vertical, Spacing.md)
@@ -82,6 +89,80 @@ struct BreastSchemaSheet: View {
                 scheduleToastHide()
             }
         }
+        .sheet(item: Binding(
+            get: { shareURL.map(ShareItem.init) },
+            set: { shareURL = $0?.url }
+        )) { item in
+            ShareSheet(items: [item.url])
+        }
+    }
+
+    // MARK: - Export
+
+    private var exportBar: some View {
+        VStack(alignment: .leading, spacing: Spacing.xxs) {
+            Text("Exportar").font(TextStyle.captionMedium).foregroundStyle(AppSurface.textSecondary).textCase(.uppercase)
+            HStack(spacing: Spacing.sm) {
+                exportButton(title: "PDF (paisagem)", icon: "doc.richtext") {
+                    Task { await export(format: .pdf) }
+                }
+                exportButton(title: "Imagem PNG", icon: "photo") {
+                    Task { await export(format: .png) }
+                }
+            }
+            .disabled(isExporting)
+            .overlay {
+                if isExporting {
+                    ProgressView()
+                        .controlSize(.small)
+                        .padding(8)
+                        .background(
+                            RoundedRectangle(cornerRadius: Radius.sm).fill(AppSurface.card)
+                        )
+                }
+            }
+        }
+    }
+
+    private func exportButton(title: String, icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: {
+            Haptics.tap()
+            action()
+        }) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 13, weight: .semibold))
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold))
+            }
+            .foregroundStyle(BrandColor.primaryDeep)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, Spacing.sm)
+            .background(
+                RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
+                    .fill(BrandColor.primary.opacity(0.12))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
+                    .stroke(BrandColor.primary.opacity(0.4), lineWidth: 1)
+            )
+        }
+    }
+
+    private enum ExportFormat { case pdf, png }
+
+    private func export(format: ExportFormat) async {
+        isExporting = true
+        defer { isExporting = false }
+        let url: URL? = await Task.detached { @MainActor in
+            switch format {
+            case .pdf: return BreastSchemaExporter.exportPDF(findings: findings)
+            case .png: return BreastSchemaExporter.exportPNG(findings: findings)
+            }
+        }.value
+        guard let url else { return }
+        Haptics.success()
+        shareURL = url
     }
 
     private var importButton: some View {
@@ -232,6 +313,21 @@ struct BreastSchemaSheet: View {
         findings[idx].approximate = false
         findings[idx].source = .manual
     }
+}
+
+private struct ShareItem: Identifiable {
+    let id = UUID()
+    let url: URL
+}
+
+private struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 private struct LobulatedSampleShape: Shape {

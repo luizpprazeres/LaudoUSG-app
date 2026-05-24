@@ -214,13 +214,21 @@ struct PlusSheet: View {
                         tint: Color(hex: "F43F5E"),
                         destination: .birads
                     )
-                    calculatorRow(
-                        title: "Esquema mamário (preview)",
-                        subtitle: "Diagrama bilateral — Step 1 sem editor ainda",
-                        icon: "rectangle.split.2x1",
-                        tint: Color(hex: "F43F5E"),
-                        destination: .breastSchema
-                    )
+                    if showsBreastSchema {
+                        calculatorRow(
+                            title: "Esquema mamário",
+                            subtitle: "Diagrama bilateral — importa achados do laudo",
+                            icon: "rectangle.split.2x1",
+                            tint: Color(hex: "F43F5E"),
+                            destination: .breastSchema
+                        )
+                    } else if categoryHint == .mamaria {
+                        disabledCalculatorRow(
+                            title: "Esquema mamário",
+                            subtitle: "Disponível após gerar o laudo",
+                            icon: "rectangle.split.2x1"
+                        )
+                    }
                 }
                 if showsTireoideCalcs {
                     calculatorRow(
@@ -323,6 +331,12 @@ struct PlusSheet: View {
     private var showsVolumeResidual: Bool {
         guard let c = categoryHint else { return true }
         return c == .viasUrinarias || c == .prostataSuprapubica || c == .prostataTransretal
+    }
+
+    /// Esquema mamário só é liberado após laudo gerado (texto não vazio).
+    private var showsBreastSchema: Bool {
+        guard categoryHint == .mamaria else { return false }
+        return !(reportText?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
     }
 
     private var consultorSection: some View {
