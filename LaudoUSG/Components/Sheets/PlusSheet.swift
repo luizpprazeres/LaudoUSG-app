@@ -18,6 +18,11 @@ struct PlusSheet: View {
         case hadlock
         case ila4q
         case anemiaMCAPSV
+        case afc
+        case ductoVenoso
+        case birads
+        case tirads
+        case preEclampsia
         case imageAnalysis(ReportCategory)
     }
 
@@ -69,6 +74,31 @@ struct PlusSheet: View {
                         onInsert: { insert($0) },
                         onDismiss: onDismiss
                     )
+                case .afc:
+                    AFCCalculatorSheet(
+                        onInsert: { insert($0) },
+                        onDismiss: onDismiss
+                    )
+                case .ductoVenoso:
+                    DuctoVenosoCalculatorSheet(
+                        onInsert: { insert($0) },
+                        onDismiss: onDismiss
+                    )
+                case .birads:
+                    BIRADSCalculatorSheet(
+                        onInsert: { insert($0) },
+                        onDismiss: onDismiss
+                    )
+                case .tirads:
+                    TIRADSCalculatorSheet(
+                        onInsert: { insert($0) },
+                        onDismiss: onDismiss
+                    )
+                case .preEclampsia:
+                    PreEclampsiaCalculatorSheet(
+                        onInsert: { insert($0) },
+                        onDismiss: onDismiss
+                    )
                 case .imageAnalysis(let category):
                     ImageAnalysisSheet(
                         category: category,
@@ -87,43 +117,115 @@ struct PlusSheet: View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             sectionTitle("Calculadoras")
             VStack(spacing: Spacing.xs) {
-                calculatorRow(
-                    title: "Idade gestacional",
-                    subtitle: "Por DUM ou USG (ACOG)",
-                    icon: "calendar",
-                    tint: BrandColor.primary,
-                    destination: .gestationalAge
-                )
-                calculatorRow(
-                    title: "Doppler obstétrico",
-                    subtitle: "Percentis Barcelona FMF",
-                    icon: "waveform.path.ecg",
-                    tint: Color(hex: "F97316"),
-                    destination: .dopplerObstetrico
-                )
-                calculatorRow(
-                    title: "Peso fetal (Hadlock)",
-                    subtitle: "EFW por biometria DBP+CC+CA+CF",
-                    icon: "scalemass",
-                    tint: Color(hex: "0EA5E9"),
-                    destination: .hadlock
-                )
-                calculatorRow(
-                    title: "ILA 4 quadrantes",
-                    subtitle: "Phelan — soma dos bolsões",
-                    icon: "drop.fill",
-                    tint: Color(hex: "06B6D4"),
-                    destination: .ila4q
-                )
-                calculatorRow(
-                    title: "Anemia fetal (MCA-PSV)",
-                    subtitle: "MoM via curva de Mari",
-                    icon: "drop",
-                    tint: Color(hex: "DC2626"),
-                    destination: .anemiaMCAPSV
-                )
+                if showsObstetricCalcs {
+                    calculatorRow(
+                        title: "Idade gestacional",
+                        subtitle: "Por DUM ou USG (ACOG)",
+                        icon: "calendar",
+                        tint: BrandColor.primary,
+                        destination: .gestationalAge
+                    )
+                    calculatorRow(
+                        title: "Peso fetal (Hadlock)",
+                        subtitle: "EFW por biometria DBP+CC+CA+CF",
+                        icon: "scalemass",
+                        tint: Color(hex: "0EA5E9"),
+                        destination: .hadlock
+                    )
+                    calculatorRow(
+                        title: "ILA 4 quadrantes",
+                        subtitle: "Phelan — soma dos bolsões",
+                        icon: "drop.fill",
+                        tint: Color(hex: "06B6D4"),
+                        destination: .ila4q
+                    )
+                }
+                if showsDopplerCalcs {
+                    calculatorRow(
+                        title: "Doppler obstétrico",
+                        subtitle: "Percentis Barcelona FMF",
+                        icon: "waveform.path.ecg",
+                        tint: Color(hex: "F97316"),
+                        destination: .dopplerObstetrico
+                    )
+                    calculatorRow(
+                        title: "Anemia fetal (MCA-PSV)",
+                        subtitle: "MoM via curva de Mari",
+                        icon: "drop",
+                        tint: Color(hex: "DC2626"),
+                        destination: .anemiaMCAPSV
+                    )
+                    calculatorRow(
+                        title: "Ducto venoso (Z-score)",
+                        subtitle: "Hecher 2001 — IP + onda A",
+                        icon: "waveform",
+                        tint: Color(hex: "F59E0B"),
+                        destination: .ductoVenoso
+                    )
+                }
+                if showsObstetricCalcs {
+                    calculatorRow(
+                        title: "Risco de pré-eclâmpsia (1T)",
+                        subtitle: "FMF simplificado — fatores + MAP + uterinas",
+                        icon: "exclamationmark.triangle",
+                        tint: Color(hex: "F43F5E"),
+                        destination: .preEclampsia
+                    )
+                }
+                if showsMamaCalcs {
+                    calculatorRow(
+                        title: "BI-RADS",
+                        subtitle: "Categorias 0-6 ACR — recomendação",
+                        icon: "heart.text.square",
+                        tint: Color(hex: "F43F5E"),
+                        destination: .birads
+                    )
+                }
+                if showsTireoideCalcs {
+                    calculatorRow(
+                        title: "TI-RADS",
+                        subtitle: "ACR — pontuação por 5 features",
+                        icon: "shield.lefthalf.filled",
+                        tint: Color(hex: "0EA5E9"),
+                        destination: .tirads
+                    )
+                }
+                if showsAFC {
+                    calculatorRow(
+                        title: "Folículos antrais (AFC)",
+                        subtitle: "Reserva ovariana — D + E",
+                        icon: "circle.grid.3x3",
+                        tint: Color(hex: "A855F7"),
+                        destination: .afc
+                    )
+                }
             }
         }
+    }
+
+    private var showsObstetricCalcs: Bool {
+        guard let c = categoryHint else { return true }
+        return c == .obstetrica || c == .dopplerObstetrico || c == .morfologico
+    }
+
+    private var showsDopplerCalcs: Bool {
+        guard let c = categoryHint else { return true }
+        return c == .dopplerObstetrico || c == .obstetrica || c == .morfologico
+    }
+
+    private var showsMamaCalcs: Bool {
+        guard let c = categoryHint else { return true }
+        return c == .mamaria
+    }
+
+    private var showsTireoideCalcs: Bool {
+        guard let c = categoryHint else { return true }
+        return c == .tireoide
+    }
+
+    private var showsAFC: Bool {
+        guard let c = categoryHint else { return true }
+        return c == .pelveFeminina
     }
 
     private var consultorSection: some View {
