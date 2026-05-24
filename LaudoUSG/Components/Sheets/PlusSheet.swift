@@ -23,6 +23,10 @@ struct PlusSheet: View {
         case birads
         case tirads
         case preEclampsia
+        case volumeProstatico
+        case volumeTireoideano
+        case volumeUterino
+        case volumeResidual
         case imageAnalysis(ReportCategory)
     }
 
@@ -96,6 +100,26 @@ struct PlusSheet: View {
                     )
                 case .preEclampsia:
                     PreEclampsiaCalculatorSheet(
+                        onInsert: { insert($0) },
+                        onDismiss: onDismiss
+                    )
+                case .volumeProstatico:
+                    VolumeProstaticoCalculatorSheet(
+                        onInsert: { insert($0) },
+                        onDismiss: onDismiss
+                    )
+                case .volumeTireoideano:
+                    VolumeTireoideanoCalculatorSheet(
+                        onInsert: { insert($0) },
+                        onDismiss: onDismiss
+                    )
+                case .volumeUterino:
+                    VolumeUterinoCalculatorSheet(
+                        onInsert: { insert($0) },
+                        onDismiss: onDismiss
+                    )
+                case .volumeResidual:
+                    VolumeResidualCalculatorSheet(
                         onInsert: { insert($0) },
                         onDismiss: onDismiss
                     )
@@ -199,6 +223,42 @@ struct PlusSheet: View {
                         destination: .afc
                     )
                 }
+                if showsVolumeProstatico {
+                    calculatorRow(
+                        title: "Volume prostático",
+                        subtitle: "Elipsoide + PSA density opcional",
+                        icon: "circle.grid.cross",
+                        tint: Color(hex: "10B981"),
+                        destination: .volumeProstatico
+                    )
+                }
+                if showsVolumeTireoideano {
+                    calculatorRow(
+                        title: "Volume tireoideano",
+                        subtitle: "Soma dos lobos D + E",
+                        icon: "shield.lefthalf.filled",
+                        tint: Color(hex: "0EA5E9"),
+                        destination: .volumeTireoideano
+                    )
+                }
+                if showsVolumeUterino {
+                    calculatorRow(
+                        title: "Volume uterino",
+                        subtitle: "Elipsoide por status hormonal",
+                        icon: "circle.dashed",
+                        tint: Color(hex: "A855F7"),
+                        destination: .volumeUterino
+                    )
+                }
+                if showsVolumeResidual {
+                    calculatorRow(
+                        title: "Resíduo pós-miccional",
+                        subtitle: "Volume vesical após esvaziamento",
+                        icon: "drop",
+                        tint: Color(hex: "06B6D4"),
+                        destination: .volumeResidual
+                    )
+                }
             }
         }
     }
@@ -226,6 +286,26 @@ struct PlusSheet: View {
     private var showsAFC: Bool {
         guard let c = categoryHint else { return true }
         return c == .pelveFeminina
+    }
+
+    private var showsVolumeProstatico: Bool {
+        guard let c = categoryHint else { return true }
+        return c == .prostataTransretal || c == .prostataSuprapubica
+    }
+
+    private var showsVolumeTireoideano: Bool {
+        guard let c = categoryHint else { return true }
+        return c == .tireoide
+    }
+
+    private var showsVolumeUterino: Bool {
+        guard let c = categoryHint else { return true }
+        return c == .pelveFeminina
+    }
+
+    private var showsVolumeResidual: Bool {
+        guard let c = categoryHint else { return true }
+        return c == .viasUrinarias || c == .prostataSuprapubica || c == .prostataTransretal
     }
 
     private var consultorSection: some View {
