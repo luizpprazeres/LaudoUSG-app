@@ -38,6 +38,15 @@ enum HistoryService {
             body: ReportFinalOutputUpdate(finalOutput: finalText, updatedAt: Date())
         )
     }
+
+    static func deleteReports(ids: [String]) async throws {
+        guard !ids.isEmpty else { return }
+        let csv = ids.joined(separator: ",")
+        try await SupabaseRESTClient.shared.delete(
+            "/rest/v1/reports",
+            query: ["id": "in.(\(csv))"]
+        )
+    }
 }
 
 private struct ReportEnvelope: Decodable {

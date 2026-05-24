@@ -11,6 +11,21 @@ final class HistoryViewModel {
     var sendingToSalaIds: Set<String> = []
     var lastSalaResult: SalaPushResult?
 
+    var isSelectionMode: Bool = false
+    var selectedIds: Set<String> = []
+    var isDeleting: Bool = false
+
+    var visibleReports: [Report] {
+        let q = filter.trimmedSearch.lowercased()
+        guard !q.isEmpty else { return reports }
+        return reports.filter { report in
+            let categoryLabel = report.category?.label.lowercased() ?? report.categoryCode.lowercased()
+            if categoryLabel.contains(q) { return true }
+            let bodies = [report.finalOutput, report.generatedOutput, report.rawInput]
+            return bodies.contains { ($0 ?? "").lowercased().contains(q) }
+        }
+    }
+
     func load() async {
         isLoading = true
         error = nil
@@ -27,6 +42,45 @@ final class HistoryViewModel {
 
     func applyFilterAndReload() {
         Task { await load() }
+    }
+
+    func enterSelectionMode() {
+        isSelectionMode = true
+        selectedIds.removeAll()
+    }
+
+    func exitSelectionMode() {
+        isSelectionMode = false
+        selectedIds.removeAll()
+    }
+
+    func toggleSelection(_ id: String) {
+        if selectedIds.contains(id) {
+            selectedIds.remove(id)
+        } else {
+            selectedIds.insert(id)
+        }
+    }
+
+    func selectAllVisible() {
+        selectedIds = Set(visibleReports.map { $0.id })
+    }
+
+    func deleteSelected() async -> Bool {
+        guard !selectedIds.isEmpty else { return true }
+        isDeleting = true
+        defer { isDeleting = false }
+        do {
+            let toDelete = Array(selectedIds)
+            try await HistoryService.deleteReports(ids: toDelete)
+            reports.removeAll { selectedIds.contains($0.id) }
+            updateAvailableCategories()
+            exitSelectionMode()
+            return true
+        } catch {
+            self.error = (error as? SupabaseError)?.errorDescription ?? error.localizedDescription
+            return false
+        }
     }
 
     private func updateAvailableCategories() {
@@ -51,6 +105,7 @@ struct SalaPushResult: Identifiable, Equatable {
 struct HistoryView: View {
     @State private var vm = HistoryViewModel()
     @State private var hasAppeared: Bool = false
+    @State private var isConfirmingDelete: Bool = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -72,7 +127,7 @@ struct HistoryView: View {
                         .background(AppSurface.background)
                 } else if let error = vm.error, vm.reports.isEmpty {
                     errorState(error)
-                } else if vm.reports.isEmpty {
+                } else if vm.visibleReports.isEmpty {
                     emptyState
                 } else {
                     list
@@ -82,6 +137,35 @@ struct HistoryView: View {
         .background(AppSurface.background.ignoresSafeArea())
         .navigationTitle("Histórico")
         .navigationBarTitleDisplayMode(.large)
+        .searchable(
+            text: Binding(
+                get: { vm.filter.searchText },
+                set: { vm.filter.searchText = $0 }
+            ),
+            placement: .navigationBarDrawer(displayMode: .always),
+            prompt: "Buscar em laudos"
+        )
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                if vm.isSelectionMode {
+                    Button("Cancelar") { vm.exitSelectionMode() }
+                } else {
+                    Button {
+                        vm.enterSelectionMode()
+                    } label: {
+                        Image(systemName: "checkmark.circle")
+                    }
+                    .disabled(vm.reports.isEmpty)
+                    .accessibilityLabel("Selecionar laudos")
+                }
+            }
+            if vm.isSelectionMode {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Todos") { vm.selectAllVisible() }
+                        .disabled(vm.visibleReports.isEmpty)
+                }
+            }
+        }
         .task { await vm.load() }
         .refreshable { await vm.load() }
         .onChange(of: vm.reports.count) { _, newCount in
@@ -90,42 +174,116 @@ struct HistoryView: View {
             }
         }
         .overlay(alignment: .bottom) {
-            if let result = vm.lastSalaResult {
+            if vm.isSelectionMode {
+                deleteBar
+                    .padding(.bottom, Spacing.lg)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if let result = vm.lastSalaResult {
                 salaToast(result)
                     .padding(.bottom, Spacing.lg)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         .animation(.snappy, value: vm.lastSalaResult)
+        .animation(.snappy, value: vm.isSelectionMode)
+        .confirmationDialog(
+            "Excluir \(vm.selectedIds.count) \(vm.selectedIds.count == 1 ? "laudo" : "laudos")?",
+            isPresented: $isConfirmingDelete,
+            titleVisibility: .visible
+        ) {
+            Button("Excluir", role: .destructive) {
+                Task { _ = await vm.deleteSelected() }
+            }
+            Button("Cancelar", role: .cancel) {}
+        } message: {
+            Text("Esta ação não pode ser desfeita.")
+        }
     }
 
     private var list: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                ForEach(Array(vm.reports.enumerated()), id: \.element.id) { index, report in
+                ForEach(Array(vm.visibleReports.enumerated()), id: \.element.id) { index, report in
                     reportRow(report: report, index: index)
                 }
             }
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.md)
+            .padding(.bottom, vm.isSelectionMode ? 80 : 0)
         }
     }
 
     @ViewBuilder
     private func reportRow(report: Report, index: Int) -> some View {
         ZStack(alignment: .topTrailing) {
-            NavigationLink(value: AppDestination.reportDetail(id: report.id)) {
-                reportCard(report)
+            if vm.isSelectionMode {
+                Button {
+                    Haptics.tap()
+                    vm.toggleSelection(report.id)
+                } label: {
+                    selectableCard(report: report)
+                }
+                .buttonStyle(PressableButtonStyle())
+            } else {
+                NavigationLink(value: AppDestination.reportDetail(id: report.id)) {
+                    reportCard(report)
+                }
+                .buttonStyle(PressableButtonStyle())
+                sendToSalaButton(report: report)
+                    .padding(.top, Spacing.sm)
+                    .padding(.trailing, Spacing.sm)
             }
-            .buttonStyle(PressableButtonStyle())
-
-            sendToSalaButton(report: report)
-                .padding(.top, Spacing.sm)
-                .padding(.trailing, Spacing.sm)
         }
         .opacity(hasAppeared || reduceMotion ? 1 : 0)
         .offset(y: hasAppeared || reduceMotion ? 0 : 12)
         .animation(.easeOut(duration: 0.28).delay(min(Double(index) * 0.05, 0.5)), value: hasAppeared)
+    }
+
+    private func selectableCard(report: Report) -> some View {
+        let isSelected = vm.selectedIds.contains(report.id)
+        return HStack(spacing: Spacing.sm) {
+            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                .font(.system(size: 22, weight: .medium))
+                .foregroundStyle(isSelected ? BrandColor.primary : AppSurface.textMuted)
+            reportCard(report)
+        }
+    }
+
+    private var deleteBar: some View {
+        let count = vm.selectedIds.count
+        let disabled = count == 0 || vm.isDeleting
+        return HStack(spacing: Spacing.sm) {
+            Text("\(count) selecionado\(count == 1 ? "" : "s")")
+                .font(TextStyle.bodyMedium)
+                .foregroundStyle(AppSurface.textPrimary)
+            Spacer()
+            Button {
+                isConfirmingDelete = true
+            } label: {
+                HStack(spacing: 6) {
+                    if vm.isDeleting {
+                        ProgressView().controlSize(.mini).tint(.white)
+                    } else {
+                        Image(systemName: "trash")
+                    }
+                    Text("Excluir")
+                }
+                .font(TextStyle.bodyMedium)
+                .foregroundStyle(.white)
+                .padding(.horizontal, Spacing.md)
+                .padding(.vertical, Spacing.xs)
+                .background(Capsule().fill(disabled ? AppSurface.textMuted : SemanticColor.errorText))
+            }
+            .disabled(disabled)
+        }
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.sm)
+        .background(
+            Capsule()
+                .fill(AppSurface.card)
+                .shadow(color: .black.opacity(0.1), radius: 16, y: 6)
+        )
+        .padding(.horizontal, Spacing.md)
     }
 
     private func sendToSalaButton(report: Report) -> some View {
@@ -212,7 +370,7 @@ struct HistoryView: View {
                     Text(formattedDate(report.createdAt))
                         .font(TextStyle.caption)
                         .foregroundStyle(AppSurface.textMuted)
-                        .padding(.trailing, 32)
+                        .padding(.trailing, vm.isSelectionMode ? 0 : 32)
                 }
                 Text(reportPreview(report))
                     .font(TextStyle.body)
@@ -233,18 +391,22 @@ struct HistoryView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: Spacing.md) {
-            Image(systemName: vm.filter.isActive ? "line.3.horizontal.decrease.circle" : "tray")
+        let searchActive = !vm.filter.trimmedSearch.isEmpty
+        let filterActive = vm.filter.isActive
+        return VStack(spacing: Spacing.md) {
+            Image(systemName: filterActive ? "line.3.horizontal.decrease.circle" : "tray")
                 .font(.system(size: 36, weight: .light))
                 .foregroundStyle(AppSurface.textMuted)
-            Text(vm.filter.isActive
-                ? "Nenhum laudo bate com esses filtros."
-                : "Nenhum laudo ainda. Crie o primeiro.")
+            Text(searchActive
+                ? "Nenhum laudo bate com “\(vm.filter.trimmedSearch)”."
+                : filterActive
+                    ? "Nenhum laudo bate com esses filtros."
+                    : "Nenhum laudo ainda. Crie o primeiro.")
                 .font(TextStyle.body)
                 .foregroundStyle(AppSurface.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, Spacing.lg)
-            if vm.filter.isActive {
+            if filterActive {
                 Button("Limpar filtros") {
                     vm.filter = HistoryFilter()
                     vm.applyFilterAndReload()

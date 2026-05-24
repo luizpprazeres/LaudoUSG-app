@@ -35,8 +35,13 @@ enum HistoryDateRange: String, CaseIterable, Identifiable {
 struct HistoryFilter: Equatable {
     var dateRange: HistoryDateRange = .all
     var categories: Set<ReportCategory> = []
+    var searchText: String = ""
 
     var isActive: Bool {
-        dateRange != .all || !categories.isEmpty
+        dateRange != .all || !categories.isEmpty || !trimmedSearch.isEmpty
+    }
+
+    var trimmedSearch: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
