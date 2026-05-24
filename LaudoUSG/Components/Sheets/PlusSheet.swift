@@ -15,6 +15,9 @@ struct PlusSheet: View {
     enum PlusDestination: Hashable {
         case gestationalAge
         case dopplerObstetrico
+        case hadlock
+        case ila4q
+        case anemiaMCAPSV
         case imageAnalysis(ReportCategory)
     }
 
@@ -51,6 +54,21 @@ struct PlusSheet: View {
                         onInsert: { insert($0) },
                         onDismiss: onDismiss
                     )
+                case .hadlock:
+                    HadlockCalculatorSheet(
+                        onInsert: { insert($0) },
+                        onDismiss: onDismiss
+                    )
+                case .ila4q:
+                    ILA4QCalculatorSheet(
+                        onInsert: { insert($0) },
+                        onDismiss: onDismiss
+                    )
+                case .anemiaMCAPSV:
+                    AnemiaMCAPSVCalculatorSheet(
+                        onInsert: { insert($0) },
+                        onDismiss: onDismiss
+                    )
                 case .imageAnalysis(let category):
                     ImageAnalysisSheet(
                         category: category,
@@ -83,10 +101,26 @@ struct PlusSheet: View {
                     tint: Color(hex: "F97316"),
                     destination: .dopplerObstetrico
                 )
-                disabledCalculatorRow(
-                    title: "Anemia fetal",
-                    subtitle: "Em breve",
-                    icon: "drop"
+                calculatorRow(
+                    title: "Peso fetal (Hadlock)",
+                    subtitle: "EFW por biometria DBP+CC+CA+CF",
+                    icon: "scalemass",
+                    tint: Color(hex: "0EA5E9"),
+                    destination: .hadlock
+                )
+                calculatorRow(
+                    title: "ILA 4 quadrantes",
+                    subtitle: "Phelan — soma dos bolsões",
+                    icon: "drop.fill",
+                    tint: Color(hex: "06B6D4"),
+                    destination: .ila4q
+                )
+                calculatorRow(
+                    title: "Anemia fetal (MCA-PSV)",
+                    subtitle: "MoM via curva de Mari",
+                    icon: "drop",
+                    tint: Color(hex: "DC2626"),
+                    destination: .anemiaMCAPSV
                 )
             }
         }
