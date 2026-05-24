@@ -6,6 +6,9 @@ struct PlusSheet: View {
     let onInsert: (String) -> Void
     let onDismiss: () -> Void
     var onOpenConsultor: (() -> Void)? = nil
+    /// Texto do laudo (quando disponível) — usado por features como o esquema mamário
+    /// que importam achados via parser.
+    var reportText: String? = nil
 
     @State private var path: [PlusDestination] = []
     @State private var phrases: [UserPhrase] = []
@@ -27,6 +30,7 @@ struct PlusSheet: View {
         case volumeTireoideano
         case volumeUterino
         case volumeResidual
+        case breastSchema
         case imageAnalysis(ReportCategory)
     }
 
@@ -123,6 +127,12 @@ struct PlusSheet: View {
                         onInsert: { insert($0) },
                         onDismiss: onDismiss
                     )
+                case .breastSchema:
+                    BreastSchemaSheet(
+                        reportText: reportText,
+                        onInsert: { insert($0) },
+                        onDismiss: onDismiss
+                    )
                 case .imageAnalysis(let category):
                     ImageAnalysisSheet(
                         category: category,
@@ -203,6 +213,13 @@ struct PlusSheet: View {
                         icon: "heart.text.square",
                         tint: Color(hex: "F43F5E"),
                         destination: .birads
+                    )
+                    calculatorRow(
+                        title: "Esquema mamário (preview)",
+                        subtitle: "Diagrama bilateral — Step 1 sem editor ainda",
+                        icon: "rectangle.split.2x1",
+                        tint: Color(hex: "F43F5E"),
+                        destination: .breastSchema
                     )
                 }
                 if showsTireoideCalcs {

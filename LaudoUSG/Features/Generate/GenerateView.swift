@@ -121,7 +121,8 @@ struct GenerateView: View {
                     } else {
                         vm.isPaywallPresented = true
                     }
-                } : nil
+                } : nil,
+                reportText: vm.displayedOutput.isEmpty ? nil : vm.displayedOutput
             )
         }
         .sheet(isPresented: Binding(get: { vm.isConsultorSheetPresented }, set: { vm.isConsultorSheetPresented = $0 })) {
