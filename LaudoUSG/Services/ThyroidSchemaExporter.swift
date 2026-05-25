@@ -11,16 +11,16 @@ enum ThyroidSchemaExporter {
     /// A4 landscape em pontos PDF.
     static let pageWidth: CGFloat = 842
     static let pageHeight: CGFloat = 595
-    static let margin: CGFloat = 40
+    static let margin: CGFloat = 28
 
     // MARK: - PDF (paisagem)
 
     static func exportPDF(findings: [ThyroidFinding]) -> URL? {
         // Esquema quadrado: altura limita o tamanho.
-        let usableH: CGFloat = pageHeight - margin * 2 - 60  // 60 pra header
-        let imgH = min(usableH, 460)
+        let usableH: CGFloat = pageHeight - margin * 2 - 56  // header ocupa ~56pt
+        let imgH = min(usableH, 500)
         let imgW = imgH  // 1:1
-        let textColumnGap: CGFloat = 24
+        let textColumnGap: CGFloat = 16
         let textColumnX = margin + imgW + textColumnGap
         let textColumnW = pageWidth - textColumnX - margin
 

@@ -10,16 +10,16 @@ enum BreastSchemaExporter {
     /// A4 landscape em pontos PDF.
     static let pageWidth: CGFloat = 842
     static let pageHeight: CGFloat = 595
-    static let margin: CGFloat = 40
+    static let margin: CGFloat = 28
 
     // MARK: - PDF (paisagem)
 
     static func exportPDF(findings: [BreastFinding]) -> URL? {
         let logicalAspect = BreastSchemaView.logicalWidth / BreastSchemaView.logicalHeight
 
-        // Esquema ocupa esquerda; lista textual à direita (largura 200 pt).
-        let textColumnW: CGFloat = 200
-        let textColumnGap: CGFloat = 20
+        // Esquema ocupa esquerda; lista textual à direita (largura compacta).
+        let textColumnW: CGFloat = 180
+        let textColumnGap: CGFloat = 16
         let imgW: CGFloat = pageWidth - margin * 2 - textColumnW - textColumnGap
         let imgH: CGFloat = imgW / logicalAspect
 
