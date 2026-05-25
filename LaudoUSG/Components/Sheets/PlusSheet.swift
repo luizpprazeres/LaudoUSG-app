@@ -32,6 +32,7 @@ struct PlusSheet: View {
         case volumeResidual
         case breastSchema
         case thyroidSchema
+        case venousSchema
         case imageAnalysis(ReportCategory)
     }
 
@@ -137,6 +138,11 @@ struct PlusSheet: View {
                 case .thyroidSchema:
                     ThyroidSchemaSheet(
                         reportText: reportText,
+                        onInsert: { insert($0) },
+                        onDismiss: onDismiss
+                    )
+                case .venousSchema:
+                    VenousSchemaSheet(
                         onInsert: { insert($0) },
                         onDismiss: onDismiss
                     )
@@ -270,6 +276,15 @@ struct PlusSheet: View {
                         destination: .afc
                     )
                 }
+                if showsVenousSchema {
+                    calculatorRow(
+                        title: "Cartografia venosa (preview)",
+                        subtitle: "Esquema MMII bilateral — Step 1 sem editor",
+                        icon: "waveform.path",
+                        tint: Color(hex: "F59E0B"),
+                        destination: .venousSchema
+                    )
+                }
                 if showsVolumeProstatico {
                     calculatorRow(
                         title: "Volume prostático",
@@ -365,6 +380,13 @@ struct PlusSheet: View {
     private var showsThyroidSchema: Bool {
         guard categoryHint == .tireoide else { return false }
         return !(reportText?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+    }
+
+    /// Cartografia venosa MMII — Step 1 ainda sem gate de laudo gerado
+    /// (será aplicado no Step 5). Visível pra Doppler venoso MMII (com/sem medidas).
+    private var showsVenousSchema: Bool {
+        guard let c = categoryHint else { return false }
+        return c == .dopplerVenosoMmii || c == .dopplerVenosoMmiiMedidas
     }
 
     private var consultorSection: some View {
