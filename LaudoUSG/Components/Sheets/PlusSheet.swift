@@ -31,6 +31,7 @@ struct PlusSheet: View {
         case volumeUterino
         case volumeResidual
         case breastSchema
+        case thyroidSchema
         case imageAnalysis(ReportCategory)
     }
 
@@ -129,6 +130,12 @@ struct PlusSheet: View {
                     )
                 case .breastSchema:
                     BreastSchemaSheet(
+                        reportText: reportText,
+                        onInsert: { insert($0) },
+                        onDismiss: onDismiss
+                    )
+                case .thyroidSchema:
+                    ThyroidSchemaSheet(
                         reportText: reportText,
                         onInsert: { insert($0) },
                         onDismiss: onDismiss
@@ -238,6 +245,21 @@ struct PlusSheet: View {
                         tint: Color(hex: "0EA5E9"),
                         destination: .tirads
                     )
+                    if showsThyroidSchema {
+                        calculatorRow(
+                            title: "Esquema tireoidiano",
+                            subtitle: "Diagrama bilateral — importa achados do laudo",
+                            icon: "rectangle.split.3x1",
+                            tint: Color(hex: "0EA5E9"),
+                            destination: .thyroidSchema
+                        )
+                    } else if categoryHint == .tireoide {
+                        disabledCalculatorRow(
+                            title: "Esquema tireoidiano",
+                            subtitle: "Disponível após gerar o laudo",
+                            icon: "rectangle.split.3x1"
+                        )
+                    }
                 }
                 if showsAFC {
                     calculatorRow(
@@ -336,6 +358,12 @@ struct PlusSheet: View {
     /// Esquema mamário só é liberado após laudo gerado (texto não vazio).
     private var showsBreastSchema: Bool {
         guard categoryHint == .mamaria else { return false }
+        return !(reportText?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+    }
+
+    /// Esquema tireoidiano só é liberado após laudo gerado (texto não vazio).
+    private var showsThyroidSchema: Bool {
+        guard categoryHint == .tireoide else { return false }
         return !(reportText?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
     }
 
