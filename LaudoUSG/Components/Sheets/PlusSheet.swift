@@ -143,6 +143,7 @@ struct PlusSheet: View {
                     )
                 case .venousSchema:
                     VenousSchemaSheet(
+                        reportText: reportText,
                         onInsert: { insert($0) },
                         onDismiss: onDismiss
                     )
@@ -279,7 +280,7 @@ struct PlusSheet: View {
                 if showsVenousSchema {
                     calculatorRow(
                         title: "Cartografia venosa (preview)",
-                        subtitle: "Esquema MMII bilateral — Step 1 sem editor",
+                        subtitle: "Esquema MMII bilateral com editor por chips",
                         icon: "waveform.path",
                         tint: Color(hex: "F59E0B"),
                         destination: .venousSchema
