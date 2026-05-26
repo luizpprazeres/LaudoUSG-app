@@ -27,14 +27,28 @@ enum SpeechServiceError: Error, LocalizedError {
 final class SpeechService {
     private(set) var isRecording: Bool = false
     private(set) var isTranscribing: Bool = false
+    /// Sub-estágio do isTranscribing — pra UX mostrar "Enviando áudio..." vs "Aguardando IA...".
+    private(set) var transcribingStage: TranscribingStage = .idle
     private(set) var currentTranscript: String = ""
     private(set) var lastError: SpeechServiceError?
     private(set) var elapsed: TimeInterval = 0
+    /// Amplitude normalizada (0.0–1.0) do último tick. UI usa isso pra waveform.
+    private(set) var currentLevel: Float = 0
+    /// Palavras estimadas por tempo de fala ativa (~0.35s por palavra acima de threshold).
+    private(set) var estimatedWordCount: Int = 0
+
+    enum TranscribingStage {
+        case idle
+        case uploading      // áudio sendo enviado pro backend
+        case processing     // IA transcrevendo
+    }
 
     private let log = Logger(subsystem: "com.laudousg.LaudoUSG", category: "Speech")
     private var recorder: AVAudioRecorder?
     private var fileURL: URL?
     private var startedAt: Date?
+    private var activeSpeechSeconds: Double = 0
+    private var lastTickAt: Date?
 
     func requestPermissions() async -> Bool {
         let granted: Bool = await withCheckedContinuation { continuation in
@@ -72,7 +86,7 @@ final class SpeechService {
 
         do {
             let recorder = try AVAudioRecorder(url: tmpURL, settings: settings)
-            recorder.isMeteringEnabled = false
+            recorder.isMeteringEnabled = true
             guard recorder.prepareToRecord() else {
                 throw SpeechServiceError.recorderFailed("prepareToRecord retornou false")
             }
@@ -82,10 +96,15 @@ final class SpeechService {
             self.recorder = recorder
             self.fileURL = tmpURL
             self.startedAt = Date()
+            self.lastTickAt = Date()
             self.elapsed = 0
+            self.currentLevel = 0
+            self.activeSpeechSeconds = 0
+            self.estimatedWordCount = 0
             self.currentTranscript = ""
             self.lastError = nil
             self.isRecording = true
+            self.transcribingStage = .idle
             log.info("Recording started -> \(tmpURL.lastPathComponent, privacy: .public)")
         } catch let error as SpeechServiceError {
             lastError = error
@@ -119,7 +138,11 @@ final class SpeechService {
         }
 
         isTranscribing = true
-        defer { isTranscribing = false }
+        transcribingStage = .uploading
+        defer {
+            isTranscribing = false
+            transcribingStage = .idle
+        }
 
         do {
             let transcript = try await uploadAndTranscribe(fileURL: fileURL)
@@ -146,13 +169,44 @@ final class SpeechService {
         self.fileURL = nil
         isRecording = false
         isTranscribing = false
+        transcribingStage = .idle
         currentTranscript = ""
+        currentLevel = 0
+        estimatedWordCount = 0
+        activeSpeechSeconds = 0
         cleanupSession()
     }
 
+    /// Chamado pela UI a cada ~80ms. Atualiza elapsed, amplitude do mic e contador de palavras estimado.
     func tick() {
-        guard isRecording, let startedAt else { return }
+        guard isRecording, let startedAt, let recorder else { return }
         elapsed = Date().timeIntervalSince(startedAt)
+
+        recorder.updateMeters()
+        // averagePower retorna dB de -160 (silêncio) a 0 (saturado). Normalizamos pra 0–1.
+        let db = recorder.averagePower(forChannel: 0)
+        let normalized = Self.normalizeLevel(db: db)
+        currentLevel = normalized
+
+        // Estima palavras: tempo "acima de threshold" / 0.35s ≈ 1 palavra
+        let now = Date()
+        let delta = lastTickAt.map { now.timeIntervalSince($0) } ?? 0
+        lastTickAt = now
+        if normalized > 0.18 {
+            activeSpeechSeconds += delta
+        }
+        estimatedWordCount = max(0, Int((activeSpeechSeconds / 0.35).rounded()))
+    }
+
+    /// Mapeia dB do AVAudioRecorder pra 0–1 com curva agradável de visualização.
+    private static func normalizeLevel(db: Float) -> Float {
+        let minDb: Float = -50   // tudo abaixo disso é "silêncio" visual
+        let maxDb: Float = -8    // ponto onde a barra fica cheia
+        if db < minDb { return 0 }
+        if db > maxDb { return 1 }
+        let linear = (db - minDb) / (maxDb - minDb)
+        // Aplica curva pra deixar o meio mais expressivo
+        return pow(linear, 0.7)
     }
 
     private func cleanupSession() {
