@@ -384,6 +384,38 @@ Padrão completo salvo em `/Users/luizprazeres/.claude/projects/-Users-luizpraze
 | 4 | pending | Calculadoras (IG ACOG + Doppler FMF) + PlusSheet snippets clicáveis + dark mode polimento + haptics + fontes Inter+Barlow embarcadas |
 | 5+ | pending | Analytics real, Biblioteca clínica, Segurança/2FA, Sala do Auxiliar, billing Stripe |
 
+### 14.1 Próximas categorias com prioridade
+
+13 categorias estão hoje em `ReportCategory.priority` (Generate picker). Faltam **17** que existem no enum mas ainda não são oferecidas, e várias **não têm esquema/parser dedicado** (vs. o que já existe pra Tireoide, Mamária, Doppler venoso MMII). Lista priorizada por volume clínico esperado × custo de implementação:
+
+| Prio | Categoria | Status atual | Próximo passo |
+|---|---|---|---|
+| **P0** | `OBSTETRICA` | No picker. Sem calculadora IG dedicada (só doppler) | Esquema biometria fetal: DBP/CC/CA/CF → IG Hadlock auto + percentis peso (Intergrowth-21st) |
+| **P0** | `MORFOLOGICO` | No picker. Sem checklist anatômico | Checklist 20-22 sem: SNC, face, tórax, abdome, urinário, esquelético + status (visto/não visto) |
+| **P0** | `MAMARIA` | Esquema mamário existe (BreastSchemaEditor) | Step 6: parser BI-RADS por lesão + recomendação automática (acompanhamento/biópsia) |
+| **P0** | `PELVE_FEMININA` | No picker. Esquema miomas planejado (`roadmap-esquema-miomas.md`) | Implementar mockup FIGO PALM-COEIN + parser de miomas (já tem regex no backend) |
+| **P1** | `DOPPLER_VENOSO_MMII_MEDIDAS` | Editor + parser existem (S19.15) | Cartografia visual pré-op safena magna/parva com calibres |
+| **P1** | `DOPPLER_ARTERIAL_MMII` | No picker | Tabela ITB + segmentos (femoral/poplítea/tibiais) + classificação Rutherford |
+| **P1** | `DOPPLER_RENAL` | No picker | Tabela IR/IP por rim + diferença esquerda/direita (estenose >70% se IR>0.8) |
+| **P1** | `ESCROTAL` | No picker (S5+ planejado) | Esquema testicular L/R + checklist varicocele/hidrocele/microlitíase |
+| **P2** | `PROSTATA_TRANSRETAL` | No picker | Volume PSA-density + zonas (periférica/transição) + classes BPH |
+| **P2** | `PROSTATA_SUPRAPUBICA` | No picker | Volume + resíduo pós-miccional já existe na calc (S19.6) — wire-up |
+| **P2** | `PARATIREOIDE` | No enum, sem priority | Reuso UI Tireoide + esquema 4 paratireoides + scintigraphy cross-ref |
+| **P2** | `CERVICAL` | No enum, sem priority | Reuso parcial Tireoide + linfonodos por nível (Ia-VI) |
+| **P2** | `GLANDULAS_SALIVARES` | No enum, sem priority | Esquema parótidas/submandibulares + sialolitíase |
+| **P3** | `REGIAO_INGUINAL` | No enum, sem priority | Esquema canal inguinal + classificação hérnia (indireta/direta/femoral) |
+| **P3** | `PAREDE_ABDOMINAL` | No enum, sem priority | Localização hérnia (umbilical/incisional) + medidas defeito |
+| **P3** | `PARTES_MOLES` | No enum, sem priority | Generic lesion mapper (localização + dimensões + ecotextura) |
+| **P3** | `TRANSFONTANELA` | No enum, sem priority | Neonatal: ventriculomegalia + hemorragia Papile + checklist anatômico |
+| **P3** | `OCULAR` | No enum, sem priority | Biometria axial + relações vítreas |
+| **P3** | `MUSCULOESQUELETICO_RARAS` | No enum, sem priority | Cobre indicações <5% (parede torácica, plexo braquial) |
+| **P3** | `DOPPLER_FISTULA_AV` | No enum, sem priority | Hemodiálise: PSV anastomose + classificação maturação |
+
+**P0 = 4 categorias** (alto volume + diferencial competitivo, próximas 3-4 sprints).
+**P1 = 4 categorias** (alto volume mas wire-up de coisa já pronta no backend).
+**P2 = 5 categorias** (volume médio, exigem trabalho de modelagem).
+**P3 = 7 categorias** (cauda longa, agrupar em sprint de "completude").
+
 ---
 
 ## 15. Anti-patterns conhecidos (não faça)
