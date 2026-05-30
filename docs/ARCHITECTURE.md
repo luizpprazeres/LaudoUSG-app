@@ -1,9 +1,14 @@
 # LaudoUSG iOS — Arquitetura
 
-> **Última atualização:** 2026-05-17 (Sprint 3 fechado)
+> **Última atualização:** 2026-05-30 (Sprints S4-S21 + S22 OBSTETRICA + Sala rounds 1-5 fechados)
 > **Repo:** `/Users/luizprazeres/laudousg-swift/LaudoUSG`
 > **Bundle:** `com.laudousg.LaudoUSG`
 > **Audiência:** Claude Code, Codex, agentes Maestri, e Luiz quando retoma após pausa.
+>
+> **Marcos recentes em produção:**
+> - iOS Build 1.0 (77) submetido à Apple Review em 2026-05-23
+> - S22 OBSTETRICA: refactor HadlockCalculator + Intergrowth-21st + Hadlock 1991 + WHO Multicentre (placeholder) + SexDetector pt-BR + PreferencesStore client-side + atalho "Calcular IG por biometria" — entregue por dex1 em 14m48s, build verde
+> - Sala do Auxiliar (sala.laudousg.com) reformulada via 5 rounds Claude Code + dex1 review: paleta branca + paginação A4 real + ações na topbar + resumo Total/Média + frases NATIVAS/GLOBAIS + anotações persistidas com numeração auto na CONCLUSÃO
 
 ---
 
@@ -264,6 +269,22 @@ Injeção: `@Environment(AppState.self)` em qualquer view abaixo de `AppShellVie
 
 Backend **não tem** `GET /api/reports` (listagem). Listing vai direto no Supabase com RLS.
 
+### Backend Sala do Auxiliar (`https://sala.laudousg.com` → rewrite host-based pra laudousgmobile.vercel.app)
+
+PWA web read-only acessada por auxiliar via pairing_code 6 chars base32. Não é consumida pelo iOS, mas faz parte do mesmo monorepo `apps/api/` — listada aqui pra mapa completo do backend.
+
+| Método | Path | Pra quê |
+|---|---|---|
+| GET | `/api/sala/[token]/phrases?categoryCode=X` | Frases NATIVAS (do médico-dono via service role) + GLOBAIS (8 hardcoded) |
+| GET | `/api/sala/[token]/annotations?reportId=X` | Lista anotações persistidas do laudo |
+| POST | `/api/sala/[token]/annotations` | Cria anotação (numeração auto após último N) da CONCLUSÃO) |
+| DELETE | `/api/sala/[token]/annotations/[id]` | Remove anotação |
+| GET | `/api/sala/latest` | Polling do laudo mais recente da sala |
+
+Quality gates do Round 5: rate limit in-memory (10 POST/min, 5 DELETE/min por token), ownership check de reportId (403 se report.user_id ≠ médico-dono), limite de 30 anotações por laudo, placement enum strict (400), reportId obrigatório no POST. RLS de `sala_annotations` bloqueia anon — acesso só via service role no backend.
+
+Helpers compartilhados: `apps/api/src/server/sala/validateToken.ts` + `apps/api/src/server/sala/rateLimit.ts`.
+
 ---
 
 ## 9. Decisões trancadas (não-negotiables)
@@ -381,8 +402,35 @@ Padrão completo salvo em `/Users/luizprazeres/.claude/projects/-Users-luizpraze
 | 2 | ✅ | End-to-end Abdome Total: Login Supabase + Whisper transcrição + SSE generate live + auto-save |
 | 3 | ✅ | Expansão: HistoryView real (Supabase REST), edição inline auto-save, SettingsView style picker, SanityChecker client-side (zero IA), ProfileService |
 | 3.5 | ✅ | Documentação versionada (este doc + DESIGN_SYSTEM.md + CLAUDE.md) |
-| 4 | pending | Calculadoras (IG ACOG + Doppler FMF) + PlusSheet snippets clicáveis + dark mode polimento + haptics + fontes Inter+Barlow embarcadas |
-| 5+ | pending | Analytics real, Biblioteca clínica, Segurança/2FA, Sala do Auxiliar, billing Stripe |
+| 4-9 | ✅ | Calculadoras (IG/Hadlock/Doppler/Pré-eclâmpsia/Volume etc), PlusSheet clicável, WYSIWYG editor, Sala do Auxiliar end-to-end no app iOS, signup completo, dark mode, haptics |
+| 10 | ✅ | Auth completa funcional E2E (esqueci senha + editar perfil + excluir conta) |
+| 11 | ✅ | App Store hygiene Parte 2: Termos de Uso + Política de Privacidade + Disclaimer expandido + accept gate + onboarding |
+| 14 | ✅ | Doppler/líquido/DUM refinements (4 blocks RAG + atalho IG por DUM 1-clique) |
+| 15 | ✅ | Consultor IA (backend gpt-5 reasoning + iOS sheet completo + markdown + image picker) |
+| 16 | ✅ | Analytics: DailyCalendar + PathologyList |
+| 17.1-17.8 | ✅ | StoreKit 2 IAP + PaywallSheet + TourFlow + Backend IAP + App Store metadata + Submit Build 77 + Beta whitelist server-side |
+| 18 | ✅ | Mobile RN revive: branding + Sala + EAS AAB build |
+| 19.14-19.16 | ✅ | Doppler venoso MMII: cartografia Step 1 + editor por chips + parser PT |
+| 20.6 | ✅ | Recording: waveform real do mic + contador de palavras |
+| 21 | ✅ | Perf generate: typewriter falso removido + status rotation reduzida + sanity async |
+| 22 | ✅ | OBSTETRICA core client-side: refactor HadlockCalculator (2 enums) + Intergrowth-21st + Hadlock 1991 (dados oficiais) + WHO Multicentre (placeholder TODO sex-specific) + SexDetector pt-BR + PreferencesStore + atalho "Calcular IG por biometria" — entregue dex1 14m48s |
+| 23 | pending | Folha A4 gráficos Intergrowth + export PDF (Swift Charts + UIGraphicsPDFRenderer) |
+| 24 | pending | Upload arquivos médico → Sala (Supabase Storage + PHPickerViewController + Sala PWA renderer) |
+| 25+ | pending | Sala paginação polish + Apple Watch + Preferências expansão (TI-RADS/headers/BI-RADS) |
+
+### 14.0 Sala do Auxiliar — rounds entregues (2026-05-28 → 2026-05-30)
+
+| Round | Commit | Conteúdo |
+|---|---|---|
+| 1+2 | `097aacd` | Bg branco + slate (de creme + amber) + box-shadow paper + paginação A4 real via useLayoutEffect + ResizeObserver + document.fonts.ready + remoção density threshold workaround + título tipografia = corpo + modo Destacar só bold |
+| 3 | `0da8129` | Sidebar 200px (+40) + timeline empilhada vertical (time 10px + label 11.5px) — fim do truncamento |
+| 4 | `e89dfa3` | Ações Destacar/Copiar/Imprimir migradas pra topbar + Resumo expandido Total + Média (span/N-1) + A4 scale dinâmico CSS var --paper-scale + Inter Tight 800 + clipboard HTML neutro + sidebar discreta |
+| 4.2 | `9f9e5ba` | Spacer `<p>&nbsp;</p>` entre título e body no clipboard + font 15px na visualização |
+| 5 | `23d738e` | Migration `sala_annotations` (RLS bloqueada anon) + endpoints `/phrases` (NATIVAS via service role + 8 GLOBAIS) + `/annotations` GET/POST/DELETE com rate limit + ownership + 30/laudo + placement enum strict + reportId obrigatório. Frontend: state insertedPhrases (local) + persistedAnnotations (backend), painel FRASES substitui ATIVIDADE, numeração auto (N+1) na CONCLUSÃO + fallback footer, DELETE rollback honesto |
+
+Reviews dex1: round 1 (1 ajuste), round 2 (workaround flagrado, paginação real entregue), round 4 (2 ajustes: média e clipboard), round 5 (6 ajustes + 1 residual reportId). Sempre @devops fechou commits + Vercel deploy automático.
+
+Limitação conhecida: padding em páginas intermediárias 3+ (S25). WHO Multicentre sex-specific table pendente curadoria.
 
 ### 14.1 Próximas categorias com prioridade
 
