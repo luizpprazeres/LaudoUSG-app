@@ -2,8 +2,11 @@ import SwiftUI
 
 @MainActor
 struct HadlockCalculatorSheet: View {
+    @Environment(AppState.self) private var app
+
     let onInsert: (String) -> Void
     let onDismiss: () -> Void
+    var sexHint: Sex = .unisex
 
     @State private var dbpText: String = ""
     @State private var ccText: String = ""
@@ -12,15 +15,16 @@ struct HadlockCalculatorSheet: View {
     @State private var igWeeks: Int = 30
     @State private var igDays: Int = 0
 
-    private var result: HadlockCalculator.HadlockResult? {
+    private var result: BiometryResult? {
         guard let dbp = decimal(dbpText),
               let cc = decimal(ccText),
               let ca = decimal(caText),
               let cf = decimal(cfText) else { return nil }
         return HadlockCalculator.calculate(.init(
             dbp: dbp, cc: cc, ca: ca, cf: cf,
-            igWeeks: igWeeks, igDays: igDays
-        ))
+            igWeeks: igWeeks, igDays: igDays, sex: sexHint
+        ), weightFormula: app.preferences.weightFormula,
+           percentileSource: app.preferences.percentileSource)
     }
 
     var body: some View {
@@ -96,7 +100,7 @@ struct HadlockCalculatorSheet: View {
         }
     }
 
-    private func resultCard(_ r: HadlockCalculator.HadlockResult) -> some View {
+    private func resultCard(_ r: BiometryResult) -> some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
             HStack(alignment: .firstTextBaseline) {
                 Text("\(r.weightGrams) g")
@@ -106,9 +110,12 @@ struct HadlockCalculatorSheet: View {
                     .font(TextStyle.body)
                     .foregroundStyle(AppSurface.textSecondary)
             }
-            Text(r.percentile)
+            Text(r.percentileLabel)
                 .font(TextStyle.bodyLargeMedium)
                 .foregroundStyle(r.isSGA || r.isLGA ? SemanticColor.warningText : AppSurface.textPrimary)
+            Text("Cálculo via \(r.percentileSourceUsed.displayName)")
+                .font(TextStyle.caption)
+                .foregroundStyle(AppSurface.textMuted)
             if r.isSGA {
                 Text("⚠️ Peso abaixo do esperado (PIG) — considerar Doppler obstétrico em 1-2 semanas.")
                     .font(TextStyle.caption)
@@ -127,7 +134,7 @@ struct HadlockCalculatorSheet: View {
         )
     }
 
-    private func insertButton(_ r: HadlockCalculator.HadlockResult) -> some View {
+    private func insertButton(_ r: BiometryResult) -> some View {
         Button {
             Haptics.success()
             onInsert("\n" + r.insertBloco + "\n")

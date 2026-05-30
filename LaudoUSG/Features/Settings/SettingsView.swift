@@ -41,6 +41,8 @@ struct SettingsView: View {
                     .buttonStyle(PressableButtonStyle())
                 }
 
+                PreferencesSection()
+
                 section(title: "Sala do Auxiliar") {
                     Button {
                         Haptics.tap()

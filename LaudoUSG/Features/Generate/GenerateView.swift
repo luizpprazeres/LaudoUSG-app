@@ -156,6 +156,18 @@ struct GenerateView: View {
                 )
             }
         }
+        .sheet(isPresented: Binding(get: { vm.isHadlockCalculatorPresented }, set: { vm.isHadlockCalculatorPresented = $0 })) {
+            NavigationStack {
+                HadlockCalculatorSheet(
+                    onInsert: { snippet in
+                        vm.insertSnippet(snippet)
+                        vm.isHadlockCalculatorPresented = false
+                    },
+                    onDismiss: { vm.isHadlockCalculatorPresented = false },
+                    sexHint: SexDetector.detect(vm.inputText)
+                )
+            }
+        }
         .sheet(isPresented: Binding(get: { vm.isDopplerCalculatorPresented }, set: { vm.isDopplerCalculatorPresented = $0 })) {
             NavigationStack {
                 DopplerCalculatorSheet(

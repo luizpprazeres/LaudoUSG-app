@@ -1,35 +1,83 @@
 import Foundation
+import os
 
-/// Estimativa de peso fetal por biometria — Hadlock 4 (1985), a fórmula mais usada
-/// no Brasil pra cálculo de EFW (Estimated Fetal Weight) em USG obstétrica.
-///
-/// log10(EFW) = 1.3596 − 0.00386·CA·CF + 0.0064·CC + 0.00061·DBP·CA + 0.0424·CA + 0.174·CF
-///
-/// Aceita medidas em mm ou cm — converte automaticamente. Output em gramas + percentil
-/// estimado via tabela Hadlock por IG (peso esperado p10/p50/p90 por semana).
+struct BiometryInput: Sendable, Hashable {
+    let dbp: Double
+    let cc: Double
+    let ca: Double
+    let cf: Double
+    let igWeeks: Int
+    let igDays: Int
+    let sex: Sex
+
+    init(
+        dbp: Double,
+        cc: Double,
+        ca: Double,
+        cf: Double,
+        igWeeks: Int,
+        igDays: Int,
+        sex: Sex = .unisex
+    ) {
+        self.dbp = dbp
+        self.cc = cc
+        self.ca = ca
+        self.cf = cf
+        self.igWeeks = igWeeks
+        self.igDays = igDays
+        self.sex = sex
+    }
+}
+
+enum WeightFormula: String, Codable, Sendable, CaseIterable {
+    case hadlock4_1985
+
+    var version: String { "hadlock4-1985" }
+    var displayName: String { "Hadlock 4 (1985)" }
+}
+
+enum PercentileSource: String, Codable, Sendable, CaseIterable {
+    case intergrowth21st = "intergrowth21st"
+    case hadlock1991 = "hadlock1991"
+    case whoMulticentre2017 = "whoMulticentre2017"
+
+    var displayName: String {
+        switch self {
+        case .intergrowth21st: "Intergrowth-21st"
+        case .hadlock1991: "Hadlock 1991"
+        case .whoMulticentre2017: "WHO Multicentre 2017"
+        }
+    }
+
+    var auditTag: String { displayName }
+}
+
+struct BiometryResult: Sendable, Hashable {
+    let weightGrams: Int
+    let weightVariation: Int
+    let percentileValue: Int
+    let percentileLabel: String
+    let isSGA: Bool
+    let isLGA: Bool
+    let insertBloco: String
+    let formulaUsed: WeightFormula
+    let percentileSourceUsed: PercentileSource
+    let sexDetected: Sex
+    let sexUsedInLookup: Sex
+    let sourceVersion: String
+}
+
 enum HadlockCalculator {
-    struct HadlockInput: Sendable, Hashable {
-        let dbp: Double  // cm
-        let cc: Double   // cm
-        let ca: Double   // cm
-        let cf: Double   // cm
-        let igWeeks: Int
-        let igDays: Int
-    }
+    private static let logger = Logger(
+        subsystem: "com.laudousg.LaudoUSG",
+        category: "obstetric"
+    )
 
-    struct HadlockResult: Sendable, Hashable {
-        let weightGrams: Int         // EFW arredondado
-        let weightVariation: Int     // ±15% (Hadlock erro típico)
-        let percentile: String       // "<P10", "P10", "P25", "P50", "P75", "P90", ">P90"
-        let percentileValue: Int     // 0-100 estimado
-        let isSGA: Bool              // small for gestational age (<P10)
-        let isLGA: Bool              // large for gestational age (>P90)
-        let insertBloco: String      // snippet pra inserir no laudo
-    }
-
-    /// Calcula EFW via Hadlock 4. Retorna nil se algum input < 1.0 cm (provavelmente erro).
-    static func calculate(_ input: HadlockInput) -> HadlockResult? {
-        // Normaliza mm → cm (se valor > 20, assume mm)
+    static func calculate(
+        _ input: BiometryInput,
+        weightFormula: WeightFormula = .hadlock4_1985,
+        percentileSource: PercentileSource = .intergrowth21st
+    ) -> BiometryResult? {
         let dbpCm = normalizeCm(input.dbp)
         let ccCm = normalizeCm(input.cc)
         let caCm = normalizeCm(input.ca)
@@ -46,58 +94,119 @@ enum HadlockCalculator {
 
         let efw = pow(10, logEFW)
         let weight = Int(efw.rounded())
-        let variation = Int((efw * 0.15).rounded())  // Hadlock 4: ±15% pra IG > 24 sem
+        let variation = Int((efw * 0.15).rounded())
+        guard let lookup = percentileLookup(
+            source: percentileSource,
+            weight: weight,
+            igWeeks: input.igWeeks,
+            igDays: input.igDays,
+            sex: input.sex
+        ) else { return nil }
+        let percentileValue = lookup.percentile
+        let percentileLabel = PercentileMath.label(percentileValue)
+        let bloco = insertBlock(
+            weight: weight,
+            variation: variation,
+            percentileLabel: percentileLabel,
+            source: percentileSource,
+            sexDetected: input.sex,
+            sexUsedInLookup: lookup.sexUsed
+        )
 
-        let percentileValue = percentileFor(weight: weight, igWeeks: input.igWeeks)
-        let percentileLabel = labelForPercentile(percentileValue)
+        logger.info(
+            "biometry weight=\(weight) percentile=\(percentileValue) source=\(percentileSource.auditTag) sexDetected=\(input.sex.rawValue) sexUsed=\(lookup.sexUsed.rawValue) version=\(lookup.version)"
+        )
 
-        let bloco = """
-        Peso fetal estimado em \(weight) g (±\(variation) g, \(percentileLabel)).
-        """
-
-        return HadlockResult(
+        return BiometryResult(
             weightGrams: weight,
             weightVariation: variation,
-            percentile: percentileLabel,
             percentileValue: percentileValue,
+            percentileLabel: percentileLabel,
             isSGA: percentileValue < 10,
             isLGA: percentileValue > 90,
-            insertBloco: bloco
+            insertBloco: bloco,
+            formulaUsed: weightFormula,
+            percentileSourceUsed: percentileSource,
+            sexDetected: input.sex,
+            sexUsedInLookup: lookup.sexUsed,
+            sourceVersion: lookup.version
         )
+    }
+
+    static func gestationalAgeByFemur(cf: Double) -> GestationalAge? {
+        let cfMm = cf > 20 ? cf : cf * 10
+        guard cfMm > 10 else { return nil }
+        let cfCm = cfMm / 10
+        let weeks = 10.35 + 2.46 * cfCm + 0.17 * pow(cfCm, 2)
+        guard weeks.isFinite, weeks > 0 else { return nil }
+        let roundedDays = Int((weeks * 7).rounded())
+        return GestationalAge(weeks: roundedDays / 7, days: roundedDays % 7, source: .biometria)
     }
 
     private static func normalizeCm(_ value: Double) -> Double {
         value > 20 ? value / 10 : value
     }
 
-    /// Tabela de peso fetal esperado (p10/p50/p90 em gramas) por semana, baseada em
-    /// Hadlock et al. 1991 + estudos brasileiros. Interpola percentil real via Z-score.
-    private static let weightCurve: [Int: (p10: Double, p50: Double, p90: Double)] = [
-        20: (260, 300, 340), 21: (310, 360, 410), 22: (370, 430, 490),
-        23: (440, 510, 580), 24: (520, 600, 680), 25: (600, 700, 800),
-        26: (700, 820, 940), 27: (820, 960, 1100), 28: (950, 1110, 1270),
-        29: (1100, 1280, 1460), 30: (1260, 1470, 1680), 31: (1430, 1670, 1910),
-        32: (1610, 1880, 2150), 33: (1800, 2100, 2400), 34: (2000, 2330, 2660),
-        35: (2200, 2570, 2940), 36: (2410, 2810, 3210), 37: (2620, 3060, 3500),
-        38: (2820, 3290, 3760), 39: (3000, 3500, 4000), 40: (3160, 3690, 4220),
-        41: (3270, 3820, 4370),
-    ]
-
-    private static func percentileFor(weight: Int, igWeeks: Int) -> Int {
-        let clampedWeek = max(20, min(41, igWeeks))
-        guard let curve = weightCurve[clampedWeek] else { return 50 }
-        // Aproxima sigma via (p90 - p10)/2.5631 (z=±1.2816 cobre p10-p90)
-        let sigma = (curve.p90 - curve.p10) / 2.5631
-        guard sigma > 0 else { return 50 }
-        let z = (Double(weight) - curve.p50) / sigma
-        return Int(DopplerCalculator.zToPercentile(z).rounded())
+    private static func percentileLookup(
+        source: PercentileSource,
+        weight: Int,
+        igWeeks: Int,
+        igDays: Int,
+        sex: Sex
+    ) -> (percentile: Int, sexUsed: Sex, version: String)? {
+        switch source {
+        case .intergrowth21st:
+            return (
+                IntergrowthTable.percentileFor(
+                    weight: weight,
+                    igWeeks: igWeeks,
+                    igDays: igDays
+                ),
+                .unisex,
+                IntergrowthTable.version
+            )
+        case .hadlock1991:
+            return (
+                HadlockTable.percentileFor(
+                    weight: weight,
+                    igWeeks: igWeeks,
+                    igDays: igDays
+                ),
+                .unisex,
+                HadlockTable.version
+            )
+        case .whoMulticentre2017:
+            guard let band = WHOMulticentreTable.lookup(
+                igWeeks: igWeeks,
+                igDays: igDays,
+                sex: sex
+            ) else {
+                return nil
+            }
+            return (
+                PercentileMath.percentileFor(weight: weight, band: band),
+                WHOMulticentreTable.usedSex(requested: sex),
+                WHOMulticentreTable.version
+            )
+        }
     }
 
-    private static func labelForPercentile(_ p: Int) -> String {
-        if p < 3 { return "percentil < 3" }
-        if p < 10 { return "percentil \(p)" }
-        if p > 97 { return "percentil > 97" }
-        if p > 90 { return "percentil \(p)" }
-        return "percentil \(p)"
+    private static func insertBlock(
+        weight: Int,
+        variation: Int,
+        percentileLabel: String,
+        source: PercentileSource,
+        sexDetected: Sex,
+        sexUsedInLookup: Sex
+    ) -> String {
+        var suffix = ""
+        if sexUsedInLookup != .unisex && source == .whoMulticentre2017 {
+            suffix = " — curva \(sexUsedInLookup.displayName)"
+        }
+        var text = "Peso fetal estimado em \(weight) g (±\(variation) g, \(percentileLabel) \(source.displayName)\(suffix))."
+        if sexDetected != .unisex {
+            text += " Sexo \(sexDetected.displayName) detectado nos achados."
+        }
+        return text
     }
 }

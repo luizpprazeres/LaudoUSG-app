@@ -8,6 +8,11 @@ final class AppState {
     var profile: UserProfile?
     var defaultWritingStyleId: String = GenerateRequest.defaultWritingStyleId
     var availableStyles: [WritingStyleRecord] = []
+    let preferencesStore = PreferencesStore()
+
+    var preferences: UserPreferences {
+        preferencesStore.preferences
+    }
 
     var needsLegalAcceptance: Bool {
         guard let profile else { return false }
@@ -123,6 +128,10 @@ final class AppState {
 
     func markChecked(signedIn: Bool) {
         session = signedIn ? .authenticated : .signedOut
+    }
+
+    func updatePreferences(_ preferences: UserPreferences) {
+        preferencesStore.update(preferences)
     }
 }
 

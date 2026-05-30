@@ -12,6 +12,7 @@ struct GenerateShortcut: Identifiable, Hashable {
         case openDopplerCalculator
         case calcularPercentis
         case calcularIGporDUM
+        case calcularIGporCF
         case insertText(String)
     }
     let id = UUID()
@@ -22,12 +23,14 @@ struct GenerateShortcut: Identifiable, Hashable {
         switch category {
         case .obstetrica, .morfologico:
             return [
+                GenerateShortcut(label: "Calcular IG pela biometria", action: .calcularIGporCF),
                 GenerateShortcut(label: "Calcular IG pela DUM", action: .calcularIGporDUM),
                 GenerateShortcut(label: "Calcular percentis", action: .calcularPercentis),
                 GenerateShortcut(label: "BCF presentes", action: .insertText("Feto único, em situação longitudinal e apresentação cefálica, com BCF presentes."))
             ]
         case .dopplerObstetrico:
             return [
+                GenerateShortcut(label: "Calcular IG pela biometria", action: .calcularIGporCF),
                 GenerateShortcut(label: "Calcular IG pela DUM", action: .calcularIGporDUM),
                 GenerateShortcut(label: "Calcular percentis", action: .calcularPercentis)
             ]
@@ -90,6 +93,7 @@ final class GenerateViewModel {
     var isPlusSheetPresented = false
     var isSalaSheetPresented = false
     var isIGCalculatorPresented = false
+    var isHadlockCalculatorPresented = false
     var isDopplerCalculatorPresented = false
     var isRecordingOverlayPresented = false
     var isConsultorSheetPresented = false
@@ -148,6 +152,8 @@ final class GenerateViewModel {
             calcularPercentis()
         case .calcularIGporDUM:
             calcularIGporDUM()
+        case .calcularIGporCF:
+            calcularIGporCF()
         case .insertText(let text):
             insertSnippet(text)
         }
@@ -155,24 +161,31 @@ final class GenerateViewModel {
 
     func calcularIGporDUM() {
         guard let dum = DopplerParser.extractDUM(achados: inputText) else {
-            // Sem DUM detectada — fallback: abre IGCalculator pra usuário digitar manualmente
-            isIGCalculatorPresented = true
+            lastWarning = "Adicione a DUM aos achados pra calcular a IG (ex.: \"DUM 20/01/26\")."
             return
         }
         guard let result = GestationalAgeCalculator.calcByDUM(dum: dum) else {
-            // DUM no futuro ou diff inválido — fallback pra calculator
-            isIGCalculatorPresented = true
+            lastWarning = "DUM inválida ou em data futura. Confira a data nos achados."
             return
         }
-        // Insere o bloco já formatado: "Idade gestacional de X semanas e Y dias (DUM: DD/MM/AAAA). DPP: DD/MM/AAAA."
         insertSnippet(result.insertBloco)
+    }
+
+    func calcularIGporCF() {
+        let findings = DopplerParser.parse(achados: inputText)
+        guard let ig = findings.ig, ig.source == .biometria else {
+            lastWarning = "Adicione o CF (comprimento do fêmur) aos achados pra calcular a IG pela biometria."
+            return
+        }
+        let cfDisplay = extractCFDisplay(from: inputText) ?? "____"
+        let text = "Idade gestacional pela biometria: \(ig.weeks) semanas e \(ig.days) dias (CF: \(cfDisplay), Hadlock 1984)."
+        insertSnippet(text)
     }
 
     func calcularPercentis() {
         let findings = DopplerParser.parse(achados: inputText)
         guard let ig = findings.ig, ig.weeks >= 20 && ig.weeks <= 41 else {
-            // Sem IG ou IG fora da faixa de tabelas (20-41 sem) — abre calculator pra inserir manual
-            isDopplerCalculatorPresented = true
+            lastWarning = "Adicione a IG aos achados (entre 20 e 41 semanas) pra calcular percentis Doppler."
             return
         }
 
@@ -197,8 +210,7 @@ final class GenerateViewModel {
         }
 
         if pieces.isEmpty {
-            // Sem IPs reconhecidos — abre calculator pra digitar
-            isDopplerCalculatorPresented = true
+            lastWarning = "Adicione AU IP, ACM IP ou Uterinas IP aos achados pra calcular percentis."
             return
         }
 
@@ -212,6 +224,23 @@ final class GenerateViewModel {
         formatter.minimumFractionDigits = 2
         formatter.maximumFractionDigits = 2
         return formatter.string(from: NSNumber(value: value)) ?? String(format: "%.2f", value)
+    }
+
+    private func extractCFDisplay(from text: String) -> String? {
+        guard let match = text.firstMatch(
+            of: /(?i)\b(?:cf|fl|f[eê]mur)\b\s*[:=]?\s*([0-9]+(?:[,.][0-9]+)?)\s*(mm|cm)?/
+        ) else {
+            return nil
+        }
+        let rawValue = String(match.1)
+        let unit: String
+        if let captured = match.2 {
+            unit = String(captured).lowercased()
+        } else {
+            let numeric = Double(rawValue.replacingOccurrences(of: ",", with: ".")) ?? 0
+            unit = numeric > 20 ? "mm" : "cm"
+        }
+        return "\(rawValue) \(unit)"
     }
 
     func startRecording() {
