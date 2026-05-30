@@ -260,28 +260,32 @@ struct GenerateView: View {
         let isLaudoWithBadge = tab == .laudo && vm.hasLaudoOutput && !isActive
         return Button {
             Haptics.tap()
-            withAnimation(.easeOut(duration: 0.18)) { vm.activeTab = tab }
+            withAnimation(.laudousgSmooth) { vm.activeTab = tab }
         } label: {
             ZStack {
                 if isActive {
                     Capsule()
                         .fill(BrandColor.primary)
-                        .matchedGeometryEffect(id: "tabPill", in: tabNamespace)
+                        .scaleEffect(x: 1, y: 1.05)
+                        .smoothMorph(id: "tabPill", in: tabNamespace)
                 }
                 HStack(spacing: Spacing.xxs) {
                     Text(label)
-                        .font(TextStyle.bodySemibold)
+                        .font(isActive ? TextStyle.bodySemibold : TextStyle.bodyMedium)
                     if isLaudoWithBadge {
                         Circle()
                             .fill(BrandColor.primary)
                             .frame(width: 6, height: 6)
                     }
                 }
-                .foregroundStyle(isActive ? .white : AppSurface.textSecondary)
+                .foregroundStyle(isActive ? .white : BrandColor.primary.opacity(0.7))
                 .frame(maxWidth: .infinity)
             }
             .frame(maxWidth: .infinity)
             .frame(height: 36)
+            .scaleEffect(x: 1, y: isActive ? 1 : 0.96)
+            .opacity(isActive ? 1 : 0.7)
+            .animation(.laudousgSmooth, value: isActive)
         }
         .buttonStyle(PressableButtonStyle())
     }
