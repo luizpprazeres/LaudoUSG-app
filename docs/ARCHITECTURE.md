@@ -1,14 +1,15 @@
 # LaudoUSG iOS — Arquitetura
 
-> **Última atualização:** 2026-05-30 (Sprints S4-S21 + S22 OBSTETRICA + Sala rounds 1-5 fechados)
+> **Última atualização:** 2026-05-30 (S22 commitado + Sala rounds 1-8 + iOS Round 8 animações merged)
 > **Repo:** `/Users/luizprazeres/laudousg-swift/LaudoUSG`
 > **Bundle:** `com.laudousg.LaudoUSG`
 > **Audiência:** Claude Code, Codex, agentes Maestri, e Luiz quando retoma após pausa.
 >
 > **Marcos recentes em produção:**
 > - iOS Build 1.0 (77) submetido à Apple Review em 2026-05-23
-> - S22 OBSTETRICA: refactor HadlockCalculator + Intergrowth-21st + Hadlock 1991 + WHO Multicentre (placeholder) + SexDetector pt-BR + PreferencesStore client-side + atalho "Calcular IG por biometria" — entregue por dex1 em 14m48s, build verde
-> - Sala do Auxiliar (sala.laudousg.com) reformulada via 5 rounds Claude Code + dex1 review: paleta branca + paginação A4 real + ações na topbar + resumo Total/Média + frases NATIVAS/GLOBAIS + anotações persistidas com numeração auto na CONCLUSÃO
+> - **S22 OBSTETRICA** (commit `2624683`): refactor HadlockCalculator com 2 enums separados (WeightFormula + PercentileSource), 3 tabelas embarcadas (Intergrowth-21st Stirnemann 2016 unisex + Hadlock 1991+Gardosi unisex + WHO Multicentre placeholder TODO), SexDetector pt-BR + 12 testes, PreferencesStore UserDefaults puro, Settings UI radio list, atalho "Calcular IG por biometria" — entregue por dex1 em 14m48s, build verde
+> - **iOS Round 8 animações** (merge commit `a2e6f85`): AnimationKit em `Components/Animations/` (4 modifiers: SmoothMorph, SymbolBreathing, FluidEntrance, Animation+Presets) + Tab switcher Achados↔Laudo com depth (matchedGeometry) + Botão "Gerar laudo" width-stable morph (sem deslocar elementos vizinhos). Estilo Apple Music/Wallet, spring damping alto sem bounce. Cross-review Claude Code aprovou.
+> - **Sala do Auxiliar** (sala.laudousg.com) reformulada via **8 rounds** Claude Code + dex1 review: paleta branca + paginação A4 real + ações topbar + resumo Total/Média + frases NATIVAS/GLOBAIS por categoria + anotações persistidas com numeração auto + frases motivacionais discretas no topbar + animações fluidas entrada de laudo + highlight anotação dark-aware.
 
 ---
 
@@ -413,24 +414,51 @@ Padrão completo salvo em `/Users/luizprazeres/.claude/projects/-Users-luizpraze
 | 19.14-19.16 | ✅ | Doppler venoso MMII: cartografia Step 1 + editor por chips + parser PT |
 | 20.6 | ✅ | Recording: waveform real do mic + contador de palavras |
 | 21 | ✅ | Perf generate: typewriter falso removido + status rotation reduzida + sanity async |
-| 22 | ✅ | OBSTETRICA core client-side: refactor HadlockCalculator (2 enums) + Intergrowth-21st + Hadlock 1991 (dados oficiais) + WHO Multicentre (placeholder TODO sex-specific) + SexDetector pt-BR + PreferencesStore + atalho "Calcular IG por biometria" — entregue dex1 14m48s |
+| 22 | ✅ | OBSTETRICA core client-side: refactor HadlockCalculator (2 enums) + Intergrowth-21st + Hadlock 1991 (dados oficiais) + WHO Multicentre (placeholder TODO sex-specific) + SexDetector pt-BR + PreferencesStore + atalho "Calcular IG por biometria" — entregue dex1 14m48s. Commit `2624683`. |
+| iOS Round 8 | ✅ | **AnimationKit + 1ª onda animações fluidas iOS** — `Components/Animations/` (4 modifiers: SmoothMorph, SymbolBreathing, FluidEntrance, Animation+Presets). Tab switcher Achados↔Laudo com depth (matchedGeometry + scale Y 1.05/0.96 + opacity + weight diferenciado, estilo Apple Music pill). Botão "Gerar laudo" width-stable morph (largura FIXA durante idle→loading→done, texto encolhe + spinner emerge centro simultâneo, checkmark SymbolEffect.appear 900ms). Implementado dex1 25min via worktree iso. Merge commit `a2e6f85`. |
 | 23 | pending | Folha A4 gráficos Intergrowth + export PDF (Swift Charts + UIGraphicsPDFRenderer) |
 | 24 | pending | Upload arquivos médico → Sala (Supabase Storage + PHPickerViewController + Sala PWA renderer) |
-| 25+ | pending | Sala paginação polish + Apple Watch + Preferências expansão (TI-RADS/headers/BI-RADS) |
+| 25+ | pending | Sala paginação polish + Apple Watch + Preferências expansão (TI-RADS/headers/BI-RADS) + 2ª onda animações iOS (Recording overlay/Banner/Settings toggle) + a11y reduce motion guard no AnimationKit |
 
-### 14.0 Sala do Auxiliar — rounds entregues (2026-05-28 → 2026-05-30)
+### 14.0 Sala do Auxiliar — 8 rounds + hotfixes entregues (2026-05-28 → 2026-05-30)
 
 | Round | Commit | Conteúdo |
 |---|---|---|
-| 1+2 | `097aacd` | Bg branco + slate (de creme + amber) + box-shadow paper + paginação A4 real via useLayoutEffect + ResizeObserver + document.fonts.ready + remoção density threshold workaround + título tipografia = corpo + modo Destacar só bold |
-| 3 | `0da8129` | Sidebar 200px (+40) + timeline empilhada vertical (time 10px + label 11.5px) — fim do truncamento |
-| 4 | `e89dfa3` | Ações Destacar/Copiar/Imprimir migradas pra topbar + Resumo expandido Total + Média (span/N-1) + A4 scale dinâmico CSS var --paper-scale + Inter Tight 800 + clipboard HTML neutro + sidebar discreta |
-| 4.2 | `9f9e5ba` | Spacer `<p>&nbsp;</p>` entre título e body no clipboard + font 15px na visualização |
-| 5 | `23d738e` | Migration `sala_annotations` (RLS bloqueada anon) + endpoints `/phrases` (NATIVAS via service role + 8 GLOBAIS) + `/annotations` GET/POST/DELETE com rate limit + ownership + 30/laudo + placement enum strict + reportId obrigatório. Frontend: state insertedPhrases (local) + persistedAnnotations (backend), painel FRASES substitui ATIVIDADE, numeração auto (N+1) na CONCLUSÃO + fallback footer, DELETE rollback honesto |
+| 1+2 | `097aacd` | Bg branco + slate + box-shadow paper + paginação A4 real (useLayoutEffect + ResizeObserver + fonts.ready) + título=corpo + Destacar só bold |
+| 3 | `0da8129` | Sidebar 200px (+40) + timeline empilhada vertical |
+| 4 | `e89dfa3` | Ações topbar + Resumo Total+Média (span/N-1) + A4 scale dinâmico --paper-scale + Inter Tight 800 + clipboard HTML neutro + sidebar discreta |
+| 4.2 | `9f9e5ba` | Spacer `<p>&nbsp;</p>` clipboard + font 15px na visualização |
+| hotfix | `38552be` | font 17px |
+| hotfix | `c3f23d8` | font 18.5px |
+| 5 | `23d738e` | Migration `sala_annotations` + endpoints `/phrases` + `/annotations` CRUD com rate limit + ownership + 30/laudo + placement strict + reportId obrigatório. Frontend: insertedPhrases (local) + persistedAnnotations (backend), FRASES substitui ATIVIDADE, numeração auto N+1 na CONCLUSÃO + fallback footer, DELETE rollback honesto |
+| 6 | `10341a2` | Frases por categoria — migration aditiva `user_phrases.category_codes[]` + trigger sync UPDATE-aware + GLOBAIS categorizadas (6 obstet + 2 tireoide) + PostgREST `cs`/`eq` filter + regex CATEGORY_CODE_RE validation. iOS Build 77 inalterado (Codable ignora coluna nova) |
+| 7 | `e809bff` | Frases motivacionais discretas no topbar (50 hardcoded em 6 categorias: filosofia/bíblicas/literárias BR/humor/propaganda/sabedoria) + hook `useMotivationalQuote` (sessionStorage + visibility + cooldown 3min unificado + StrictMode guard). Itálica 11.5px ellipsis adapta dark |
+| hotfix | `0a23062` | font frase motivacional 10.5→11.5px |
+| 8 | `b4dd8e1` | Animações fluidas — idea 10 (novo laudo entrando `key={id}` + @keyframes 360ms translateY+scale cubic-bezier smooth) + idea 11 (anotação added highlight `var(--brand-soft)` 1.4s adapta light/dark). Estilo Apple-like, sem bounce. Cross-review Claude Code aprovou |
 
-Reviews dex1: round 1 (1 ajuste), round 2 (workaround flagrado, paginação real entregue), round 4 (2 ajustes: média e clipboard), round 5 (6 ajustes + 1 residual reportId). Sempre @devops fechou commits + Vercel deploy automático.
+**Reviews dex1 ao longo dos rounds**: R1 (1 ajuste amber), R2 (red flag density threshold → paginação real), R4 (2 ajustes média + clipboard), R5 (6 ajustes RLS+rate limit+ownership+placement+rollback+bug reset + 1 residual reportId), R6 (1 fix trigger UPDATE-aware + 2 defensivos), R7 (1 fix cooldown unificado), R8 (2 ressalvas opcionais: dark mode atendida + a11y backlog).
 
-Limitação conhecida: padding em páginas intermediárias 3+ (S25). WHO Multicentre sex-specific table pendente curadoria.
+**Padrão consolidado**: Claude Code implementa → review dex1 → ajustes round X.1 → @devops commit+push → Vercel auto-deploy. Tempo médio por round ~30min-2h.
+
+**Limitações conhecidas (entram em S25)**:
+- Paginação polish: padding em páginas intermediárias 3+ (texto colado no topo). 1-2 páginas OK.
+- Rate limit in-memory: state não compartilhado entre instâncias Vercel serverless. MVP aceitável, futuro Upstash Redis.
+- Globals duplicados Swift (UserPhrasesService) ↔ TS (route.ts). Futuro: JSON em packages/shared.
+- WHO Multicentre placeholder (S22 iOS).
+- A11y reduce motion guard no AnimationKit iOS (Round 8). Curtas/sutis, baixo impacto. PR polish futuro.
+
+**Tabelas Supabase novas em prod**:
+- `sala_annotations` (round 5): id, sala_token, report_id, text (1-4000), placement enum, created_at. RLS sem policies (service role bypassa).
+- `user_phrases.category_codes TEXT[]` (round 6): coluna aditiva + GIN index + trigger sync UPDATE-aware. iOS Build 77 continua lendo legacy `category_code`.
+
+**Arquivos novos no monorepo backend** (`/apps/api/src/`):
+- `app/api/sala/[token]/phrases/route.ts` (GET com filtro por categoria)
+- `app/api/sala/[token]/annotations/route.ts` (GET + POST)
+- `app/api/sala/[token]/annotations/[id]/route.ts` (DELETE)
+- `server/sala/validateToken.ts` (pairing_code 6 chars base32 → user_id)
+- `server/sala/rateLimit.ts` (Map<token, bucket> + cleanup 5min unref)
+- `lib/motivationalQuotes.ts` (50 quotes hardcoded curados)
+- `lib/useMotivationalQuote.ts` (hook isolado SSR-safe)
 
 ### 14.1 Próximas categorias com prioridade
 
