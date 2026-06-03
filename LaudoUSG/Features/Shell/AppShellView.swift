@@ -68,7 +68,7 @@ struct AppShellView: View {
                 .environment(app)
         }
         .fullScreenCover(isPresented: showOnboardingGate) {
-            OnboardingView(onCompleted: {})
+            OnboardingFlow(onCompleted: {})
                 .environment(app)
         }
         .fullScreenCover(isPresented: $isTourPresented) {
