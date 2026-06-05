@@ -121,6 +121,10 @@ struct SettingsView: View {
                         navRowLabel("Transcrição ao vivo (Deepgram)")
                     }
                     .buttonStyle(PressableButtonStyle())
+                    NavigationLink(destination: MyomaSchematicScreen()) {
+                        navRowLabel("Esquema de miomas (FIGO)")
+                    }
+                    .buttonStyle(PressableButtonStyle())
                 }
 
                 section(title: "Zona de risco") {
