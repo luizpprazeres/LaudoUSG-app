@@ -187,7 +187,7 @@ struct GenerateView: View {
             if vm.isRecordingOverlayPresented {
                 RecordingOverlay(
                     isPresented: Binding(get: { vm.isRecordingOverlayPresented }, set: { vm.isRecordingOverlayPresented = $0 }),
-                    speech: vm.speech,
+                    deepgram: vm.deepgram,
                     onCancel: { vm.cancelRecording() },
                     onStop: { vm.finishRecording() }
                 )
@@ -566,7 +566,7 @@ struct GenerateView: View {
 
     private func performCopyLaudo() {
         #if canImport(UIKit)
-        UIPasteboard.general.string = vm.editedLaudoText
+        UIPasteboard.general.string = vm.editedLaudoText.strippedReviewMarkers
         Haptics.success()
         #endif
         withAnimation(.easeOut(duration: 0.15)) { didCopyLaudo = true }
