@@ -152,6 +152,7 @@ final class DeepgramLiveService {
             .init(name: "interim_results", value: "true"),
             .init(name: "smart_format", value: "true"),
             .init(name: "punctuate", value: "true"),
+            .init(name: "numerals", value: "true"),   // medidas como dígitos (2,5 cm)
             .init(name: "endpointing", value: "300"),
         ]
         guard let url = comps.url else { throw DeepgramError.badURL }

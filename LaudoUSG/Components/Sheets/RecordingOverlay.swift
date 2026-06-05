@@ -130,7 +130,10 @@ struct RecordingOverlay: View {
         .opacity(deepgram.isStreaming ? 1 : 0)
     }
 
-    // MARK: - Legenda ao vivo (texto rolando — os primeiros somem conforme chega novo)
+    // MARK: - Legenda ao vivo (estilo lyrics do Spotify — texto sobe, topo some)
+
+    /// ~4 linhas visíveis.
+    private let captionHeight: CGFloat = 96
 
     private var liveCaption: some View {
         Group {
@@ -139,26 +142,43 @@ struct RecordingOverlay: View {
                     .font(TextStyle.body)
                     .foregroundStyle(.white.opacity(0.45))
                     .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity, minHeight: captionHeight)
             } else {
-                Text(deepgram.liveTranscript)
-                    .font(.system(size: 16, weight: .regular))
-                    .foregroundStyle(.white.opacity(0.9))
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .truncationMode(.head)        // mostra o FIM; os primeiros somem
-                    .animation(.easeOut(duration: 0.18), value: deepgram.liveTranscript)
+                ScrollViewReader { proxy in
+                    ScrollView(.vertical, showsIndicators: false) {
+                        Text(deepgram.liveTranscript)
+                            .font(.system(size: 16, weight: .regular))
+                            .foregroundStyle(.white.opacity(0.92))
+                            .multilineTextAlignment(.center)
+                            .lineSpacing(3)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 6)
+                            .id("captionEnd")
+                    }
+                    .frame(height: captionHeight)
+                    .scrollDisabled(true)
+                    .onChange(of: deepgram.liveTranscript) { _, _ in
+                        withAnimation(.easeOut(duration: 0.28)) {
+                            proxy.scrollTo("captionEnd", anchor: .bottom)
+                        }
+                    }
                     .mask(
-                        // fade no topo: a linha mais antiga vai sumindo
+                        // fade no topo: as linhas antigas vão sumindo ao subir
                         LinearGradient(
-                            colors: [.clear, .black, .black],
+                            stops: [
+                                .init(color: .clear, location: 0.0),
+                                .init(color: .black.opacity(0.5), location: 0.16),
+                                .init(color: .black, location: 0.42),
+                                .init(color: .black, location: 1.0),
+                            ],
                             startPoint: .top, endPoint: .bottom
                         )
                     )
+                }
             }
         }
         .padding(.horizontal, Spacing.lg)
-        .frame(maxWidth: .infinity, minHeight: 52)
-        .contentTransition(.opacity)
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Buttons
