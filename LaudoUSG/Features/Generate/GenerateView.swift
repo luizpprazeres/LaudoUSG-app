@@ -68,6 +68,7 @@ struct GenerateView: View {
                     ScrollView {
                         VStack(alignment: .leading, spacing: Spacing.md) {
                             shortcutsBar
+                            watchDitadosBar
                             achadosEditor
                             Color.clear.frame(height: 120)
                         }
@@ -345,6 +346,34 @@ struct GenerateView: View {
         .accessibilityLabel("Atalho: \(shortcut.label)")
     }
 
+    /// Pill discreto dos ditados do Watch — linha própria à direita, abaixo dos
+    /// atalhos (não sobrepõe). Aparece só quando há ditados pendentes.
+    @ViewBuilder
+    private var watchDitadosBar: some View {
+        if !watchInbox.pending.isEmpty {
+            HStack {
+                Spacer()
+                Button {
+                    Haptics.tap()
+                    vm.isWatchDitadosPresented = true
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "applewatch.radiowaves.left.and.right")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text("\(watchInbox.pending.count) ditado\(watchInbox.pending.count == 1 ? "" : "s") do Watch")
+                            .font(TextStyle.captionMedium)
+                    }
+                    .foregroundStyle(BrandColor.primary)
+                    .padding(.horizontal, Spacing.sm)
+                    .padding(.vertical, Spacing.xxs)
+                    .background(Capsule().fill(BrandColor.primaryTint))
+                    .overlay(Capsule().stroke(BrandColor.primary.opacity(0.3), lineWidth: 1))
+                }
+                .accessibilityLabel("Ditados gravados no Apple Watch")
+            }
+        }
+    }
+
     private var achadosEditor: some View {
         ZStack(alignment: .topLeading) {
             TextEditor(text: Binding(get: { vm.inputText }, set: { vm.inputText = $0 }))
@@ -361,30 +390,6 @@ struct GenerateView: View {
                     .foregroundStyle(AppSurface.textMuted)
                     .padding(.top, Spacing.xs)
                     .allowsHitTesting(false)
-            }
-
-            if !watchInbox.pending.isEmpty {
-                HStack {
-                    Button {
-                        Haptics.tap()
-                        vm.isWatchDitadosPresented = true
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "applewatch.radiowaves.left.and.right")
-                                .font(.system(size: 12, weight: .semibold))
-                            Text("\(watchInbox.pending.count) ditado\(watchInbox.pending.count == 1 ? "" : "s") do Watch")
-                                .font(TextStyle.captionMedium)
-                        }
-                        .foregroundStyle(BrandColor.primary)
-                        .padding(.horizontal, Spacing.xs)
-                        .padding(.vertical, Spacing.xxs)
-                        .background(Capsule().fill(BrandColor.primaryTint))
-                        .overlay(Capsule().stroke(BrandColor.primary.opacity(0.3), lineWidth: 1))
-                    }
-                    .accessibilityLabel("Ditados gravados no Apple Watch")
-                    Spacer()
-                }
-                .offset(y: -36)
             }
 
             if !vm.inputText.isEmpty {
