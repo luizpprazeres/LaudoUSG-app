@@ -29,6 +29,19 @@ final class DeepgramLiveService {
         return finalText + i
     }
 
+    // Métricas pra UI de gravação (espelha o que o overlay consumia do SpeechService).
+    var audioLevel: Float = 0          // 0–1, nível RMS pra waveform
+    var elapsed: TimeInterval = 0      // segundos de gravação
+    private var startDate: Date?
+    /// Contagem aproximada de palavras transcritas até agora.
+    var wordCount: Int {
+        liveTranscript.split(whereSeparator: { $0 == " " || $0 == "\n" }).count
+    }
+    /// Chamado pelo timer da UI (~12 fps) pra atualizar o tempo decorrido.
+    func tick() {
+        if let s = startDate { elapsed = Date().timeIntervalSince(s) }
+    }
+
     private let log = Logger(subsystem: "com.laudousg.LaudoUSG", category: "deepgram")
 
     // Áudio
@@ -50,6 +63,9 @@ final class DeepgramLiveService {
         errorMessage = nil
         finalText = ""
         interimText = ""
+        audioLevel = 0
+        elapsed = 0
+        startDate = Date()
         status = "Pedindo permissão…"
 
         guard await requestMicPermission() else {
@@ -103,6 +119,7 @@ final class DeepgramLiveService {
         wsTask = nil
         unregisterNotifications()
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        audioLevel = 0
         status = "Pronto"
         log.info("deepgram streaming parado")
     }
@@ -206,9 +223,14 @@ final class DeepgramLiveService {
         let target = targetFormat
         let queue = sendQueue
         let task = wsTask
+        // Publica o nível RMS no main actor pra waveform (sem tocar estado do tap).
+        let levelSink: @Sendable (Float) -> Void = { [weak self] lvl in
+            Task { @MainActor in self?.audioLevel = lvl }
+        }
         input.installTap(onBus: 0, bufferSize: 2048, format: inputFormat) { buffer, _ in
             Self.processAndSend(buffer, inputFormat: inputFormat,
-                                converter: conv, target: target, queue: queue, task: task)
+                                converter: conv, target: target, queue: queue,
+                                task: task, levelSink: levelSink)
         }
         engine.prepare()
         try engine.start()
@@ -219,7 +241,8 @@ final class DeepgramLiveService {
     private nonisolated static func processAndSend(
         _ buffer: AVAudioPCMBuffer, inputFormat: AVAudioFormat,
         converter: AVAudioConverter?, target: AVAudioFormat,
-        queue: DispatchQueue, task: URLSessionWebSocketTask?
+        queue: DispatchQueue, task: URLSessionWebSocketTask?,
+        levelSink: @Sendable (Float) -> Void
     ) {
         guard let converter else { return }
         let ratio = target.sampleRate / inputFormat.sampleRate
@@ -237,7 +260,18 @@ final class DeepgramLiveService {
         guard convError == nil, outBuffer.frameLength > 0,
               let channel = outBuffer.int16ChannelData else { return }
 
-        let byteCount = Int(outBuffer.frameLength) * MemoryLayout<Int16>.size
+        let frames = Int(outBuffer.frameLength)
+        // Nível RMS normalizado (0–1) com curva agradável pra waveform.
+        var sumSquares: Double = 0
+        for i in 0..<frames {
+            let s = Double(channel[0][i]) / 32768.0
+            sumSquares += s * s
+        }
+        let rms = frames > 0 ? (sumSquares / Double(frames)).squareRoot() : 0
+        let level = Float(min(1.0, rms * 3.2))   // ganho visual
+        levelSink(level)
+
+        let byteCount = frames * MemoryLayout<Int16>.size
         let data = Data(bytes: channel[0], count: byteCount)
         queue.async { task?.send(.data(data)) { _ in } }
     }

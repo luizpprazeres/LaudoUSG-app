@@ -187,7 +187,7 @@ struct GenerateView: View {
             if vm.isRecordingOverlayPresented {
                 RecordingOverlay(
                     isPresented: Binding(get: { vm.isRecordingOverlayPresented }, set: { vm.isRecordingOverlayPresented = $0 }),
-                    speech: vm.speech,
+                    deepgram: vm.deepgram,
                     onCancel: { vm.cancelRecording() },
                     onStop: { vm.finishRecording() }
                 )

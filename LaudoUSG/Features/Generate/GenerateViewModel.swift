@@ -107,6 +107,9 @@ final class GenerateViewModel {
     }
 
     let speech = SpeechService()
+    /// Engine de gravação ao vivo (Deepgram streaming) — substitui o Whisper batch
+    /// no fluxo de ditado: texto aparece ao vivo e já fica pronto ao parar.
+    let deepgram = DeepgramLiveService()
     private var saveTask: Task<Void, Never>?
 
     var canGenerate: Bool {
@@ -246,24 +249,19 @@ final class GenerateViewModel {
     func startRecording() {
         guard !phase.isBusy else { return }
         Task { @MainActor in
-            let granted = await speech.requestPermissions()
-            guard granted else {
-                lastError = speech.lastError?.errorDescription ?? "Sem permissão para gravar."
-                return
-            }
-            do {
-                liveTranscript = ""
-                try await speech.start()
+            liveTranscript = ""
+            await deepgram.start()   // pede permissão + conecta internamente
+            if deepgram.isStreaming {
                 phase = .recording
                 isRecordingOverlayPresented = true
-            } catch {
-                lastError = (error as? SpeechServiceError)?.errorDescription ?? error.localizedDescription
+            } else {
+                lastError = deepgram.errorMessage ?? "Não foi possível iniciar a gravação."
             }
         }
     }
 
     func cancelRecording() {
-        speech.cancel()
+        Task { @MainActor in await deepgram.stop() }
         liveTranscript = ""
         isRecordingOverlayPresented = false
         phase = inputText.isEmpty ? .idle : .ready
@@ -271,9 +269,11 @@ final class GenerateViewModel {
 
     func finishRecording() {
         isRecordingOverlayPresented = false
-        phase = .transcribing
         Task { @MainActor in
-            let transcript = await speech.stop()
+            await deepgram.stop()
+            // Streaming: o texto JÁ está pronto ao parar (sem espera de transcrição).
+            // Usa liveTranscript (final + último parcial) pra não perder o fim da fala.
+            let transcript = deepgram.liveTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
             if !transcript.isEmpty {
                 if inputText.isEmpty {
                     inputText = transcript
@@ -281,8 +281,8 @@ final class GenerateViewModel {
                     let separator = inputText.hasSuffix("\n") ? "" : "\n"
                     inputText += separator + transcript
                 }
-            } else if let err = speech.lastError {
-                lastError = err.errorDescription
+            } else if let err = deepgram.errorMessage {
+                lastError = err
             }
             liveTranscript = ""
             phase = inputText.isEmpty ? .idle : .ready
