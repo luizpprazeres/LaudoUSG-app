@@ -56,9 +56,8 @@ enum MyomaCanvasRenderer {
         ctx.fill(batS, with: .color(cavityFill))
         ctx.stroke(batS, with: .color(cavityLine), lineWidth: 1.6 * s)
 
-        for f in findings {
-            if let pt = f.sagPoint { drawMarker(ctx, f, pt.applying(t), s) }
-        }
+        let pts = spread(findings.map { $0.sagPoint ?? $0.canonicalSag })
+        for (f, dp) in zip(findings, pts) { drawMarker(ctx, f, dp.applying(t), s) }
     }
 
     // MARK: - Transversal (disco + linha endometrial)
@@ -83,9 +82,25 @@ enum MyomaCanvasRenderer {
         ctx.fill(lensS, with: .color(cavityFill))
         ctx.stroke(lensS, with: .color(cavityLine), lineWidth: 1.6 * s)
 
-        for f in findings {
-            if let pt = f.axPoint { drawMarker(ctx, f, pt.applying(t), s) }
+        let pts = spread(findings.map { $0.axPoint ?? $0.canonicalAx })
+        for (f, dp) in zip(findings, pts) { drawMarker(ctx, f, dp.applying(t), s) }
+    }
+
+    /// Espalha marcadores que cairiam no mesmo ponto (espiral curta).
+    private static func spread(_ points: [CGPoint]) -> [CGPoint] {
+        var placed: [CGPoint] = []
+        var out: [CGPoint] = []
+        for p in points {
+            var q = p
+            var k = 0
+            while placed.contains(where: { hypot($0.x - q.x, $0.y - q.y) < 26 }) {
+                k += 1
+                let ang = Double(k) * 1.9
+                q = CGPoint(x: p.x + CGFloat(cos(ang)) * 30, y: p.y + CGFloat(sin(ang)) * 22)
+            }
+            placed.append(q); out.append(q)
         }
+        return out
     }
 
     private static func drawMarker(_ ctx: GraphicsContext, _ f: MyomaFinding, _ center: CGPoint, _ s: CGFloat) {

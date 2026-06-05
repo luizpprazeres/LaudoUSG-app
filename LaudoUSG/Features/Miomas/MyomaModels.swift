@@ -50,29 +50,85 @@ struct FigoCategory: Identifiable {
     }
 }
 
-/// Achado de mioma. Step 1 usa exemplos hardcoded (Step 2 = editor manual).
+/// Localização do mioma na parede uterina.
+enum MyomaLocation: String, CaseIterable, Identifiable {
+    case anterior = "Anterior"
+    case posterior = "Posterior"
+    case lateralDireita = "Lateral direita"
+    case lateralEsquerda = "Lateral esquerda"
+    case fundo = "Fundo"
+    case cervical = "Cervical"
+    var id: String { rawValue }
+
+    /// Posição canônica na visão TRANSVERSAL (ref 560×400).
+    var axPoint: CGPoint {
+        switch self {
+        case .anterior:        return CGPoint(x: 280, y: 150)
+        case .posterior:       return CGPoint(x: 280, y: 252)
+        case .lateralDireita:  return CGPoint(x: 420, y: 188)
+        case .lateralEsquerda: return CGPoint(x: 140, y: 200)
+        case .fundo:           return CGPoint(x: 280, y: 200)
+        case .cervical:        return CGPoint(x: 280, y: 320)
+        }
+    }
+}
+
+/// Ecotextura do nódulo (opcional).
+enum MyomaEcho: String, CaseIterable, Identifiable {
+    case hipoecoica = "Hipoecoica"
+    case heterogenea = "Heterogênea"
+    case calcificada = "Calcificada"
+    case degenerada = "Degenerada"
+    var id: String { rawValue }
+}
+
+/// Achado de mioma — modelo do editor (Step 2).
 struct MyomaFinding: Identifiable {
     let id = UUID()
-    var figo: Int
-    var sizeMaxMm: Double?      // maior eixo → tamanho do marcador
-    /// Posição no frame de DESIGN de cada visão (mesmas coords do mockup).
-    var sagPoint: CGPoint?      // longitudinal — ref 420×520 (vertical, antes da rotação)
-    var axPoint: CGPoint?       // transversal — ref 560×400
+    var figo: Int = 4
+    var sizeMaxMm: Double? = 20
+    var localizacao: MyomaLocation = .anterior
+    var ecotextura: MyomaEcho? = nil
+    /// Override explícito de posição (Step 3 = drag); senão usa o canônico.
+    var sagPoint: CGPoint? = nil
+    var axPoint: CGPoint? = nil
 
     var family: FigoFamily { FigoCategory.family(figo) }
+
+    /// Posição na visão LONGITUDINAL — canônica por FIGO (ref 420×520, vertical).
+    var canonicalSag: CGPoint { FigoLayout.sagPoint(figo) }
+    /// Posição na visão TRANSVERSAL — por localização.
+    var canonicalAx: CGPoint { localizacao.axPoint }
+}
+
+/// Posições canônicas dos FIGO 0–8 na visão longitudinal (coords do mockup).
+enum FigoLayout {
+    static func sagPoint(_ figo: Int) -> CGPoint {
+        switch figo {
+        case 0: return CGPoint(x: 208, y: 236)
+        case 1: return CGPoint(x: 176, y: 250)
+        case 2: return CGPoint(x: 244, y: 250)
+        case 3: return CGPoint(x: 150, y: 300)
+        case 4: return CGPoint(x: 272, y: 300)
+        case 5: return CGPoint(x: 120, y: 210)
+        case 6: return CGPoint(x: 304, y: 168)
+        case 7: return CGPoint(x: 360, y: 108)
+        default: return CGPoint(x: 232, y: 440)   // 8 — cervical
+        }
+    }
 }
 
 extension MyomaFinding {
     /// Um exemplo de cada FIGO (espelha o mockup aprovado).
-    static let exemplos: [MyomaFinding] = [
-        .init(figo: 0, sizeMaxMm: 14, sagPoint: CGPoint(x: 208, y: 236), axPoint: nil),
-        .init(figo: 1, sizeMaxMm: 22, sagPoint: CGPoint(x: 176, y: 250), axPoint: CGPoint(x: 280, y: 150)),
-        .init(figo: 2, sizeMaxMm: 24, sagPoint: CGPoint(x: 244, y: 250), axPoint: nil),
-        .init(figo: 3, sizeMaxMm: 30, sagPoint: CGPoint(x: 150, y: 300), axPoint: CGPoint(x: 280, y: 252)),
-        .init(figo: 4, sizeMaxMm: 30, sagPoint: CGPoint(x: 272, y: 300), axPoint: CGPoint(x: 140, y: 200)),
-        .init(figo: 5, sizeMaxMm: 26, sagPoint: CGPoint(x: 120, y: 210), axPoint: nil),
-        .init(figo: 6, sizeMaxMm: 26, sagPoint: CGPoint(x: 304, y: 168), axPoint: CGPoint(x: 420, y: 178)),
-        .init(figo: 7, sizeMaxMm: 18, sagPoint: CGPoint(x: 360, y: 108), axPoint: CGPoint(x: 514, y: 262)),
-        .init(figo: 8, sizeMaxMm: 16, sagPoint: CGPoint(x: 232, y: 440), axPoint: nil),
-    ]
+    static let exemplos: [MyomaFinding] = (0...8).map { figo in
+        let loc: MyomaLocation
+        switch figo {
+        case 1, 3, 5: loc = .anterior
+        case 2, 4, 6: loc = .posterior
+        case 7: loc = .lateralDireita
+        case 8: loc = .cervical
+        default: loc = .fundo
+        }
+        return MyomaFinding(figo: figo, sizeMaxMm: 18 + Double(figo) * 1.5, localizacao: loc)
+    }
 }
