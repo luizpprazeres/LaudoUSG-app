@@ -3,7 +3,7 @@ import Combine
 
 struct RecordingOverlay: View {
     @Binding var isPresented: Bool
-    @Bindable var speech: SpeechService
+    @Bindable var deepgram: DeepgramLiveService
     let onCancel: () -> Void
     let onStop: () -> Void
 
@@ -30,11 +30,11 @@ struct RecordingOverlay: View {
 
                 waveform
                     .accessibilityElement()
-                    .accessibilityLabel(speech.isTranscribing ? "Transcrevendo" : "Gravação em andamento")
+                    .accessibilityLabel("Gravação em andamento")
 
                 wordCounter
 
-                bottomMessage
+                liveCaption
 
                 HStack(spacing: Spacing.sm) {
                     cancelButton
@@ -50,7 +50,7 @@ struct RecordingOverlay: View {
         }
         .onReceive(timer) { _ in
             guard isPresented else { return }
-            speech.tick()
+            deepgram.tick()
             advanceWaveform()
         }
     }
@@ -60,7 +60,16 @@ struct RecordingOverlay: View {
     @ViewBuilder
     private var statusEyebrow: some View {
         HStack(spacing: 8) {
-            if speech.isRecording {
+            if deepgram.isReconnecting {
+                ProgressView()
+                    .controlSize(.mini)
+                    .tint(.white.opacity(0.8))
+                Text("RECONECTANDO…")
+                    .font(.system(size: 11, weight: .semibold))
+                    .tracking(0.15 * 11)
+                    .foregroundStyle(.white.opacity(0.9))
+                    .contentTransition(.opacity)
+            } else if deepgram.isStreaming {
                 Circle()
                     .fill(Color(hex: "EF4444"))
                     .frame(width: 8, height: 8)
@@ -69,11 +78,11 @@ struct RecordingOverlay: View {
                     .font(.system(size: 11, weight: .semibold))
                     .tracking(0.15 * 11)
                     .foregroundStyle(.white.opacity(0.9))
-            } else if speech.isTranscribing {
+            } else {
                 ProgressView()
                     .controlSize(.mini)
                     .tint(.white.opacity(0.8))
-                Text(transcribingLabel)
+                Text("CONECTANDO…")
                     .font(.system(size: 11, weight: .semibold))
                     .tracking(0.15 * 11)
                     .foregroundStyle(.white.opacity(0.9))
@@ -84,14 +93,6 @@ struct RecordingOverlay: View {
         .padding(.vertical, 6)
         .background(Capsule().fill(.white.opacity(0.1)))
         .overlay(Capsule().stroke(.white.opacity(0.15), lineWidth: 1))
-    }
-
-    private var transcribingLabel: String {
-        switch speech.transcribingStage {
-        case .uploading: return "ENVIANDO ÁUDIO"
-        case .processing: return "TRANSCREVENDO COM IA"
-        case .idle: return "PROCESSANDO"
-        }
     }
 
     // MARK: - Waveform (amplitude real do mic)
@@ -109,7 +110,6 @@ struct RecordingOverlay: View {
     }
 
     private func barColor(for index: Int) -> Color {
-        // Centro mais brilhante, bordas mais sutis (envelope visual)
         let centerDistance = abs(Double(index) - Double(barLevels.count - 1) / 2)
         let centerNormalized = 1.0 - (centerDistance / Double(barLevels.count / 2))
         let opacity = 0.45 + 0.55 * centerNormalized
@@ -126,7 +126,7 @@ struct RecordingOverlay: View {
     }
 
     private func advanceWaveform() {
-        let newLevel = CGFloat(speech.currentLevel)
+        let newLevel = CGFloat(deepgram.audioLevel)
         var next = barLevels
         next.removeFirst()
         next.append(newLevel)
@@ -140,37 +140,65 @@ struct RecordingOverlay: View {
             Image(systemName: "text.alignleft")
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.white.opacity(0.5))
-            Text("~\(speech.estimatedWordCount) \(speech.estimatedWordCount == 1 ? "palavra" : "palavras")")
+            Text("~\(deepgram.wordCount) \(deepgram.wordCount == 1 ? "palavra" : "palavras")")
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.white.opacity(0.7))
                 .monospacedDigit()
                 .contentTransition(.numericText())
         }
         .frame(minHeight: 18)
-        .opacity(speech.isRecording ? 1 : 0)
+        .opacity(deepgram.isStreaming ? 1 : 0)
     }
 
-    // MARK: - Bottom message
+    // MARK: - Legenda ao vivo (estilo lyrics do Spotify — texto sobe, topo some)
 
-    private var bottomMessage: some View {
-        Text(messageText)
-            .font(TextStyle.body)
-            .foregroundStyle(.white.opacity(0.7))
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, Spacing.lg)
-            .frame(minHeight: 40)
-            .contentTransition(.opacity)
-    }
+    /// ~4 linhas visíveis.
+    private let captionHeight: CGFloat = 96
 
-    private var messageText: String {
-        if speech.isTranscribing {
-            switch speech.transcribingStage {
-            case .uploading: return "Enviando seu áudio com segurança…"
-            case .processing: return "A IA está transcrevendo. Isso costuma levar 2–3 segundos."
-            case .idle: return "Processando…"
+    private var liveCaption: some View {
+        Group {
+            if deepgram.liveTranscript.isEmpty {
+                Text("Comece a ditar — o texto aparece aqui ao vivo.")
+                    .font(TextStyle.body)
+                    .foregroundStyle(.white.opacity(0.45))
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity, minHeight: captionHeight)
+            } else {
+                ScrollViewReader { proxy in
+                    ScrollView(.vertical, showsIndicators: false) {
+                        Text(deepgram.liveTranscript)
+                            .font(.system(size: 16, weight: .regular))
+                            .foregroundStyle(.white.opacity(0.92))
+                            .multilineTextAlignment(.center)
+                            .lineSpacing(3)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 6)
+                            .id("captionEnd")
+                    }
+                    .frame(height: captionHeight)
+                    .scrollDisabled(true)
+                    .onChange(of: deepgram.liveTranscript) { _, _ in
+                        withAnimation(.easeOut(duration: 0.28)) {
+                            proxy.scrollTo("captionEnd", anchor: .bottom)
+                        }
+                    }
+                    .mask(
+                        // fade no topo: as linhas antigas vão sumindo ao subir
+                        LinearGradient(
+                            stops: [
+                                .init(color: .clear, location: 0.0),
+                                .init(color: .black.opacity(0.5), location: 0.16),
+                                .init(color: .black, location: 0.42),
+                                .init(color: .black, location: 1.0),
+                            ],
+                            startPoint: .top, endPoint: .bottom
+                        )
+                    )
+                }
             }
         }
-        return "Toque em Parar e usar quando terminar. A transcrição leva 2–3 segundos após parar."
+        .padding(.horizontal, Spacing.lg)
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Buttons
@@ -190,8 +218,6 @@ struct RecordingOverlay: View {
                 )
         }
         .buttonStyle(PressableButtonStyle())
-        .disabled(speech.isTranscribing)
-        .opacity(speech.isTranscribing ? 0.5 : 1.0)
         .accessibilityLabel("Cancelar gravação")
     }
 
@@ -200,7 +226,7 @@ struct RecordingOverlay: View {
             isPresented = false
             onStop()
         } label: {
-            Text(speech.isTranscribing ? "Aguarde…" : "Parar e usar")
+            Text("Parar e usar")
                 .font(TextStyle.bodySemibold)
                 .frame(maxWidth: .infinity, minHeight: 48)
                 .foregroundStyle(.white)
@@ -208,16 +234,13 @@ struct RecordingOverlay: View {
                     RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                         .fill(Color(hex: "FF3B30"))
                 )
-                .contentTransition(.opacity)
         }
         .buttonStyle(PressableButtonStyle())
-        .disabled(speech.isTranscribing)
-        .opacity(speech.isTranscribing ? 0.5 : 1.0)
-        .accessibilityLabel("Parar gravação e usar áudio")
+        .accessibilityLabel("Parar gravação e usar o texto")
     }
 
     private var formattedElapsed: String {
-        let totalSeconds = Int(speech.elapsed)
+        let totalSeconds = Int(deepgram.elapsed)
         let minutes = totalSeconds / 60
         let seconds = totalSeconds % 60
         return String(format: "%02d:%02d", minutes, seconds)
@@ -240,11 +263,11 @@ private struct PulseAnimation: ViewModifier {
 
 #Preview {
     @Previewable @State var isPresented = true
-    let speech = SpeechService()
+    let deepgram = DeepgramLiveService()
 
     return RecordingOverlay(
         isPresented: $isPresented,
-        speech: speech,
+        deepgram: deepgram,
         onCancel: {},
         onStop: {}
     )

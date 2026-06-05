@@ -1,5 +1,6 @@
 import SwiftUI
 
+@available(*, deprecated, message: "Use OnboardingFlow for the active first-report onboarding.")
 struct OnboardingView: View {
     @Environment(AppState.self) private var app
     @Environment(\.dismiss) private var dismiss
@@ -164,9 +165,4 @@ struct OnboardingView: View {
             isCompleting = false
         }
     }
-}
-
-#Preview {
-    OnboardingView(onCompleted: {})
-        .environment(AppState())
 }
