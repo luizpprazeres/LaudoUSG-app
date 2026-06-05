@@ -7,10 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		00C23F2B2FD3647C0093098D /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00C23F2A2FD3647C0093098D /* WidgetKit.framework */; };
+		00C23F2D2FD3647C0093098D /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00C23F2C2FD3647C0093098D /* SwiftUI.framework */; };
+		00C23F382FD3647F0093098D /* LaudoUSGComplicationExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 00C23F282FD3647C0093098D /* LaudoUSGComplicationExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A1000000000000000000000B /* LaudoUSGWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = A10000000000000000000001 /* LaudoUSGWatch.app */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		00C23F362FD3647F0093098D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 000AB0E32FB92548009E0889 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 00C23F272FD3647C0093098D;
+			remoteInfo = LaudoUSGComplicationExtension;
+		};
 		A1000000000000000000000C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 000AB0E32FB92548009E0889 /* Project object */;
@@ -21,6 +31,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		00C23F392FD3647F0093098D /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				00C23F382FD3647F0093098D /* LaudoUSGComplicationExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A1000000000000000000000A /* Embed Watch Content */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -36,13 +57,34 @@
 
 /* Begin PBXFileReference section */
 		000AB0EB2FB92549009E0889 /* LaudoUSG.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LaudoUSG.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		00C23F282FD3647C0093098D /* LaudoUSGComplicationExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LaudoUSGComplicationExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		00C23F2A2FD3647C0093098D /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		00C23F2C2FD3647C0093098D /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		A10000000000000000000001 /* LaudoUSGWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LaudoUSGWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		00C23F3C2FD3647F0093098D /* Exceptions for "LaudoUSGComplication" folder in "LaudoUSGComplicationExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 00C23F272FD3647C0093098D /* LaudoUSGComplicationExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		000AB0ED2FB92549009E0889 /* LaudoUSG */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = LaudoUSG;
+			sourceTree = "<group>";
+		};
+		00C23F2E2FD3647C0093098D /* LaudoUSGComplication */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				00C23F3C2FD3647F0093098D /* Exceptions for "LaudoUSGComplication" folder in "LaudoUSGComplicationExtension" target */,
+			);
+			path = LaudoUSGComplication;
 			sourceTree = "<group>";
 		};
 		A10000000000000000000002 /* LaudoUSGWatch */ = {
@@ -57,6 +99,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		00C23F252FD3647C0093098D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				00C23F2D2FD3647C0093098D /* SwiftUI.framework in Frameworks */,
+				00C23F2B2FD3647C0093098D /* WidgetKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -75,6 +126,8 @@
 			children = (
 				000AB0ED2FB92549009E0889 /* LaudoUSG */,
 				A10000000000000000000002 /* LaudoUSGWatch */,
+				00C23F2E2FD3647C0093098D /* LaudoUSGComplication */,
+				00C23F292FD3647C0093098D /* Frameworks */,
 				000AB0EC2FB92549009E0889 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -84,8 +137,18 @@
 			children = (
 				000AB0EB2FB92549009E0889 /* LaudoUSG.app */,
 				A10000000000000000000001 /* LaudoUSGWatch.app */,
+				00C23F282FD3647C0093098D /* LaudoUSGComplicationExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		00C23F292FD3647C0093098D /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				00C23F2A2FD3647C0093098D /* WidgetKit.framework */,
+				00C23F2C2FD3647C0093098D /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -115,6 +178,28 @@
 			productReference = 000AB0EB2FB92549009E0889 /* LaudoUSG.app */;
 			productType = "com.apple.product-type.application";
 		};
+		00C23F272FD3647C0093098D /* LaudoUSGComplicationExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 00C23F3D2FD3647F0093098D /* Build configuration list for PBXNativeTarget "LaudoUSGComplicationExtension" */;
+			buildPhases = (
+				00C23F242FD3647C0093098D /* Sources */,
+				00C23F252FD3647C0093098D /* Frameworks */,
+				00C23F262FD3647C0093098D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				00C23F2E2FD3647C0093098D /* LaudoUSGComplication */,
+			);
+			name = LaudoUSGComplicationExtension;
+			packageProductDependencies = (
+			);
+			productName = LaudoUSGComplicationExtension;
+			productReference = 00C23F282FD3647C0093098D /* LaudoUSGComplicationExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		A10000000000000000000006 /* LaudoUSGWatch */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = A10000000000000000000009 /* Build configuration list for PBXNativeTarget "LaudoUSGWatch" */;
@@ -122,10 +207,12 @@
 				A10000000000000000000004 /* Sources */,
 				A10000000000000000000003 /* Frameworks */,
 				A10000000000000000000005 /* Resources */,
+				00C23F392FD3647F0093098D /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				00C23F372FD3647F0093098D /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				A10000000000000000000002 /* LaudoUSGWatch */,
@@ -150,6 +237,9 @@
 					000AB0EA2FB92548009E0889 = {
 						CreatedOnToolsVersion = 26.4;
 					};
+					00C23F272FD3647C0093098D = {
+						CreatedOnToolsVersion = 26.4;
+					};
 					A10000000000000000000006 = {
 						CreatedOnToolsVersion = 26.4;
 					};
@@ -171,12 +261,20 @@
 			targets = (
 				000AB0EA2FB92548009E0889 /* LaudoUSG */,
 				A10000000000000000000006 /* LaudoUSGWatch */,
+				00C23F272FD3647C0093098D /* LaudoUSGComplicationExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		000AB0E92FB92548009E0889 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		00C23F262FD3647C0093098D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -200,6 +298,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		00C23F242FD3647C0093098D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A10000000000000000000004 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -210,6 +315,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		00C23F372FD3647F0093098D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 00C23F272FD3647C0093098D /* LaudoUSGComplicationExtension */;
+			targetProxy = 00C23F362FD3647F0093098D /* PBXContainerItemProxy */;
+		};
 		A1000000000000000000000D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = A10000000000000000000006 /* LaudoUSGWatch */;
@@ -428,6 +538,73 @@
 			};
 			name = Release;
 		};
+		00C23F3A2FD3647F0093098D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = W772N4FGJ6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LaudoUSGComplication/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LaudoUSGComplication;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.laudousg.LaudoUSG.watchkitapp.LaudoUSGComplication;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.4;
+			};
+			name = Debug;
+		};
+		00C23F3B2FD3647F0093098D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = W772N4FGJ6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LaudoUSGComplication/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LaudoUSGComplication;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.laudousg.LaudoUSG.watchkitapp.LaudoUSGComplication;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 26.4;
+			};
+			name = Release;
+		};
 		A10000000000000000000007 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -510,6 +687,15 @@
 			buildConfigurations = (
 				000AB0F72FB9254C009E0889 /* Debug */,
 				000AB0F82FB9254C009E0889 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		00C23F3D2FD3647F0093098D /* Build configuration list for PBXNativeTarget "LaudoUSGComplicationExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				00C23F3A2FD3647F0093098D /* Debug */,
+				00C23F3B2FD3647F0093098D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -1,5 +1,6 @@
 import Foundation
 import WatchConnectivity
+import WidgetKit
 import os
 
 /// Um ditado gravado na sessão atual do Watch + seu status de entrega.
@@ -33,6 +34,17 @@ final class WatchSessionManager: NSObject {
         WCSession.default.transferFile(fileURL, metadata: ["id": id, "duration": duration])
         queue.insert(QueuedDitado(id: id, recordedAt: Date(), duration: duration, delivered: false), at: 0)
         log.info("transfer iniciado: \(id, privacy: .public)")
+        syncComplication()
+    }
+
+    /// Escreve a contagem no App Group + recarrega a complication da carátula.
+    private func syncComplication() {
+        let d = UserDefaults(suiteName: "group.com.laudousg.watch")
+        d?.set(pendingCount, forKey: "pendingDitados")
+        d?.set(queue.count, forKey: "sessionDitados")
+        // Só este kind (respeita o budget de reloads do watchOS); chamado só em
+        // mudança real (send + didFinish), não em loop.
+        WidgetCenter.shared.reloadTimelines(ofKind: "LaudoUSGDitados")
     }
 }
 
@@ -54,6 +66,7 @@ extension WatchSessionManager: WCSessionDelegate {
             if let id, let i = self.queue.firstIndex(where: { $0.id == id }) {
                 self.queue[i].delivered = ok
             }
+            self.syncComplication()
             if let error { self.log.error("transfer falhou: \(error.localizedDescription, privacy: .public)") }
         }
     }
