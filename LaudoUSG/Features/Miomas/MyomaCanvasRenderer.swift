@@ -14,15 +14,29 @@ enum MyomaCanvasRenderer {
 
     private static func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: x, y: y) }
 
+    // Transform design→tela (compartilhado entre o draw e o drag/hit-test).
+    static func sagScale(_ size: CGSize) -> CGFloat { min(size.width / 520, size.height / 420) * 0.9 }
+    static func axScale(_ size: CGSize) -> CGFloat { min(size.width / 560, size.height / 400) * 0.92 }
+
+    static func sagTransform(_ size: CGSize) -> CGAffineTransform {
+        CGAffineTransform.identity
+            .translatedBy(x: size.width / 2, y: size.height / 2)
+            .scaledBy(x: sagScale(size), y: sagScale(size))
+            .rotated(by: -.pi / 2)
+            .translatedBy(x: -210, y: -266)
+    }
+    static func axTransform(_ size: CGSize) -> CGAffineTransform {
+        CGAffineTransform.identity
+            .translatedBy(x: size.width / 2, y: size.height / 2)
+            .scaledBy(x: axScale(size), y: axScale(size))
+            .translatedBy(x: -280, y: -200)
+    }
+
     // MARK: - Longitudinal (pera vertical aprovada, rotacionada -90°)
 
     static func drawSagittal(_ ctx: GraphicsContext, _ size: CGSize, _ findings: [MyomaFinding]) {
-        let s = min(size.width / 520, size.height / 420) * 0.9
-        let t = CGAffineTransform.identity
-            .translatedBy(x: size.width / 2, y: size.height / 2)
-            .scaledBy(x: s, y: s)
-            .rotated(by: -.pi / 2)
-            .translatedBy(x: -210, y: -266)
+        let s = sagScale(size)
+        let t = sagTransform(size)
 
         var pear = Path()
         pear.move(to: p(210, 46))
@@ -63,11 +77,8 @@ enum MyomaCanvasRenderer {
     // MARK: - Transversal (disco + linha endometrial)
 
     static func drawAxial(_ ctx: GraphicsContext, _ size: CGSize, _ findings: [MyomaFinding]) {
-        let s = min(size.width / 560, size.height / 400) * 0.92
-        let t = CGAffineTransform.identity
-            .translatedBy(x: size.width / 2, y: size.height / 2)
-            .scaledBy(x: s, y: s)
-            .translatedBy(x: -280, y: -200)
+        let s = axScale(size)
+        let t = axTransform(size)
 
         let disc = Path(ellipseIn: CGRect(x: 80, y: 50, width: 400, height: 300)).applying(t)
         ctx.fill(disc, with: .color(cream))

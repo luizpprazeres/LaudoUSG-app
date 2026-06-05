@@ -17,7 +17,7 @@ struct MyomaEditorScreen: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                MyomaSchematicView(findings: myomas)
+                MyomaSchematicView(findings: $myomas)
 
                 HStack {
                     Text("Nódulos (\(myomas.count))").font(TextStyle.bodyLargeMedium)
