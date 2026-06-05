@@ -132,6 +132,7 @@ final class DeepgramLiveService {
         let temporary: Bool
         let model: String
         let language: String
+        let keyterms: [String]?   // boost de vocabulário (controlado pelo backend)
     }
 
     private func fetchToken() async throws -> TokenInfo {
@@ -155,7 +156,16 @@ final class DeepgramLiveService {
             .init(name: "numerals", value: "true"),   // medidas como dígitos (2,5 cm)
             .init(name: "endpointing", value: "300"),
         ]
+        // Keyterm Prompting: 1 query item por termo. URLComponents URL-encoda os
+        // espaços das frases multi-palavra (sem encoding manual — dex1). Lista
+        // vem do backend (tunar/desligar sem rebuild). Conservadora (~22 termos).
+        let keyterms = token.keyterms ?? []
+        comps.queryItems?.append(contentsOf: keyterms.map {
+            URLQueryItem(name: "keyterm", value: $0)
+        })
         guard let url = comps.url else { throw DeepgramError.badURL }
+        // Log de segurança (dex1): tamanho da URL + contagem de keyterms.
+        log.info("deepgram WS: urlLen=\(url.absoluteString.count) keyterms=\(keyterms.count)")
 
         var req = URLRequest(url: url)
         // Token temporário usa "Bearer"; fallback de protótipo (API key) usa "Token".
