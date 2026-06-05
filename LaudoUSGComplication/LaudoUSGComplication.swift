@@ -89,6 +89,6 @@ struct LaudoUSGComplication: Widget {
         }
         .configurationDisplayName("Ditados")
         .description("Ditados pendentes pra recuperar no iPhone.")
-        .supportedFamilies([.accessoryCircular, .accessoryInline, .accessoryRectangular, .accessoryCorner])
+        .supportedFamilies([.accessoryCircular, .accessoryInline, .accessoryRectangular])
     }
 }
