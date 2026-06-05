@@ -116,6 +116,13 @@ struct SettingsView: View {
                     .buttonStyle(PressableButtonStyle())
                 }
 
+                section(title: "Protótipos (debug)") {
+                    NavigationLink(destination: DeepgramTestView()) {
+                        navRowLabel("Transcrição ao vivo (Deepgram)")
+                    }
+                    .buttonStyle(PressableButtonStyle())
+                }
+
                 section(title: "Zona de risco") {
                     NavigationLink(destination: DeleteAccountView()) {
                         HStack {
