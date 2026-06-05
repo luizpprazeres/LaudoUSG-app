@@ -60,14 +60,25 @@ struct RecordingOverlay: View {
     @ViewBuilder
     private var statusEyebrow: some View {
         HStack(spacing: 8) {
-            Circle()
-                .fill(Color(hex: "EF4444"))
-                .frame(width: 8, height: 8)
-                .modifier(PulseAnimation())
-            Text("OUVINDO")
-                .font(.system(size: 11, weight: .semibold))
-                .tracking(0.15 * 11)
-                .foregroundStyle(.white.opacity(0.9))
+            if deepgram.isStreaming {
+                Circle()
+                    .fill(Color(hex: "EF4444"))
+                    .frame(width: 8, height: 8)
+                    .modifier(PulseAnimation())
+                Text("OUVINDO")
+                    .font(.system(size: 11, weight: .semibold))
+                    .tracking(0.15 * 11)
+                    .foregroundStyle(.white.opacity(0.9))
+            } else {
+                ProgressView()
+                    .controlSize(.mini)
+                    .tint(.white.opacity(0.8))
+                Text("CONECTANDO…")
+                    .font(.system(size: 11, weight: .semibold))
+                    .tracking(0.15 * 11)
+                    .foregroundStyle(.white.opacity(0.9))
+                    .contentTransition(.opacity)
+            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 6)

@@ -248,13 +248,16 @@ final class GenerateViewModel {
 
     func startRecording() {
         guard !phase.isBusy else { return }
+        // Mostra o overlay JÁ (estado "Conectando…") — resposta instantânea ao
+        // toque, sem esperar token + conexão + áudio (vira "Ouvindo" quando pronto).
+        liveTranscript = ""
+        phase = .recording
+        isRecordingOverlayPresented = true
         Task { @MainActor in
-            liveTranscript = ""
             await deepgram.start()   // pede permissão + conecta internamente
-            if deepgram.isStreaming {
-                phase = .recording
-                isRecordingOverlayPresented = true
-            } else {
+            if !deepgram.isStreaming {
+                isRecordingOverlayPresented = false
+                phase = inputText.isEmpty ? .idle : .ready
                 lastError = deepgram.errorMessage ?? "Não foi possível iniciar a gravação."
             }
         }
