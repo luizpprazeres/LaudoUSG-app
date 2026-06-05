@@ -60,7 +60,16 @@ struct RecordingOverlay: View {
     @ViewBuilder
     private var statusEyebrow: some View {
         HStack(spacing: 8) {
-            if deepgram.isStreaming {
+            if deepgram.isReconnecting {
+                ProgressView()
+                    .controlSize(.mini)
+                    .tint(.white.opacity(0.8))
+                Text("RECONECTANDO…")
+                    .font(.system(size: 11, weight: .semibold))
+                    .tracking(0.15 * 11)
+                    .foregroundStyle(.white.opacity(0.9))
+                    .contentTransition(.opacity)
+            } else if deepgram.isStreaming {
                 Circle()
                     .fill(Color(hex: "EF4444"))
                     .frame(width: 8, height: 8)

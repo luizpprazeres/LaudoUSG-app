@@ -246,6 +246,12 @@ final class GenerateViewModel {
         return "\(rawValue) \(unit)"
     }
 
+    /// Pré-aquece o token Deepgram ao abrir a tela — o toque no mic fica
+    /// instantâneo (sem ida ao backend no caminho crítico).
+    func prewarmMic() {
+        Task { @MainActor in await deepgram.prewarm() }
+    }
+
     func startRecording() {
         guard !phase.isBusy else { return }
         // Mostra o overlay JÁ (estado "Conectando…") — resposta instantânea ao

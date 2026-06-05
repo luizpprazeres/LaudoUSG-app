@@ -33,6 +33,7 @@ struct GenerateView: View {
                     }
                 }
         }
+        .task { vm.prewarmMic() }   // pré-aquece o token Deepgram (início instantâneo)
     }
 
     private var content: some View {
