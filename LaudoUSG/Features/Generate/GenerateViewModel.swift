@@ -348,7 +348,8 @@ final class GenerateViewModel {
         saveStatus = .saving
         saveTask?.cancel()
         saveTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            // 0,6s — correção próxima do envio chega rápido na Sala (4B).
+            try? await Task.sleep(nanoseconds: 600_000_000)
             guard !Task.isCancelled else { return }
             await persistLaudo()
         }
