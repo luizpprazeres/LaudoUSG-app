@@ -308,7 +308,7 @@ struct ReportDetailView: View {
 
     private func performCopy() {
         #if canImport(UIKit)
-        UIPasteboard.general.string = vm.editingText
+        UIPasteboard.general.string = vm.editingText.strippedReviewMarkers
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         #endif
         withAnimation(.easeOut(duration: 0.18)) { didCopy = true }

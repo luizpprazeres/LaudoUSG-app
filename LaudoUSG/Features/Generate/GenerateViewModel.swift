@@ -350,7 +350,9 @@ final class GenerateViewModel {
             return
         }
         do {
-            try await HistoryService.updateFinalOutput(reportId: reportId, finalText: editedLaudoText)
+            // Salva LIMPO (sem marcadores [REVISAR — ...]) — o que vai pra Sala
+            // (pushReport usa o relatório salvo) e pro histórico fica final.
+            try await HistoryService.updateFinalOutput(reportId: reportId, finalText: editedLaudoText.strippedReviewMarkers)
             saveStatus = .saved
         } catch {
             saveStatus = .failed(error.localizedDescription)

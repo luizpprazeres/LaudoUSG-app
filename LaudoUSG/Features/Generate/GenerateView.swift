@@ -566,7 +566,7 @@ struct GenerateView: View {
 
     private func performCopyLaudo() {
         #if canImport(UIKit)
-        UIPasteboard.general.string = vm.editedLaudoText
+        UIPasteboard.general.string = vm.editedLaudoText.strippedReviewMarkers
         Haptics.success()
         #endif
         withAnimation(.easeOut(duration: 0.15)) { didCopyLaudo = true }
