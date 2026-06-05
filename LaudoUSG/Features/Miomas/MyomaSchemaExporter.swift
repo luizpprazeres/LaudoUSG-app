@@ -107,34 +107,14 @@ enum MyomaSchemaExporter {
     }
 }
 
-/// Renderiza + envia o esquema pra Sala do Auxiliar (POST /api/sala/push-schema).
+/// Renderiza + envia o esquema de miomas pra Sala (usa o uploader genérico).
 @MainActor
 enum MyomaSchemaSender {
-    private static let log = Logger(subsystem: "com.laudousg.LaudoUSG", category: "miomas")
-
     static func send(findings: [MyomaFinding], examLabel: String, reportId: String?) async -> Bool {
-        guard let png = MyomaSchemaExporter.renderPNG(findings) else {
-            log.error("falha ao renderizar PNG do esquema")
-            return false
-        }
+        guard let png = MyomaSchemaExporter.renderPNG(findings) else { return false }
         let pdf = MyomaSchemaExporter.renderPDF(findings)
-
-        var payload: [String: Any] = [
-            "examType": "MIOMAS",
-            "examLabel": examLabel,
-            "png": png.base64EncodedString(),
-        ]
-        if let pdf { payload["pdf"] = pdf.base64EncodedString() }
-        if let reportId { payload["reportId"] = reportId }
-
-        guard let body = try? JSONSerialization.data(withJSONObject: payload) else { return false }
-        do {
-            let data = try await APIClient.shared.postRawJSON("/api/sala/push-schema", body: body)
-            let str = String(data: data, encoding: .utf8) ?? ""
-            return str.contains("\"ok\":true") || str.contains("\"ok\": true")
-        } catch {
-            log.error("envio do esquema falhou: \(error.localizedDescription)")
-            return false
-        }
+        return await SalaSchemaUploader.upload(
+            png: png, pdf: pdf, examType: "MIOMAS", examLabel: examLabel, reportId: reportId
+        )
     }
 }

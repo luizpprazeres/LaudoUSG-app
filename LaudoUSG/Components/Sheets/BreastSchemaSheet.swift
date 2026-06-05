@@ -14,6 +14,8 @@ struct BreastSchemaSheet: View {
     @State private var lastImportCount: Int? = nil
     @State private var shareURL: URL? = nil
     @State private var isExporting: Bool = false
+    @State private var sendingSala: Bool = false
+    @State private var salaResult: String? = nil
 
     private var hasReport: Bool {
         !(reportText?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
@@ -121,7 +123,36 @@ struct BreastSchemaSheet: View {
                         )
                 }
             }
+
+            Button {
+                Haptics.tap()
+                Task { await sendToSala() }
+            } label: {
+                HStack(spacing: 6) {
+                    if sendingSala { ProgressView().controlSize(.small).tint(.white) }
+                    else { Image(systemName: "paperplane.fill").font(.system(size: 13, weight: .semibold)) }
+                    Text(sendingSala ? "Enviando…" : "Enviar p/ Sala").font(.system(size: 13, weight: .semibold))
+                }
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, Spacing.sm)
+                .background(RoundedRectangle(cornerRadius: Radius.lg, style: .continuous).fill(BrandColor.primary))
+            }
+            .disabled(sendingSala || findings.isEmpty)
+            if let salaResult { Text(salaResult).font(.caption2).foregroundStyle(AppSurface.textSecondary) }
         }
+    }
+
+    private func sendToSala() async {
+        sendingSala = true; salaResult = nil
+        defer { sendingSala = false }
+        let pngURL = BreastSchemaExporter.exportPNG(findings: findings)
+        let pdfURL = BreastSchemaExporter.exportPDF(findings: findings)
+        let ok = await SalaSchemaUploader.upload(
+            pngURL: pngURL, pdfURL: pdfURL, examType: "MAMA", examLabel: "Mama — esquema", reportId: nil
+        )
+        if ok { Haptics.success() }
+        salaResult = ok ? "Enviado pra Sala ✓" : "Falha ao enviar. Tente de novo."
     }
 
     private func exportButton(title: String, icon: String, action: @escaping () -> Void) -> some View {
