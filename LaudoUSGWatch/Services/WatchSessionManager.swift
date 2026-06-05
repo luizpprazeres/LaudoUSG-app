@@ -2,16 +2,24 @@ import Foundation
 import WatchConnectivity
 import os
 
-/// Envia os áudios gravados no Watch pro iPhone pareado (modelo COMPLEMENTO).
-/// `transferFile` é oportunístico: enfileira e entrega quando o iPhone reconecta
-/// (mesmo bloqueado). Sem auth — o pareamento já é a confiança.
+/// Um ditado gravado na sessão atual do Watch + seu status de entrega.
+struct QueuedDitado: Identifiable, Equatable {
+    let id: String
+    let recordedAt: Date
+    let duration: TimeInterval
+    var delivered: Bool
+}
+
+/// Envia os áudios gravados no Watch pro iPhone pareado (modelo COMPLEMENTO) e
+/// mantém a FILA da sessão com status de entrega. `transferFile` é persistente:
+/// o sistema enfileira e reentrega sozinho quando o iPhone reconecta.
 @Observable @MainActor
 final class WatchSessionManager: NSObject {
     static let shared = WatchSessionManager()
     private let log = Logger(subsystem: "com.laudousg.watch", category: "wcsession")
 
-    private(set) var pending = 0
-    private(set) var lastSentAt: Date?
+    private(set) var queue: [QueuedDitado] = []
+    var pendingCount: Int { queue.lazy.filter { !$0.delivered }.count }
 
     func activate() {
         guard WCSession.isSupported() else { return }
@@ -22,10 +30,8 @@ final class WatchSessionManager: NSObject {
 
     func send(fileURL: URL, duration: TimeInterval) {
         let id = fileURL.deletingPathExtension().lastPathComponent
-        let meta: [String: Any] = ["id": id, "duration": duration]
-        WCSession.default.transferFile(fileURL, metadata: meta)
-        pending += 1
-        lastSentAt = Date()
+        WCSession.default.transferFile(fileURL, metadata: ["id": id, "duration": duration])
+        queue.insert(QueuedDitado(id: id, recordedAt: Date(), duration: duration, delivered: false), at: 0)
         log.info("transfer iniciado: \(id, privacy: .public)")
     }
 }
@@ -42,8 +48,12 @@ extension WatchSessionManager: WCSessionDelegate {
         didFinish fileTransfer: WCSessionFileTransfer,
         error: Error?
     ) {
+        let id = fileTransfer.file.metadata?["id"] as? String
+        let ok = error == nil
         Task { @MainActor in
-            self.pending = max(0, self.pending - 1)
+            if let id, let i = self.queue.firstIndex(where: { $0.id == id }) {
+                self.queue[i].delivered = ok
+            }
             if let error { self.log.error("transfer falhou: \(error.localizedDescription, privacy: .public)") }
         }
     }
