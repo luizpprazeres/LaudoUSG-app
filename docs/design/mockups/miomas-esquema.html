@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Esquema de miomas uterinos — FIGO 0–8 · LaudoUSG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#faf8f4; --ink:#1c2520; --ink-soft:#52605a; --line:#e3ddd1;
+    --emerald:#0f9b6e; --emerald-deep:#0a6e4e; --emerald-soft:#e7f4ee;
+    /* famílias FIGO */
+    --submuc:#e0584a;  --submuc-soft:#fbe9e7;   /* 0,1,2 vermelho-coral */
+    --intra:#d8932b;   --intra-soft:#fbf0dd;     /* 3,4 âmbar */
+    --subser:#7b59c6;  --subser-soft:#efeafb;    /* 5,6,7 roxo */
+    --outros:#3d8bbf;  --outros-soft:#e6f1f8;    /* 8 azul */
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:"Atkinson Hyperlegible",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased; line-height:1.55;
+  }
+  .wrap{max-width:1140px;margin:0 auto;padding:40px 28px 80px}
+  header.top{border-bottom:1px solid var(--line);padding-bottom:22px;margin-bottom:28px}
+  .eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--emerald-deep);font-weight:700}
+  h1{font-family:"Fraunces",serif;font-weight:500;font-size:clamp(28px,4vw,42px);line-height:1.05;margin:.3em 0 .1em;letter-spacing:-.01em}
+  h1 em{font-style:italic;color:var(--emerald-deep)}
+  .sub{color:var(--ink-soft);font-size:15px;max-width:60ch}
+  .note{margin-top:14px;font-size:12.5px;color:var(--ink-soft);background:var(--emerald-soft);border:1px solid #cfe9dd;border-radius:10px;padding:10px 14px;display:inline-block}
+
+  .switch{display:inline-flex;gap:4px;background:#efeae0;border-radius:12px;padding:4px;margin:6px 0 26px}
+  .switch button{font:inherit;font-size:14px;font-weight:700;border:0;background:transparent;color:var(--ink-soft);padding:9px 20px;border-radius:9px;cursor:pointer;transition:.18s}
+  .switch button.active{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+  .stage{display:grid;grid-template-columns:1.15fr .85fr;gap:32px;align-items:start}
+  @media(max-width:820px){.stage{grid-template-columns:1fr}}
+
+  .canvas{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 24px 50px -34px rgba(20,40,30,.35);position:relative}
+  .canvas h2{font-family:"Fraunces",serif;font-weight:500;font-size:18px;margin:4px 6px 0}
+  .canvas .cap{font-size:12px;color:var(--ink-soft);margin:0 6px 6px}
+  svg{display:block;width:100%;height:auto}
+  .view{display:none}.view.active{display:block}
+
+  /* SVG tokens */
+  .serosa{fill:#fff;stroke:#b9a98c;stroke-width:2.4}
+  .myo{fill:#fbf7ee;stroke:#d9ccb0;stroke-width:1.2}
+  .cavity{fill:var(--emerald-soft);stroke:var(--emerald);stroke-width:1.6}
+  .label-an{fill:var(--ink-soft);font:600 11px "Atkinson Hyperlegible";letter-spacing:.04em}
+  .stalk{stroke:#9a8a6c;stroke-width:1.6;fill:none}
+  .mk{stroke:#fff;stroke-width:1.5}
+  .mk-num{fill:#fff;font:700 11px "Atkinson Hyperlegible";text-anchor:middle;dominant-baseline:central}
+
+  /* legenda */
+  .legend{background:#fff;border:1px solid var(--line);border-radius:18px;padding:6px 6px 10px;box-shadow:0 24px 50px -38px rgba(20,40,30,.3)}
+  .legend h3{font-family:"Fraunces",serif;font-weight:500;font-size:16px;margin:14px 16px 6px}
+  .fam{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;margin:14px 16px 4px;color:var(--ink-soft)}
+  .row{display:flex;gap:12px;align-items:flex-start;padding:8px 16px;border-radius:10px}
+  .row:hover{background:#f7f3ea}
+  .dot{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;margin-top:1px}
+  .row b{font-size:13.5px}.row span{display:block;font-size:12.5px;color:var(--ink-soft)}
+
+  footer{margin-top:34px;border-top:1px solid var(--line);padding-top:18px;color:var(--ink-soft);font-size:13px}
+  footer b{color:var(--ink)}
+  .q{margin:8px 0;padding-left:16px;border-left:2px solid var(--emerald)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">LaudoUSG · esquema visual · diferencial</div>
+    <h1>Mapa de <em>miomas uterinos</em> — classificação FIGO 0–8</h1>
+    <p class="sub">Duas visões 2D complementares (sagital + transversal) com os nódulos posicionados pela categoria FIGO PALM-COEIN. Mockup de validação — antes de codar o SwiftUI.</p>
+    <div class="note">📐 Mockup Step 0 — valide o visual e a posição de cada FIGO. Não é a versão final; serve pra alinhar a direção.</div>
+  </header>
+
+  <div class="switch">
+    <button class="active" data-v="sag">Longitudinal (sagital)</button>
+    <button data-v="ax">Transversal (axial)</button>
+  </div>
+
+  <div class="stage">
+    <div class="canvas">
+      <!-- ======================= SAGITAL ======================= -->
+      <div class="view sag active">
+        <h2>Corte longitudinal</h2>
+        <p class="cap">Mesma pera de antes, deitada. Fundo à esquerda, colo à direita.</p>
+        <svg viewBox="0 0 500 310" role="img" aria-label="Útero em corte sagital horizontal com miomas FIGO">
+          <!-- ANATOMIA: o shape vertical aprovado, ROTACIONADO -90° (translate p/ caber) -->
+          <g transform="translate(40,-90) rotate(-90 210 266)">
+            <!-- miométrio: pera vertical original, idêntico ao de antes -->
+            <path class="serosa myo" d="M210,46 C150,46 96,86 92,166 C90,214 104,250 120,286 C150,352 168,372 176,408 L176,470 C176,486 244,486 244,470 L244,408 C252,372 270,352 300,286 C316,250 330,214 328,166 C324,86 270,46 210,46 Z"/>
+            <!-- endométrio: UM taco de baseball (barril no fundo → cabo fino no colo) -->
+            <path class="cavity" d="M178,116 C196,104 224,104 242,116 C248,146 240,172 226,196 C221,205 219,214 218,226 C217,290 216,370 215,432 C215,442 213,448 210,450 C207,448 205,442 205,432 C204,370 203,290 202,226 C201,214 199,205 194,196 C180,172 172,146 178,116 Z"/>
+            <!-- hastes dos pediculados (rotacionam junto) -->
+            <path class="stalk" d="M210,196 q-6,18 -2,30"/>
+            <path class="stalk" d="M312,118 q24,-10 40,-4"/>
+            <!-- marcadores: posições verticais aprovadas; conteúdo CONTRA-rotacionado (rotate 90) p/ número de pé -->
+            <g transform="translate(208,236) rotate(90)"><circle class="mk" r="13" fill="var(--submuc)"/><text class="mk-num">0</text></g>
+            <g transform="translate(176,250) rotate(90)"><circle class="mk" r="14" fill="var(--submuc)"/><text class="mk-num">1</text></g>
+            <g transform="translate(244,250) rotate(90)"><circle class="mk" r="14" fill="var(--submuc)"/><text class="mk-num">2</text></g>
+            <g transform="translate(150,300) rotate(90)"><circle class="mk" r="15" fill="var(--intra)"/><text class="mk-num">3</text></g>
+            <g transform="translate(272,300) rotate(90)"><circle class="mk" r="15" fill="var(--intra)"/><text class="mk-num">4</text></g>
+            <g transform="translate(120,210) rotate(90)"><circle class="mk" r="14" fill="var(--subser)"/><text class="mk-num">5</text></g>
+            <g transform="translate(304,168) rotate(90)"><circle class="mk" r="14" fill="var(--subser)"/><text class="mk-num">6</text></g>
+            <g transform="translate(360,108) rotate(90)"><circle class="mk" r="13" fill="var(--subser)"/><text class="mk-num">7</text></g>
+            <g transform="translate(232,440) rotate(90)"><circle class="mk" r="12" fill="var(--outros)"/><text class="mk-num">8</text></g>
+          </g>
+          <!-- rótulos no frame horizontal (não rotacionam) -->
+          <text class="label-an" x="58" y="20" text-anchor="middle">FUNDO</text>
+          <text class="label-an" x="448" y="20" text-anchor="middle">COLO</text>
+          <text class="label-an" x="250" y="14" text-anchor="middle">POSTERIOR</text>
+          <text class="label-an" x="250" y="300" text-anchor="middle">ANTERIOR</text>
+        </svg>
+      </div>
+
+      <!-- ======================= AXIAL ======================= -->
+      <div class="view ax">
+        <h2>Corte transversal</h2>
+        <p class="cap">Desambigua parede direita ↔ esquerda. Endométrio = linha central.</p>
+        <svg viewBox="0 0 560 400" role="img" aria-label="Útero em corte transversal com miomas FIGO">
+          <!-- serosa (disco oval) -->
+          <ellipse class="serosa myo" cx="280" cy="200" rx="200" ry="150"/>
+          <!-- cavidade endometrial LINEAR (eco endometrial = linha fina central) -->
+          <path class="cavity" d="M192,196 C236,188 324,188 368,196 C324,212 236,212 192,196 Z"/>
+          <!-- rótulos -->
+          <text class="label-an" x="280" y="40" text-anchor="middle">ANTERIOR</text>
+          <text class="label-an" x="280" y="372" text-anchor="middle">POSTERIOR</text>
+          <text class="label-an" x="498" y="204" text-anchor="middle">LAT. D</text>
+          <text class="label-an" x="62" y="204" text-anchor="middle">LAT. E</text>
+
+          <!-- marcadores (exemplos por parede) -->
+          <!-- submucoso (1) anterior tocando a linha endometrial -->
+          <g transform="translate(280,150)"><circle class="mk" r="15" fill="var(--submuc)"/><text class="mk-num">1</text></g>
+          <!-- intramural (4) lateral esquerda -->
+          <g transform="translate(140,200)"><circle class="mk" r="16" fill="var(--intra)"/><text class="mk-num">4</text></g>
+          <!-- subseroso (6) lateral direita perto da serosa -->
+          <g transform="translate(420,178)"><circle class="mk" r="15" fill="var(--subser)"/><text class="mk-num">6</text></g>
+          <!-- intramural (3) posterior tocando a linha -->
+          <g transform="translate(280,252)"><circle class="mk" r="16" fill="var(--intra)"/><text class="mk-num">3</text></g>
+          <!-- subseroso pediculado (7) fora, lateral direita + haste -->
+          <path class="stalk" d="M468,228 q24,10 38,24"/>
+          <g transform="translate(514,262)"><circle class="mk" r="13" fill="var(--subser)"/><text class="mk-num">7</text></g>
+        </svg>
+      </div>
+    </div>
+
+    <!-- ===================== LEGENDA ===================== -->
+    <aside class="legend">
+      <h3>Classificação FIGO (leiomioma)</h3>
+
+      <div class="fam" style="color:var(--submuc)">Submucosos</div>
+      <div class="row"><span class="dot" style="background:var(--submuc)">0</span><div><b>Pediculado intracavitário</b><span>Dentro da cavidade, com haste</span></div></div>
+      <div class="row"><span class="dot" style="background:var(--submuc)">1</span><div><b>&lt; 50% intramural</b><span>Faz contato com o endométrio</span></div></div>
+      <div class="row"><span class="dot" style="background:var(--submuc)">2</span><div><b>≥ 50% intramural</b><span>Faz contato com o endométrio</span></div></div>
+
+      <div class="fam" style="color:var(--intra)">Intramurais</div>
+      <div class="row"><span class="dot" style="background:var(--intra)">3</span><div><b>Contato com endométrio</b><span>100% intramural, toca a cavidade</span></div></div>
+      <div class="row"><span class="dot" style="background:var(--intra)">4</span><div><b>Intramural puro</b><span>Sem tocar endométrio nem serosa</span></div></div>
+
+      <div class="fam" style="color:var(--subser)">Subserosos</div>
+      <div class="row"><span class="dot" style="background:var(--subser)">5</span><div><b>≥ 50% intramural</b><span>Faz contato com a serosa</span></div></div>
+      <div class="row"><span class="dot" style="background:var(--subser)">6</span><div><b>&lt; 50% intramural</b><span>Faz contato com a serosa</span></div></div>
+      <div class="row"><span class="dot" style="background:var(--subser)">7</span><div><b>Pediculado externo</b><span>Externo, com haste</span></div></div>
+
+      <div class="fam" style="color:var(--outros)">Outros</div>
+      <div class="row"><span class="dot" style="background:var(--outros)">8</span><div><b>Localização atípica</b><span>Cervical, ligamento largo, parasitário</span></div></div>
+    </aside>
+  </div>
+
+  <footer>
+    <b>Decisões travadas com o Luiz (2026-06-05):</b>
+    <div class="q">✓ <b>Só miomas (L)</b> — sem PALM-COEIN completo no MVP.</div>
+    <div class="q">✓ <b>As 2 visões por default</b> ao abrir o esquema (longitudinal + transversal).</div>
+    <div class="q">✓ <b>Tamanho do marcador proporcional ao maior eixo</b> do nódulo (tamanho exato no label).</div>
+    <p style="margin-top:14px">Próximo passo se o visual estiver aprovado: portar esses 2 SVGs pra SwiftUI (Step 1) + editor manual FIGO/localização/tamanho (Step 2).</p>
+  </footer>
+</div>
+
+<script>
+  document.querySelectorAll('.switch button').forEach(b=>{
+    b.onclick=()=>{
+      document.querySelectorAll('.switch button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      const v=b.dataset.v;
+      document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.classList.contains(v)));
+    };
+  });
+</script>
+</body>
+</html>
