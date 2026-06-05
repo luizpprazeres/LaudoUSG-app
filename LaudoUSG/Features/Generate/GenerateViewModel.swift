@@ -98,6 +98,7 @@ final class GenerateViewModel {
     var isRecordingOverlayPresented = false
     var isConsultorSheetPresented = false
     var isPaywallPresented = false
+    var isMiomaEditorPresented = false
 
     var canOpenConsultor: Bool {
         if case .done = phase {

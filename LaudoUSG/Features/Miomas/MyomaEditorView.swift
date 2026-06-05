@@ -3,10 +3,16 @@ import SwiftUI
 /// Editor manual de miomas (Step 2) — CRUD com preview ao vivo do esquema +
 /// envio pra Sala. FIGO / localização / tamanho / ecotextura.
 struct MyomaEditorScreen: View {
-    var reportId: String? = nil
-    @State private var myomas: [MyomaFinding] = [MyomaFinding()]
+    var reportId: String?
+    @State private var myomas: [MyomaFinding]
     @State private var sending = false
     @State private var sendResult: String?
+
+    /// Abre com os miomas PARSEADOS do laudo (auto-import). Se vazio, 1 em branco.
+    init(reportId: String? = nil, initialFindings: [MyomaFinding] = []) {
+        self.reportId = reportId
+        _myomas = State(initialValue: initialFindings.isEmpty ? [MyomaFinding()] : initialFindings)
+    }
 
     var body: some View {
         ScrollView {

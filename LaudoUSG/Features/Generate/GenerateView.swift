@@ -137,6 +137,14 @@ struct GenerateView: View {
                 onDismiss: { vm.isConsultorSheetPresented = false }
             )
         }
+        .sheet(isPresented: Binding(get: { vm.isMiomaEditorPresented }, set: { vm.isMiomaEditorPresented = $0 })) {
+            NavigationStack {
+                MyomaEditorScreen(
+                    reportId: vm.lastReportId,
+                    initialFindings: MyomaFindingsParser.parse(vm.editedLaudoText)
+                )
+            }
+        }
         .sheet(isPresented: Binding(get: { vm.isPaywallPresented }, set: { vm.isPaywallPresented = $0 })) {
             PaywallSheet(
                 onSuccess: {
@@ -521,6 +529,27 @@ struct GenerateView: View {
                 }
                 .buttonStyle(PressableButtonStyle())
                 .accessibilityLabel("Enviar laudo para Sala do Auxiliar")
+
+                if vm.category == .pelveFeminina {
+                    Button {
+                        Haptics.tap()
+                        vm.isMiomaEditorPresented = true
+                    } label: {
+                        HStack(spacing: Spacing.xxs) {
+                            Image(systemName: "square.on.square")
+                                .font(.system(size: 12, weight: .semibold))
+                            Text("Esquema de miomas")
+                                .font(TextStyle.captionMedium)
+                        }
+                        .foregroundStyle(AppSurface.textSecondary)
+                        .padding(.horizontal, Spacing.sm)
+                        .frame(minHeight: 30)
+                        .background(Capsule().fill(AppSurface.card))
+                        .overlay(Capsule().stroke(AppSurface.border, lineWidth: 1))
+                    }
+                    .buttonStyle(PressableButtonStyle())
+                    .accessibilityLabel("Abrir esquema visual de miomas")
+                }
             }
         }
     }
