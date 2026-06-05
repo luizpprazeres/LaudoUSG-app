@@ -99,6 +99,18 @@ final class GenerateViewModel {
     var isConsultorSheetPresented = false
     var isPaywallPresented = false
     var isMiomaEditorPresented = false
+    var isWatchDitadosPresented = false
+
+    /// Insere uma transcrição (ex.: ditado do Apple Watch) no input.
+    func insertTranscript(_ transcript: String) {
+        let t = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !t.isEmpty else { return }
+        if inputText.isEmpty {
+            inputText = t
+        } else {
+            inputText += (inputText.hasSuffix("\n") ? "" : "\n") + t
+        }
+    }
 
     var canOpenConsultor: Bool {
         if case .done = phase {

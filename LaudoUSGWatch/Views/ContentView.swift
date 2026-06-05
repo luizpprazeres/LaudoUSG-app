@@ -1,23 +1,13 @@
 import SwiftUI
 
+/// Modelo COMPLEMENTO: o watch só captura ditados e envia pro iPhone pareado.
+/// O fluxo standalone antigo (setup/categorias/geração) fica dormente.
 struct ContentView: View {
-    @Environment(WatchAppState.self) private var app
-
     var body: some View {
-        switch app.route {
-        case .setup:
-            SetupSalaView()
-        case .categories:
-            CategoryListView()
-        case .recording(let category):
-            RecordingView(category: category)
-        case .generating(let category):
-            GeneratingView(category: category)
-        }
+        ComplementCaptureView()
     }
 }
 
 #Preview {
-    ContentView()
-        .environment(WatchAppState())
+    ComplementCaptureView()
 }

@@ -26,6 +26,7 @@ struct LaudoUSGApp: App {
         WindowGroup {
             ContentView(app: appState)
                 .preferredColorScheme(colorScheme)
+                .task { WatchAudioInbox.shared.activate() }
                 .onOpenURL { url in
                     guard url.scheme == "laudousg" else { return }
                     Task {

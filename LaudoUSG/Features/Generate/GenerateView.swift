@@ -10,6 +10,7 @@ struct GenerateView: View {
     @State private var didCopyLaudo: Bool = false
     @State private var isEditingLaudo: Bool = false  // toggle visualização (com highlight) vs edição (TextEditor)
     @State private var isSanityExpanded: Bool = false // acordeão de pontos a revisar
+    @State private var watchInbox = WatchAudioInbox.shared
     @Namespace private var tabNamespace
 
     var body: some View {
@@ -144,6 +145,13 @@ struct GenerateView: View {
                     initialFindings: MyomaFindingsParser.parse(vm.editedLaudoText)
                 )
             }
+        }
+        .sheet(isPresented: Binding(get: { vm.isWatchDitadosPresented }, set: { vm.isWatchDitadosPresented = $0 })) {
+            WatchDitadosSheet(
+                inbox: WatchAudioInbox.shared,
+                onInsert: { vm.insertTranscript($0) },
+                onDismiss: { vm.isWatchDitadosPresented = false }
+            )
         }
         .sheet(isPresented: Binding(get: { vm.isPaywallPresented }, set: { vm.isPaywallPresented = $0 })) {
             PaywallSheet(
@@ -353,6 +361,30 @@ struct GenerateView: View {
                     .foregroundStyle(AppSurface.textMuted)
                     .padding(.top, Spacing.xs)
                     .allowsHitTesting(false)
+            }
+
+            if !watchInbox.pending.isEmpty {
+                HStack {
+                    Button {
+                        Haptics.tap()
+                        vm.isWatchDitadosPresented = true
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "applewatch.radiowaves.left.and.right")
+                                .font(.system(size: 12, weight: .semibold))
+                            Text("\(watchInbox.pending.count) ditado\(watchInbox.pending.count == 1 ? "" : "s") do Watch")
+                                .font(TextStyle.captionMedium)
+                        }
+                        .foregroundStyle(BrandColor.primary)
+                        .padding(.horizontal, Spacing.xs)
+                        .padding(.vertical, Spacing.xxs)
+                        .background(Capsule().fill(BrandColor.primaryTint))
+                        .overlay(Capsule().stroke(BrandColor.primary.opacity(0.3), lineWidth: 1))
+                    }
+                    .accessibilityLabel("Ditados gravados no Apple Watch")
+                    Spacer()
+                }
+                .offset(y: -36)
             }
 
             if !vm.inputText.isEmpty {
