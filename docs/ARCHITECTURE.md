@@ -418,7 +418,8 @@ Padrão completo salvo em `/Users/luizprazeres/.claude/projects/-Users-luizpraze
 | iOS Round 8 | ✅ | **AnimationKit + 1ª onda animações fluidas iOS** — `Components/Animations/` (4 modifiers: SmoothMorph, SymbolBreathing, FluidEntrance, Animation+Presets). Tab switcher Achados↔Laudo com depth (matchedGeometry + scale Y 1.05/0.96 + opacity + weight diferenciado, estilo Apple Music pill). Botão "Gerar laudo" width-stable morph (largura FIXA durante idle→loading→done, texto encolhe + spinner emerge centro simultâneo, checkmark SymbolEffect.appear 900ms). Implementado dex1 25min via worktree iso. Merge commit `a2e6f85`. |
 | 23 | pending | Folha A4 gráficos Intergrowth + export PDF (Swift Charts + UIGraphicsPDFRenderer) |
 | 24 | pending | Upload arquivos médico → Sala (Supabase Storage + PHPickerViewController + Sala PWA renderer) |
-| 25+ | pending | Sala paginação polish + Apple Watch + Preferências expansão (TI-RADS/headers/BI-RADS) + 2ª onda animações iOS (Recording overlay/Banner/Settings toggle) + a11y reduce motion guard no AnimationKit |
+| 25+ | pending | Sala paginação polish + Preferências expansão (TI-RADS/headers/BI-RADS) + 2ª onda animações iOS (Recording overlay/Banner/Settings toggle) + a11y reduce motion guard no AnimationKit |
+| S30 Watch | 🔬 branch `apple-watch-experimental` | **Apple Watch → modelo COMPLEMENTO** (pivot do standalone). Ver §14.2. |
 
 ### 14.0 Sala do Auxiliar — 8 rounds + hotfixes entregues (2026-05-28 → 2026-05-30)
 
@@ -491,6 +492,22 @@ Padrão completo salvo em `/Users/luizprazeres/.claude/projects/-Users-luizpraze
 **P1 = 4 categorias** (alto volume mas wire-up de coisa já pronta no backend).
 **P2 = 5 categorias** (volume médio, exigem trabalho de modelagem).
 **P3 = 7 categorias** (cauda longa, agrupar em sprint de "completude").
+
+### 14.2 Apple Watch — modelo COMPLEMENTO (branch `apple-watch-experimental`, 2026-06-05)
+
+**Pivot** do watch de "gerador standalone" (auth + RAG + laudo no relógio) → **captura de áudio complementar**. Caso real: médico tem watch+iPhone juntos, quer usar menos o celular. Aprovado pelo Luiz + revisado com dex1. Worktree: `/Users/luizprazeres/laudousg-swift/LaudoUSG-watch`.
+
+**Fluxo:** watch grava ditado (fila, 1 por exame) → `WCSession.transferFile` pro iPhone pareado (persistente, entrega mesmo com iPhone bloqueado) → iPhone transcreve (Whisper `/api/transcribe`) → preenche o input do Gerar → médico finaliza. **Zero auth no watch** (o pareamento já é a confiança; áudio só vai pro próprio iPhone). Áudio transitório (LGPD).
+
+**Entregue (builda os 2 targets):**
+- iPhone: `WatchAudioInbox` (WCSession delegate, copia síncrono, dedup) · `AudioTranscriber` · `WatchDitadosSheet` (lista→usar) · pill discreto no Gerar (linha própria à direita).
+- Watch: `WatchSessionManager` (transferFile + fila com status entregue/enviando) · `ComplementCaptureView` (grava→transfere→háptico, fila visível).
+- **Testado E2E no device** (transfer iniciado confirmado no console). Standalone antigo dormente.
+
+**Complication da carátula (BLOQUEADA — falta teste device):**
+- Target `LaudoUSGComplicationExtension` (Widget Extension, embed no watch app, App Group `group.com.laudousg.watch`). Mostra ditados pendentes. Código pronto + **builda + assina + a `.appex` está embutida + entitlements OK** — mas **NÃO aparece no picker da carátula** no device (watchOS 26.4). dex1: provável cache stale OU descoberta. Já tentado: reboot, clean, accessoryCorner removido, deployment target igualado (26.4). **Próximo:** deletar watch app + reinstalar limpo; se persistir, Console.app filtrando `chronod`. Doc: `docs/watch-complication-setup.md`.
+
+**Backlog watch (brainstorm):** captura de medidas por voz→biometria (descartado — redundante c/ DopplerParser atual), pré-tag de categoria (crown), offline-first robusto, Smart Stack widget.
 
 ---
 
