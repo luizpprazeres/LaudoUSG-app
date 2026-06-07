@@ -155,5 +155,6 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         .dopplerVenosoMmii,
         .abdomenSuperior,
         .escrotal,
+        .cervical,
     ]
 }
