@@ -153,8 +153,11 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         .musculoesqueleticoV2,
         .dopplerCarotidas,
         .dopplerVenosoMmii,
+        .dopplerArterialMmii,
+        .dopplerRenal,
         .abdomenSuperior,
         .escrotal,
         .cervical,
+        .glandulasSalivares,
     ]
 }
