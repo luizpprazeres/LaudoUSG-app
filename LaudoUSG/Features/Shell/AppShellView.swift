@@ -103,11 +103,16 @@ struct AppShellView: View {
     private func loadPostLogin() async {
         async let profile = ProfileService.fetchProfile()
         async let styles = ProfileService.fetchWritingStyles()
+        async let reportPreferences = ProfileService.fetchReportPreferences()
         if let profileValue = try? await profile {
             app.updateProfile(profileValue)
         }
         if let stylesValue = try? await styles {
             app.availableStyles = stylesValue
+        }
+        if let preferencesValue = try? await reportPreferences, app.session == .authenticated {
+            app.reportPreferences = preferencesValue.preferences
+            app.availableVariants = preferencesValue.availableVariants
         }
     }
 

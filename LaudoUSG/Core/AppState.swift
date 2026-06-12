@@ -8,6 +8,8 @@ final class AppState {
     var profile: UserProfile?
     var defaultWritingStyleId: String = GenerateRequest.defaultWritingStyleId
     var availableStyles: [WritingStyleRecord] = []
+    var reportPreferences: [ReportPreferenceRecord] = []
+    var availableVariants: [ReportTemplateVariantRecord] = []
     let preferencesStore = PreferencesStore()
 
     var preferences: UserPreferences {
@@ -50,6 +52,31 @@ final class AppState {
             updateProfile(record)
         } catch {
             // Falha silenciosa — UI segue com profile anterior.
+        }
+    }
+
+    func refreshReportPreferences() async {
+        do {
+            let response = try await ProfileService.fetchReportPreferences()
+            // Descarta resposta tardia se o usuário saiu da conta no meio tempo.
+            guard session == .authenticated else { return }
+            reportPreferences = response.preferences
+            availableVariants = response.availableVariants
+        } catch {
+            // Falha silenciosa — UI segue com dados anteriores.
+        }
+    }
+
+    func setReportPreference(categoryCode: String, variant: ReportTemplateVariantRecord?) {
+        reportPreferences.removeAll { $0.categoryCode == categoryCode }
+        if let variant {
+            reportPreferences.append(
+                ReportPreferenceRecord(
+                    categoryCode: categoryCode,
+                    defaultVariantId: variant.id,
+                    variantKey: variant.variantKey
+                )
+            )
         }
     }
 
@@ -121,6 +148,8 @@ final class AppState {
     func signOut() {
         profile = nil
         availableStyles = []
+        reportPreferences = []
+        availableVariants = []
         defaultWritingStyleId = GenerateRequest.defaultWritingStyleId
         session = .signedOut
         Task { await AuthService.shared.signOut() }

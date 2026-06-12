@@ -47,6 +47,37 @@ enum ProfileService {
         _ = try await APIClient.shared.patchRaw("/api/me/profile", body: encoded)
     }
 
+    private struct UpdateReportPreferenceBody: Encodable {
+        let categoryCode: String
+        let defaultVariantId: String?
+
+        enum CodingKeys: String, CodingKey {
+            case categoryCode
+            case defaultVariantId
+        }
+
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(categoryCode, forKey: .categoryCode)
+            // null explícito limpa a preferência no backend (volta ao padrão)
+            if let defaultVariantId {
+                try container.encode(defaultVariantId, forKey: .defaultVariantId)
+            } else {
+                try container.encodeNil(forKey: .defaultVariantId)
+            }
+        }
+    }
+
+    static func fetchReportPreferences() async throws -> ReportPreferencesResponse {
+        try await APIClient.shared.get("/api/me/report-preferences", as: ReportPreferencesResponse.self)
+    }
+
+    static func updateReportPreference(categoryCode: String, variantId: String?) async throws {
+        let body = UpdateReportPreferenceBody(categoryCode: categoryCode, defaultVariantId: variantId)
+        let encoded = try JSONEncoder.api.encode(body)
+        _ = try await APIClient.shared.patchRaw("/api/me/report-preferences", body: encoded)
+    }
+
     static func updateProfile(name: String, crm: String, uf: String) async throws {
         guard let userId = await AuthService.shared.currentUserId() else {
             throw AuthError.invalidResponse
