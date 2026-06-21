@@ -224,17 +224,17 @@ struct SettingsView: View {
     }
 
     private var stylesOrFallback: [WritingStyleRecord] {
+        // Fallback (só se a busca falhar): o estilo padrão Clássico, com o id real.
         app.availableStyles.isEmpty
-            ? WritingStyle.allCases.map {
+            ? [
                 WritingStyleRecord(
                     id: GenerateRequest.defaultWritingStyleId,
-                    slug: $0.rawValue,
-                    label: $0.label,
-                    description: $0.description,
-                    isDefault: $0 == .tradicional,
-                    categoryCode: nil
+                    code: "CLASSICO_COMPLETO",
+                    name: "Clássico completo",
+                    description: nil,
+                    active: true
                 )
-            }
+            ]
             : app.availableStyles
     }
 

@@ -31,11 +31,16 @@ enum ProfileService {
     }
 
     static func fetchWritingStyles() async throws -> [WritingStyleRecord] {
+        // Colunas reais da tabela writing_styles (id,code,name,description,active);
+        // só estilos ATIVOS (saneamento: Clássico + Objetivo). A query antiga
+        // pedia colunas inexistentes (slug/label/is_default/category_code) e
+        // falhava com 42703 → picker vazio.
         try await SupabaseRESTClient.shared.get(
             "/rest/v1/writing_styles",
             query: [
-                "select": "id,slug,label,description,is_default,category_code",
-                "order": "label.asc"
+                "select": "id,code,name,description,active",
+                "active": "eq.true",
+                "order": "name.asc"
             ],
             as: [WritingStyleRecord].self
         )

@@ -2,11 +2,13 @@ import Foundation
 
 struct WritingStyleRecord: Identifiable, Codable, Sendable, Hashable {
     let id: String
-    let slug: String
-    let label: String
+    let code: String
+    let name: String
     let description: String?
-    let isDefault: Bool
-    let categoryCode: String?
+    let active: Bool
+
+    /// Rótulo exibido no picker (a tabela usa `name`).
+    var label: String { name }
 }
 
 enum WritingStyle: String, CaseIterable, Identifiable, Codable {
