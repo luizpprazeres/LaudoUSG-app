@@ -69,6 +69,22 @@ enum GenerateSaveStatus: Equatable {
     case failed(String)
 }
 
+enum FeedbackState: Equatable {
+    case idle
+    case submitting(String)
+    case submitted(String)
+    case error(String)
+
+    var selectedVerdict: String? {
+        switch self {
+        case .submitting(let verdict), .submitted(let verdict):
+            return verdict
+        case .idle, .error:
+            return nil
+        }
+    }
+}
+
 @Observable
 @MainActor
 final class GenerateViewModel {
@@ -88,6 +104,7 @@ final class GenerateViewModel {
     var activeTab: GenerateTab = .achados
     var editedLaudoText: String = ""
     var saveStatus: GenerateSaveStatus = .idle
+    var feedbackState: FeedbackState = .idle
 
     var isCategorySheetPresented = false
     var isMenuSheetPresented = false
@@ -122,6 +139,10 @@ final class GenerateViewModel {
     var hasLaudoOutput: Bool {
         !editedLaudoText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             || !streamedOutput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    var canShowFeedback: Bool {
+        lastReportId != nil && hasLaudoOutput && !phase.isBusy
     }
 
     var phaseLabel: String {
@@ -305,11 +326,13 @@ final class GenerateViewModel {
 
     func generate(writingStyleId: String) {
         guard canGenerate else { return }
+        lastReportId = nil
         streamedOutput = ""
         displayedOutput = ""
         editedLaudoText = ""
         generationFindings = []
         saveStatus = .idle
+        feedbackState = .idle
         lastError = nil
         lastWarning = nil
         sanityIssues = []
@@ -372,6 +395,25 @@ final class GenerateViewModel {
         }
     }
 
+    func submitFeedback(verdict: String, comment: String?) async {
+        guard let reportId = lastReportId else { return }
+        feedbackState = .submitting(verdict)
+
+        do {
+            try await FeedbackService.submit(
+                reportId: reportId,
+                categoryCode: category.rawValue,
+                verdict: verdict,
+                comment: comment
+            )
+            feedbackState = .submitted(verdict)
+            Haptics.success()
+        } catch {
+            feedbackState = .error(error.localizedDescription)
+            Haptics.error()
+        }
+    }
+
     private func handle(event: GenerateSSEEvent) {
         switch event {
         case .open(let payload):
@@ -425,6 +467,7 @@ final class GenerateViewModel {
 
     func reset() {
         stopStreamingFeedback()
+        lastReportId = nil
         inputText = ""
         streamedOutput = ""
         displayedOutput = ""
@@ -434,6 +477,7 @@ final class GenerateViewModel {
         phase = .idle
         activeTab = .achados
         saveStatus = .idle
+        feedbackState = .idle
         lastError = nil
         currentStatusMessage = ""
     }

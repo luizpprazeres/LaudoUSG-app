@@ -10,6 +10,8 @@ struct GenerateView: View {
     @State private var didCopyLaudo: Bool = false
     @State private var isEditingLaudo: Bool = false  // toggle visualização (com highlight) vs edição (TextEditor)
     @State private var isSanityExpanded: Bool = false // acordeão de pontos a revisar
+    @State private var isNegativeFeedbackExpanded: Bool = false
+    @State private var feedbackComment: String = ""
     @Namespace private var tabNamespace
 
     var body: some View {
@@ -420,13 +422,19 @@ struct GenerateView: View {
             } else {
                 // Modo visualização — Text(AttributedString) com linhas que contêm ____ destacadas em roxo
                 ScrollView {
-                    Text(vm.editedLaudoText.laudoHighlighted)
-                        .font(TextStyle.bodyLarge)
-                        .foregroundStyle(AppSurface.textPrimary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top, Spacing.xs)
-                        .padding(.leading, Spacing.xs)
-                        .textSelection(.enabled) // permite copiar com seleção
+                    VStack(alignment: .leading, spacing: Spacing.md) {
+                        Text(vm.editedLaudoText.laudoHighlighted)
+                            .font(TextStyle.bodyLarge)
+                            .foregroundStyle(AppSurface.textPrimary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.top, Spacing.xs)
+                            .padding(.leading, Spacing.xs)
+                            .textSelection(.enabled) // permite copiar com seleção
+
+                        if vm.canShowFeedback {
+                            feedbackCard
+                        }
+                    }
                 }
                 .scrollIndicators(.hidden)
                 .background(AppSurface.background)
@@ -493,6 +501,149 @@ struct GenerateView: View {
         .animation(.easeOut(duration: 0.18), value: vm.generationFindings)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(progressAccessibilityLabel)
+    }
+
+    private var feedbackCard: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            HStack(alignment: .center, spacing: Spacing.sm) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Esse laudo ficou bom?")
+                        .font(TextStyle.bodyLargeSemibold)
+                        .foregroundStyle(AppSurface.textPrimary)
+
+                    feedbackStatusText
+                }
+
+                Spacer(minLength: 0)
+
+                HStack(spacing: Spacing.xs) {
+                    feedbackVoteButton(verdict: "positive", icon: "hand.thumbsup.fill", label: "Bom")
+                    feedbackVoteButton(verdict: "negative", icon: "hand.thumbsdown.fill", label: "Ruim")
+                }
+            }
+
+            if isNegativeFeedbackExpanded {
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    TextField("O que faltou? (opcional)", text: $feedbackComment, axis: .vertical)
+                        .font(TextStyle.body)
+                        .lineLimit(2...4)
+                        .padding(Spacing.sm)
+                        .background(
+                            RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
+                                .fill(AppSurface.background)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
+                                .stroke(AppSurface.border, lineWidth: 1)
+                        )
+
+                    Button {
+                        Task { await vm.submitFeedback(verdict: "negative", comment: feedbackComment) }
+                    } label: {
+                        feedbackSubmitLabel("Enviar feedback")
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, Spacing.sm)
+                            .background(
+                                RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
+                                    .fill(BrandColor.primary)
+                            )
+                    }
+                    .buttonStyle(PressableButtonStyle())
+                    .disabled(isFeedbackSubmitting)
+                }
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .padding(Spacing.md)
+        .background(
+            RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
+                .fill(AppSurface.card)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
+                .stroke(AppSurface.border, lineWidth: 1)
+        )
+        .animation(.easeOut(duration: 0.18), value: isNegativeFeedbackExpanded)
+        .animation(.easeOut(duration: 0.18), value: vm.feedbackState)
+    }
+
+    private var feedbackStatusText: some View {
+        Group {
+            switch vm.feedbackState {
+            case .idle:
+                Text("Sua avaliação ajuda a melhorar os próximos laudos.")
+                    .foregroundStyle(AppSurface.textMuted)
+            case .submitting:
+                Text("Enviando…")
+                    .foregroundStyle(AppSurface.textMuted)
+            case .submitted:
+                Text("Obrigado pelo feedback. Você pode trocar o voto.")
+                    .foregroundStyle(SemanticColor.successText)
+            case .error(let message):
+                Text(message)
+                    .foregroundStyle(SemanticColor.errorText)
+            }
+        }
+        .font(TextStyle.caption)
+    }
+
+    private func feedbackVoteButton(verdict: String, icon: String, label: String) -> some View {
+        let isSelected = vm.feedbackState.selectedVerdict == verdict
+        let isSubmittingThis = vm.feedbackState == .submitting(verdict)
+
+        return Button {
+            Haptics.tap()
+            if verdict == "negative" {
+                isNegativeFeedbackExpanded = true
+            } else {
+                isNegativeFeedbackExpanded = false
+                feedbackComment = ""
+                Task { await vm.submitFeedback(verdict: verdict, comment: nil) }
+            }
+        } label: {
+            HStack(spacing: Spacing.xxs) {
+                if isSubmittingThis {
+                    ProgressView()
+                        .controlSize(.mini)
+                        .tint(isSelected ? .white : BrandColor.primary)
+                } else {
+                    Image(systemName: icon)
+                        .font(.system(size: 14, weight: .semibold))
+                }
+                Text(label)
+                    .font(TextStyle.captionMedium)
+            }
+            .foregroundStyle(isSelected ? .white : AppSurface.textSecondary)
+            .padding(.horizontal, Spacing.sm)
+            .frame(minHeight: 34)
+            .background(
+                Capsule().fill(isSelected ? BrandColor.primary : AppSurface.background)
+            )
+            .overlay(
+                Capsule().stroke(isSelected ? BrandColor.primary : AppSurface.border, lineWidth: 1)
+            )
+        }
+        .buttonStyle(PressableButtonStyle())
+        .disabled(isFeedbackSubmitting)
+        .accessibilityLabel(label == "Bom" ? "Marcar laudo como bom" : "Marcar laudo como ruim")
+    }
+
+    private func feedbackSubmitLabel(_ text: String) -> some View {
+        HStack(spacing: Spacing.xs) {
+            if isFeedbackSubmitting {
+                ProgressView()
+                    .controlSize(.mini)
+                    .tint(.white)
+            }
+            Text(text)
+                .font(TextStyle.bodyLargeSemibold)
+        }
+    }
+
+    private var isFeedbackSubmitting: Bool {
+        if case .submitting = vm.feedbackState { return true }
+        return false
     }
 
     private var progressAccessibilityLabel: String {

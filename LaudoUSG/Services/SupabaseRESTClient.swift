@@ -86,12 +86,13 @@ actor SupabaseRESTClient {
     func postRaw(
         _ path: String,
         query: [String: String],
-        body: Data
+        body: Data,
+        prefer: String = "return=minimal"
     ) async throws {
         _ = try await performWithRefresh {
             var request = try makeRequest(path: path, method: "POST", query: query)
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
+            request.setValue(prefer, forHTTPHeaderField: "Prefer")
             request.httpBody = body
             return request
         }
