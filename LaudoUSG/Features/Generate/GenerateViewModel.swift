@@ -78,6 +78,7 @@ final class GenerateViewModel {
     var streamedOutput: String = ""
     var displayedOutput: String = ""
     var currentStatusMessage: String = ""
+    var generationFindings: [String] = []
     var liveTranscript: String = ""
 
     var phase: GenerationPhase = .idle
@@ -307,6 +308,7 @@ final class GenerateViewModel {
         streamedOutput = ""
         displayedOutput = ""
         editedLaudoText = ""
+        generationFindings = []
         saveStatus = .idle
         lastError = nil
         lastWarning = nil
@@ -376,6 +378,8 @@ final class GenerateViewModel {
             lastReportId = payload.reportId
         case .heartbeat:
             break
+        case .stage(let payload):
+            handle(stage: payload)
         case .structured:
             break
         case .validator(let payload):
@@ -426,6 +430,7 @@ final class GenerateViewModel {
         displayedOutput = ""
         editedLaudoText = ""
         liveTranscript = ""
+        generationFindings = []
         phase = .idle
         activeTab = .achados
         saveStatus = .idle
@@ -434,10 +439,29 @@ final class GenerateViewModel {
     }
 
     private func startStreamingFeedback() {
-        currentStatusMessage = "Analisando achados…"
+        currentStatusMessage = "Interpretando o ditado…"
+        generationFindings = []
     }
 
     private func stopStreamingFeedback() {
         currentStatusMessage = ""
+    }
+
+    private func handle(stage payload: StagePayload) {
+        switch payload.stage {
+        case "achado":
+            appendGenerationFinding(payload.label)
+        default:
+            currentStatusMessage = payload.label
+        }
+    }
+
+    private func appendGenerationFinding(_ label: String) {
+        let cleaned = label.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleaned.isEmpty else { return }
+        guard !generationFindings.contains(where: { $0.caseInsensitiveCompare(cleaned) == .orderedSame }) else {
+            return
+        }
+        generationFindings.append(cleaned)
     }
 }

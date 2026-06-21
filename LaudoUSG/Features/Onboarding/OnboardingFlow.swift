@@ -260,6 +260,8 @@ struct OnboardingFlow: View {
             reportId = payload.reportId
         case .heartbeat:
             break
+        case .stage:
+            break
         case .structured:
             generationStages.insert(.structured)
         case .validator(let payload):

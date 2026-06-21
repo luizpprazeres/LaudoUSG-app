@@ -3,6 +3,7 @@ import Foundation
 enum GenerateSSEEvent: Sendable {
     case open(OpenPayload)
     case heartbeat(HeartbeatPayload)
+    case stage(StagePayload)
     case structured(StructuredPayload)
     case validator(ValidatorPayload)
     case clarify(ClarifyPayload)
@@ -29,6 +30,8 @@ extension GenerateSSEEvent: Decodable {
             self = .open(try OpenPayload(from: decoder))
         case "heartbeat":
             self = .heartbeat(try HeartbeatPayload(from: decoder))
+        case "stage":
+            self = .stage(try StagePayload(from: decoder))
         case "structured":
             self = .structured(try StructuredPayload(from: decoder))
         case "validator":
@@ -66,6 +69,12 @@ struct OpenPayload: Decodable, Sendable, Hashable {
 
 struct HeartbeatPayload: Decodable, Sendable, Hashable {
     let ts: String?
+}
+
+struct StagePayload: Decodable, Sendable, Hashable {
+    let ts: String?
+    let stage: String
+    let label: String
 }
 
 struct StructuredPayload: Decodable, Sendable, Hashable {

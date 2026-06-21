@@ -380,22 +380,7 @@ struct GenerateView: View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             laudoToolbar
             if vm.phase.isBusy && vm.streamedOutput.isEmpty && !vm.currentStatusMessage.isEmpty {
-                VStack(alignment: .leading) {
-                    HStack(spacing: Spacing.sm) {
-                        ProgressView()
-                            .scaleEffect(0.8)
-                        Text(vm.currentStatusMessage)
-                            .font(TextStyle.bodyLarge)
-                            .foregroundStyle(AppSurface.textSecondary)
-                            .id(vm.currentStatusMessage)
-                            .transition(.opacity.combined(with: .move(edge: .leading)))
-                    }
-                    .padding(.top, Spacing.xs)
-                    .padding(.leading, Spacing.xs)
-                    Spacer()
-                }
-                .frame(maxHeight: .infinity)
-                .animation(.easeInOut(duration: 0.3), value: vm.currentStatusMessage)
+                generationProgressView
             } else if vm.phase.isBusy && !vm.displayedOutput.isEmpty {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
@@ -453,6 +438,68 @@ struct GenerateView: View {
         .onChange(of: vm.phase.isBusy) { _, newValue in
             if newValue { isEditingLaudo = false }
         }
+    }
+
+    private var generationProgressView: some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            HStack(spacing: Spacing.sm) {
+                ProgressView()
+                    .scaleEffect(0.86)
+                    .tint(BrandColor.primary)
+                Text(vm.currentStatusMessage)
+                    .font(TextStyle.bodyLarge)
+                    .foregroundStyle(AppSurface.textPrimary)
+                    .id(vm.currentStatusMessage)
+                    .transition(.opacity.combined(with: .move(edge: .leading)))
+                Spacer(minLength: 0)
+            }
+
+            if !vm.generationFindings.isEmpty {
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Text("Achados reconhecidos")
+                        .font(TextStyle.captionMedium)
+                        .foregroundStyle(AppSurface.textMuted)
+
+                    FlowLayout(spacing: Spacing.xs, alignment: .leading) {
+                        ForEach(vm.generationFindings, id: \.self) { finding in
+                            HStack(spacing: Spacing.xxs) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(BrandColor.primary)
+                                Text(finding)
+                                    .font(TextStyle.captionMedium)
+                                    .foregroundStyle(AppSurface.textSecondary)
+                                    .lineLimit(1)
+                            }
+                            .padding(.horizontal, Spacing.xs)
+                            .frame(height: 28)
+                            .background(Capsule().fill(BrandColor.primaryTint))
+                            .overlay(
+                                Capsule()
+                                    .stroke(BrandColor.primary.opacity(0.16), lineWidth: 1)
+                            )
+                            .transition(.scale(scale: 0.96).combined(with: .opacity))
+                        }
+                    }
+                }
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(.top, Spacing.xs)
+        .padding(.horizontal, Spacing.xs)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .animation(.easeInOut(duration: 0.25), value: vm.currentStatusMessage)
+        .animation(.easeOut(duration: 0.18), value: vm.generationFindings)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(progressAccessibilityLabel)
+    }
+
+    private var progressAccessibilityLabel: String {
+        if vm.generationFindings.isEmpty {
+            return vm.currentStatusMessage
+        }
+        return "\(vm.currentStatusMessage). Achados reconhecidos: \(vm.generationFindings.joined(separator: ", "))"
     }
 
     private struct TypingCursor: View {
