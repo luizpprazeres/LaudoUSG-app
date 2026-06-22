@@ -160,16 +160,10 @@ Para operar o Serviço, o Usuário concede ao Controlador licença **mundial, n�
 
 Esta licença **não inclui** o direito de comercializar ou divulgar o Conteúdo do Usuário.
 
-## 9. Planos e Pagamento
+## 9. Acesso ao Serviço
 
-> **NOTA:** funcionalidade de planos pagos ainda não implementada na versão atual.
-
-O Controlador poderá oferecer planos pagos no futuro. Quando disponíveis:
-
-- Preços e condições serão informados claramente antes da contratação;
-- Cobrança recorrente será comunicada com antecedência;
-- Cancelamento poderá ser feito a qualquer momento, com efeito ao final do ciclo pago corrente;
-- Não há reembolso proporcional após início de uso do ciclo, salvo por exigência legal.
+O aplicativo apenas reflete o status de acesso associado à Conta do Usuário.
+Mudanças de acesso não são realizadas dentro do aplicativo.
 
 ## 10. Suspensão e Encerramento da Conta
 
@@ -240,10 +234,7 @@ As exclusões acima **não se aplicam** e o Controlador **responde integralmente
 
 ### 12.2 Limite Máximo (quando juridicamente admissível)
 
-Nos casos em que a limitação contratual de responsabilidade for juridicamente admissível, o valor máximo de eventual indenização **limita-se ao maior** entre:
-
-- (a) o valor efetivamente pago pelo Usuário ao Controlador nos **12 (doze) meses anteriores** ao fato gerador, ou
-- (b) **R$ 500,00 (quinhentos reais)**.
+Nos casos em que a limitação contratual de responsabilidade for juridicamente admissível, eventual indenização observará os limites permitidos pela legislação aplicável e pela natureza do Serviço.
 
 Esta limitação **não se aplica** às hipóteses ressalvadas na Cláusula 12.1.
 

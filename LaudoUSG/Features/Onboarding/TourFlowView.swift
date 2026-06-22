@@ -73,9 +73,9 @@ struct TourFlowView: View {
         tourPage(
             icon: "checkmark.seal.fill",
             iconTint: BrandColor.primary,
-            title: "Comece com 3 dias grátis",
-            subtitle: "Teste tudo sem compromisso. Cancele em 1 clique a qualquer momento antes do fim do trial.",
-            highlights: ["Sem cartão até o fim do trial", "Suporte direto via WhatsApp", "Cancele em 1 toque"]
+            title: "Tudo pronto!",
+            subtitle: "Comece a gerar seus laudos agora, com revisão e edição sempre no seu controle.",
+            highlights: ["Fluxo rápido de ditado", "Laudo editável", "Histórico organizado"]
         )
     }
 
@@ -141,7 +141,7 @@ struct TourFlowView: View {
                 onFinish()
             }
         } label: {
-            Text(selectedPage < totalPages - 1 ? "Próximo" : "Ver planos")
+            Text(selectedPage < totalPages - 1 ? "Próximo" : "Começar")
                 .font(TextStyle.bodyLargeSemibold)
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)

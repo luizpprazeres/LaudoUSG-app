@@ -5,12 +5,6 @@ struct PaywallSheet: View {
     let onSuccess: () -> Void
     let onDismiss: () -> Void
 
-    @Environment(\.openURL) private var openURL
-
-    private var pricingURL: URL {
-        AppConfig.webBaseURL.appending(path: "precos")
-    }
-
     var body: some View {
         NavigationStack {
             ZStack {
@@ -24,7 +18,7 @@ struct PaywallSheet: View {
                 .padding(.horizontal, Spacing.md)
                 .padding(.vertical, Spacing.lg)
             }
-            .navigationTitle("Plano gratuito")
+            .navigationTitle("Acesso restrito")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -42,11 +36,11 @@ struct PaywallSheet: View {
                 .foregroundStyle(BrandColor.primary)
                 .padding(.bottom, Spacing.xs)
 
-            Text("Sua conta está no plano gratuito.")
+            Text("Acesso restrito")
                 .font(TextStyle.h2)
                 .foregroundStyle(AppSurface.textPrimary)
 
-            Text("As assinaturas são gerenciadas no site.")
+            Text("Este recurso requer uma conta com acesso ativo.")
                 .font(TextStyle.bodyLarge)
                 .foregroundStyle(AppSurface.textSecondary)
         }
@@ -54,9 +48,8 @@ struct PaywallSheet: View {
 
     private var infoCard: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            featureRow("Acesse laudousg.com para gerenciar sua assinatura.")
-            featureRow("Depois de concluir no site, volte ao app e atualize sua conta.")
-            featureRow("O app libera o acesso assim que seu plano estiver ativo no perfil.")
+            featureRow("Se você já tem acesso, atualize sua conta para liberar o recurso.")
+            featureRow("Caso o acesso ainda não apareça, tente novamente em alguns instantes.")
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -74,9 +67,9 @@ struct PaywallSheet: View {
         VStack(spacing: Spacing.sm) {
             Button {
                 Haptics.tap()
-                openURL(pricingURL)
+                onSuccess()
             } label: {
-                Text("Gerenciar em laudousg.com")
+                Text("Já tenho acesso — atualizar")
                     .font(TextStyle.bodyLargeSemibold)
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
@@ -84,25 +77,6 @@ struct PaywallSheet: View {
                     .background(
                         RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                             .fill(BrandColor.primary)
-                    )
-            }
-
-            Button {
-                Haptics.tap()
-                onSuccess()
-            } label: {
-                Text("Já assinei — atualizar")
-                    .font(TextStyle.bodyLargeSemibold)
-                    .foregroundStyle(BrandColor.primary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, Spacing.md)
-                    .background(
-                        RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
-                            .fill(AppSurface.card)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
-                            .stroke(AppSurface.border, lineWidth: 1)
                     )
             }
 

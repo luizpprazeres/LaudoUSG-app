@@ -186,6 +186,7 @@ struct UserProfile: Equatable {
         switch plan?.lowercased() {
         case "free", "gratuito": return "Gratuito"
         case "essential", "essencial": return "Essencial"
+        case "clinic": return "Profissional"
         case "pro": return "Pro"
         default: return "Gratuito"
         }
@@ -193,13 +194,16 @@ struct UserProfile: Equatable {
 
     var hasEssencialOrAbove: Bool {
         switch plan?.lowercased() {
-        case "essential", "essencial", "pro": return true
+        case "essential", "essencial", "clinic", "pro": return true
         default: return false
         }
     }
 
     var hasPro: Bool {
-        plan?.lowercased() == "pro"
+        switch plan?.lowercased() {
+        case "clinic", "pro": return true
+        default: return false
+        }
     }
 
     var avatarInitial: String {

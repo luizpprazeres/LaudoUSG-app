@@ -103,13 +103,6 @@ struct SettingsView: View {
                     infoRow(label: "Email", value: app.profile?.email ?? "—")
                     Divider().padding(.leading, Spacing.md)
                     infoRow(label: "Plano", value: app.profile?.planLabel ?? "Gratuito")
-                    Divider().padding(.leading, Spacing.md)
-                    Button {
-                        UIApplication.shared.open(AppConfig.webBaseURL.appending(path: "precos"))
-                    } label: {
-                        navRowLabel("Gerenciar assinatura")
-                    }
-                    .buttonStyle(PressableButtonStyle())
                 }
 
                 section(title: "Perfil") {
