@@ -6,14 +6,14 @@
 
 <!--
 Nota interna (não-renderizada): conteúdo desta v2.0 aguarda revisão jurídica externa antes do submit final ao App Store.
-Identificação do Controlador atual: Pessoa Física, CPF 108.964.194-20. Pessoa jurídica em constituição — atualizar quando CNPJ emitido.
+Identificação do Controlador: responsável identificado na conta de desenvolvedor e nos documentos legais do app.
 -->
 
 ---
 
 ## Identificação do Controlador
 
-- **Controlador:** Luiz Paulo de Souza Prazeres (CPF 108.964.194-20)
+- **Controlador:** responsável identificado na conta de desenvolvedor e nos documentos legais do app
 - **Encarregado de Dados (DPO):** Luiz Paulo de Souza Prazeres
 - **Email institucional / DPO:** contato@laudousg.com
 - **Endereço postal:** fornecido sob solicitação ao DPO via email
@@ -22,7 +22,7 @@ Identificação do Controlador atual: Pessoa Física, CPF 108.964.194-20. Pessoa
 
 ## 1. Introdução
 
-Esta Política de Privacidade ("Política") descreve como **Luiz Paulo de Souza Prazeres** ("LaudoUSG", "nós", "Controlador"), CPF 108.964.194-20 (Pessoa Física; pessoa jurídica em constituição), coleta, utiliza, compartilha e protege os dados pessoais dos usuários do aplicativo **LaudoUSG**.
+Esta Política de Privacidade ("Política") descreve como o **Controlador identificado na conta de desenvolvedor e nos documentos legais do app** ("LaudoUSG", "nós", "Controlador") coleta, utiliza, compartilha e protege os dados pessoais dos usuários do aplicativo **LaudoUSG**.
 
 Esta Política é parte integrante dos [Termos de Uso](./TERMS_OF_USE.md) e está em conformidade com:
 
@@ -33,9 +33,8 @@ Esta Política é parte integrante dos [Termos de Uso](./TERMS_OF_USE.md) e est�
 
 ## 2. Quem somos (Controlador)
 
-**Controlador dos dados:** Luiz Paulo de Souza Prazeres
-**CPF:** 108.964.194-20
-**Natureza:** Pessoa Física; pessoa jurídica em constituição (CNPJ ainda não emitido pela Receita Federal)
+**Controlador dos dados:** responsável identificado na conta de desenvolvedor e nos documentos legais do app
+**Natureza:** responsável pela operação do Serviço LaudoUSG
 **Endereço:** fornecido sob solicitação ao Encarregado de Dados (DPO) via email
 **Email institucional:** contato@laudousg.com
 
@@ -73,12 +72,15 @@ Os Termos de Uso (Cláusula 5.2) **vedam expressamente** que o Usuário insira d
 | Dado | Finalidade | Base Legal |
 |---|---|---|
 | Texto digitado/ditado de achados | Geração de laudo | Execução de contrato (Art. 7º, V) |
-| Áudio gravado (temporário) | Transcrição via Whisper | Execução de contrato (Art. 7º, V) |
+| Áudio gravado (temporário) | Transcrição por serviços contratados via backend | Execução de contrato (Art. 7º, V) |
 | Laudos gerados | Armazenamento no histórico do Usuário | Execução de contrato (Art. 7º, V) |
 | Frases customizadas | Reutilização pelo Usuário | Execução de contrato (Art. 7º, V) |
 | Configurações (estilo, idioma) | Personalização | Execução de contrato (Art. 7º, V) |
+| Imagens selecionadas pelo Usuário (temporárias) | Análise de medidas, apoio ao Consultor IA e geração de contexto clínico | Execução de contrato (Art. 7º, V) |
 
-**Áudio:** o arquivo de áudio é **enviado para transcrição** e **descartado imediatamente após** a transcrição bem-sucedida. Não armazenamos áudios em nossos servidores.
+**Áudio:** o arquivo de áudio é **enviado para transcrição** e **descartado imediatamente após** a transcrição bem-sucedida. Não armazenamos áudios permanentemente em nossos servidores.
+
+**Imagens:** imagens eventualmente selecionadas pelo médico, como imagens de ultrassonografia ou exames relacionados, podem ser processadas **temporariamente** para análise de medidas ou apoio ao Consultor IA. Essas imagens **não são armazenadas permanentemente** pelo LaudoUSG e não devem conter identificadores de paciente.
 
 ### 4.3 Dados Técnicos (coletados automaticamente)
 
@@ -91,10 +93,9 @@ Os Termos de Uso (Cláusula 5.2) **vedam expressamente** que o Usuário insira d
 
 ## 5. Dados que NÃO Coletamos (compromisso)
 
-**O LaudoUSG NÃO coleta:**
+**O LaudoUSG NÃO coleta intencionalmente:**
 
 - Dados identificáveis de **pacientes** (nome, CPF, RG, endereço, telefone, foto, prontuário). Os Termos de Uso vedam expressamente que o Usuário insira tais dados;
-- **Imagens médicas** (ultrassonografias, exames de imagem);
 - **Localização geográfica** precisa do Usuário (não solicitamos permissão de localização);
 - **Contatos**, calendário, biblioteca de fotos do dispositivo;
 - **Identificadores publicitários** (Apple IDFA);
@@ -129,7 +130,8 @@ Para operar o Serviço, contratamos provedores que atuam como **Operadores** (LG
 |---|---|---|---|
 | **Supabase** | Banco de dados, autenticação, armazenamento | EUA (AWS us-east-1) | Cadastrais, conteúdo, logs |
 | **Vercel** | Hospedagem do backend Next.js | EUA / multi-região | Requisições, logs técnicos |
-| **OpenAI** | Transcrição de áudio (Whisper), geração de texto (gpt-4.1-mini) | EUA | Áudio (temporário), texto do ditado |
+| **Deepgram** | Transcrição de áudio em tempo real | EUA | Áudio temporário para transcrição |
+| **OpenAI** | Geração de texto e análise de conteúdo multimodal quando aplicável | EUA | Texto do ditado, laudos, imagens temporárias quando selecionadas |
 | **Groq** | Fallback de geração de texto (llama-3.3-70b) | EUA | Texto do ditado |
 | **Resend** | Envio de emails transacionais | EUA / Europa | Email, conteúdo do email |
 | **Apple** | Distribuição do app e serviços da plataforma iOS | Global, conforme termos da Apple | Dados técnicos e de distribuição tratados pela Apple como provedora da plataforma |

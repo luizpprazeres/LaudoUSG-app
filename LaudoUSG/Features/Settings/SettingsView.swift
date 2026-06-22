@@ -119,17 +119,6 @@ struct SettingsView: View {
                     .buttonStyle(PressableButtonStyle())
                 }
 
-                section(title: "Protótipos (debug)") {
-                    NavigationLink(destination: DeepgramTestView()) {
-                        navRowLabel("Transcrição ao vivo (Deepgram)")
-                    }
-                    .buttonStyle(PressableButtonStyle())
-                    NavigationLink(destination: MyomaEditorScreen()) {
-                        navRowLabel("Esquema de miomas (FIGO)")
-                    }
-                    .buttonStyle(PressableButtonStyle())
-                }
-
                 section(title: "Zona de risco") {
                     NavigationLink(destination: DeleteAccountView()) {
                         HStack {
