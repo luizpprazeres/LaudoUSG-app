@@ -105,9 +105,7 @@ struct SettingsView: View {
                     infoRow(label: "Plano", value: app.profile?.planLabel ?? "Gratuito")
                     Divider().padding(.leading, Spacing.md)
                     Button {
-                        if let url = URL(string: "itms-apps://apps.apple.com/account/subscriptions") {
-                            UIApplication.shared.open(url)
-                        }
+                        UIApplication.shared.open(AppConfig.webBaseURL.appending(path: "precos"))
                     } label: {
                         navRowLabel("Gerenciar assinatura")
                     }

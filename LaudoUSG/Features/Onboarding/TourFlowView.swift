@@ -64,7 +64,7 @@ struct TourFlowView: View {
             icon: "sparkles",
             iconTint: Color(hex: "8B5CF6"),
             title: "Consultor IA",
-            subtitle: "No plano PRO, abra um chat com a IA que recebe seu laudo como contexto e sugere diagnósticos diferenciais, conduta e referências.",
+            subtitle: "Abra um chat com a IA que recebe seu laudo como contexto e sugere diagnósticos diferenciais, conduta e referências.",
             highlights: ["Até 5 imagens por consulta", "Modo thinking (raciocínio aprofundado)", "Embasado em literatura clínica"]
         )
     }
