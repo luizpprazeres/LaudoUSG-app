@@ -84,7 +84,7 @@ struct IGCalculatorSheet: View {
 
             inputField("Data do exame", text: $usgDateText, hasError: errorMessage != nil)
 
-            Stepper("Semanas: \(usgWeeks)", value: $usgWeeks, in: 0...42)
+            Stepper("Semanas: \(usgWeeks)", value: $usgWeeks, in: 5...42)
                 .font(TextStyle.bodyMedium)
                 .foregroundStyle(AppSurface.textPrimary)
 

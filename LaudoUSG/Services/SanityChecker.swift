@@ -96,7 +96,11 @@ enum SanityChecker {
     private static func checkDates(in text: String) -> [LocalSanityIssue] {
         matches(pattern: #"\b(\d{1,2})/(\d{1,2})/(\d{2}|\d{4})\b"#, in: text).compactMap { match in
             let parts = match.split(separator: "/").compactMap { Int($0) }
-            guard parts.count == 3, parts[0] > 31 || parts[1] > 12 else { return nil }
+            guard parts.count == 3 else { return nil }
+            let day = parts[0], month = parts[1]
+            let year = parts[2] < 100 ? 2000 + parts[2] : parts[2]
+            // #10: valida dias reais do mês (pega 31/04, 29/02 não-bissexto etc.)
+            guard !isValidCalendarDate(day: day, month: month, year: year) else { return nil }
 
             return LocalSanityIssue(
                 code: "data_invalida",
@@ -105,6 +109,13 @@ enum SanityChecker {
                 range: match
             )
         }
+    }
+
+    private static func isValidCalendarDate(day: Int, month: Int, year: Int) -> Bool {
+        guard month >= 1, month <= 12, day >= 1 else { return false }
+        let leap = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
+        let daysInMonth = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+        return day <= daysInMonth[month - 1]
     }
 
     private static func matches(pattern: String, in text: String) -> [String] {

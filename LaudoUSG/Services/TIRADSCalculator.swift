@@ -141,7 +141,10 @@ enum TIRADSCalculator {
         return TIRADSResult(pontos: total, categoria: cat, recomendacao: recomendacao, insertBloco: bloco)
     }
 
-    private static func recomendar(categoria: Categoria, tamanho: Double) -> String {
+    private static func recomendar(categoria: Categoria, tamanho rawTamanho: Double) -> String {
+        // #8: arredonda a 1 casa antes de comparar com os cutoffs — evita que
+        // 1,5 cm vire 1,4999 por imprecisão de parsing e perca a indicação.
+        let tamanho = (rawTamanho * 10).rounded() / 10
         switch categoria {
         case .tr1, .tr2:
             return "Sem necessidade de seguimento adicional ou punção."
