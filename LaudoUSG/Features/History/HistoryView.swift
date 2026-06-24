@@ -32,6 +32,9 @@ final class HistoryViewModel {
         do {
             reports = try await HistoryService.fetchRecentReports(filter: filter)
             updateAvailableCategories()
+            // #U5: descarta da seleção IDs que sumiram após o reload, pra o
+            // contador e o delete em lote não operarem sobre itens fantasma.
+            selectedIds.formIntersection(Set(reports.map { $0.id }))
         } catch let err as SupabaseError {
             error = err.errorDescription
         } catch let other {

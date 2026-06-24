@@ -10,6 +10,9 @@ final class AnalyticsViewModel {
     var reports: [Report] = []
 
     func load() async {
+        // #U12: evita cargas concorrentes (.task + .refreshable) que
+        // intercalariam summary/reports de fetches diferentes.
+        guard !isLoading else { return }
         isLoading = true
         error = nil
 
