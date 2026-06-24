@@ -47,6 +47,19 @@ enum PreEclampsiaCalculator {
         let insertBloco: String
     }
 
+    /// P90/P95 do IP médio das artérias uterinas por idade gestacional —
+    /// Gómez O, Figueras F et al. "Reference ranges for uterine artery mean
+    /// pulsatility index at 11–41 weeks of gestation." Ultrasound Obstet Gynecol
+    /// 2008;32:128–132 (referência da escola de Medicina Fetal Barcelona).
+    /// Modelo log-normal (Royston), GA em dias. Validado contra os âncoras do
+    /// paper: P95 ≈ 2,70 (11 sem) · 1,48 (22 sem) · 1,36 (24 sem).
+    static func utaPiReference(gaWeeks: Int) -> (p90: Double, p95: Double) {
+        let ga = Double(gaWeeks * 7)
+        let logMedian = 1.39 - 0.012 * ga + 0.0000198 * ga * ga
+        let logSD = 0.272 - 0.000259 * ga
+        return (exp(logMedian + 1.2816 * logSD), exp(logMedian + 1.6449 * logSD))
+    }
+
     /// Avaliação categórica simplificada por contagem de fatores de risco + valor
     /// dos parâmetros ecográficos. Não substitui FMF risk calculator completo
     /// (que requer PAPP-A + PlGF + MoM ajustado).
@@ -73,9 +86,18 @@ enum PreEclampsiaCalculator {
         if input.mapMmHg >= 100 { pontos += 2; fatores.append("MAP elevada (≥ 100 mmHg)") }
         else if input.mapMmHg >= 95 { pontos += 1; fatores.append("MAP moderadamente elevada (95-99 mmHg)") }
 
-        // Doppler uterinas: IP > P95 ≈ 2.35 no 1T (Plasencia 2007)
-        if input.uterinaPiMedio >= 2.35 { pontos += 2; fatores.append("IP médio uterinas acima do percentil 95 (≥ 2,35)") }
-        else if input.uterinaPiMedio >= 1.80 { pontos += 1; fatores.append("IP médio uterinas elevado (1,80-2,34)") }
+        // Doppler uterinas: P90/P95 do IP médio variam com a IG — Gómez 2008
+        // (Medicina Fetal Barcelona), não cutoff fixo.
+        let utaRef = utaPiReference(gaWeeks: input.igWeeks)
+        let p95Fmt = String(format: "%.2f", utaRef.p95).replacingOccurrences(of: ".", with: ",")
+        if input.uterinaPiMedio >= utaRef.p95 {
+            pontos += 2
+            fatores.append("IP médio das uterinas acima do percentil 95 para \(input.igWeeks) sem (≥ \(p95Fmt))")
+        } else if input.uterinaPiMedio >= utaRef.p90 {
+            pontos += 1
+            let p90Fmt = String(format: "%.2f", utaRef.p90).replacingOccurrences(of: ".", with: ",")
+            fatores.append("IP médio das uterinas no percentil 90–95 para \(input.igWeeks) sem (≥ \(p90Fmt))")
+        }
 
         let risk: Risk
         if pontos >= 5 { risk = .alto }

@@ -6,8 +6,8 @@
 
 ## 🔴 CRÍTICOS — precisam de você
 
-### #2 [CLÍNICO] Doppler pode mascarar centralização (RCP/ACM patológico com UA normal)
-`Services/DopplerCalculator.swift:159-176` (`aplicarCorrecoesClinicas`) — quando a a. umbilical está normal mas ACM/RCP saem patológicos, o código **sobrescreve para percentil 5 e `pathological:false`**. Risco: uma **centralização real** (RCP baixo = marcador precoce de hipóxia) ser reportada como normal. O agente classificou como "clinicamente invertida". **⚠️ Preciso que você confirme se essa regra está mesmo errada antes de eu tocar — é decisão sua.**
+### #2 ✅ VALIDADO — NÃO é bug (comportamento clínico correto)
+`Services/DopplerCalculator.swift:159-176` (`aplicarCorrecoesClinicas`). **Dr. Luiz confirmou (2026-06-24):** quando a a. umbilical está normal e a relação está patológica, **forçar "normal" é o comportamento clínico desejado** — a umbilical normal manda. O agente de auditoria interpretou errado. **NÃO corrigir.**
 
 ### #1 [CÓDIGO] `parseDateBR` aceita datas impossíveis / timezone / sem faixa
 `Services/GestationalAgeCalculator.swift:78-95` — aceita DUM como `01/01/1900` (IG de milhares de semanas), ramo ISO sem timezone fixo desloca ±1 dia (UTC-3), sem limite superior de IG. **Posso corrigir** (validar faixa plausível, fixar timezone, rejeitar IG>45sem).

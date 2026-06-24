@@ -17,16 +17,14 @@ enum AnemiaMCAPSVCalculator {
 
     enum Severity: String, Sendable {
         case normal
-        case mild         // 1.29-1.50 MoM
-        case moderate     // 1.50-1.55 MoM
-        case severe       // ≥1.55 MoM
+        case mild              // 1.29-1.50 MoM
+        case moderateSevere    // ≥1.50 MoM (cutoff de Mari — considerar transfusão)
 
         var label: String {
             switch self {
             case .normal: return "MCA-PSV dentro da normalidade — sem evidência de anemia fetal"
             case .mild: return "MCA-PSV elevado — suspeita de anemia fetal leve"
-            case .moderate: return "MCA-PSV acima de 1,50 MoM — suspeita de anemia fetal moderada a severa"
-            case .severe: return "MCA-PSV acima de 1,55 MoM — anemia fetal severa; considerar transfusão intrauterina"
+            case .moderateSevere: return "MCA-PSV ≥ 1,50 MoM — suspeita de anemia fetal moderada a severa; considerar transfusão intrauterina"
             }
         }
 
@@ -34,7 +32,7 @@ enum AnemiaMCAPSVCalculator {
             switch self {
             case .normal: return ""
             case .mild: return " Reavaliar em 1-2 semanas com novo Doppler."
-            case .moderate, .severe: return " Convém, a critério clínico, encaminhar a centro de referência em medicina fetal para avaliação imediata."
+            case .moderateSevere: return " Convém, a critério clínico, encaminhar a centro de referência em medicina fetal para avaliação imediata."
             }
         }
     }
@@ -69,8 +67,7 @@ enum AnemiaMCAPSVCalculator {
         let severity: Severity
         if mom < 1.29 { severity = .normal }
         else if mom < 1.50 { severity = .mild }
-        else if mom < 1.55 { severity = .moderate }
-        else { severity = .severe }
+        else { severity = .moderateSevere }  // ≥1.50 MoM (Mari 2000)
 
         let psvFmt = formatNumber(input.psvCmSec)
         let medianFmt = formatNumber(median)
