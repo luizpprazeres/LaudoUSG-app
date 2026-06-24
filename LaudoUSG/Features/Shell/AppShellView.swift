@@ -9,7 +9,6 @@ struct AppShellView: View {
 
     @AppStorage("laudousg.hasSeenTour") private var hasSeenTour: Bool = false
     @State private var isTourPresented: Bool = false
-    @State private var isPostTourPaywallPresented: Bool = false
 
     // Apresentação reativa: modais aparecem/fecham automaticamente conforme
     // o estado do AppState muda. Sem timing race entre loadPostLogin e UI.
@@ -75,19 +74,7 @@ struct AppShellView: View {
             TourFlowView {
                 hasSeenTour = true
                 isTourPresented = false
-                if app.profile?.hasEssencialOrAbove != true {
-                    isPostTourPaywallPresented = true
-                }
             }
-        }
-        .sheet(isPresented: $isPostTourPaywallPresented) {
-            PaywallSheet(
-                onSuccess: {
-                    isPostTourPaywallPresented = false
-                    Task { await app.refreshProfile() }
-                },
-                onDismiss: { isPostTourPaywallPresented = false }
-            )
         }
         .onChange(of: app.session) { _, newValue in
             guard newValue == .authenticated else { return }

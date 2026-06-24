@@ -460,7 +460,9 @@ actor AuthService {
         guard let data = UserDefaults.standard.data(forKey: storageKey) else { return nil }
         guard let session = try? JSONDecoder().decode(StoredSession.self, from: data) else { return nil }
         if let expiresAt = session.expiresAt, expiresAt < Date().addingTimeInterval(60) {
-            return nil
+            // #4: token expirado, mas o refresh token dura semanas — renova antes
+            // de desistir, em vez de deslogar o usuário a cada abertura após ~1h.
+            return try? await refresh()
         }
         await APIClient.shared.setToken(session.accessToken)
         await SupabaseRESTClient.shared.setToken(session.accessToken)

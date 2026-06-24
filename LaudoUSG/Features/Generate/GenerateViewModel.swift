@@ -324,6 +324,10 @@ final class GenerateViewModel {
     var lastReportId: String?
     var sanityIssues: [LocalSanityIssue] = []
 
+    /// #1: task da geração em voo — cancelada em reset/nova geração para o
+    /// stream antigo não sobrescrever o laudo da geração nova (risco clínico).
+    private var generateTask: Task<Void, Never>?
+
     func generate(writingStyleId: String) {
         guard canGenerate else { return }
         lastReportId = nil
@@ -346,13 +350,25 @@ final class GenerateViewModel {
             writingStyleId: writingStyleId
         )
 
-        Task { @MainActor in
+        generateTask?.cancel()
+        generateTask = Task { @MainActor in
             do {
                 let stream = try await ReportService.generateStream(request: req)
                 for try await event in stream {
+                    guard !Task.isCancelled else { return }
                     handle(event: event)
                 }
+                // #11: stream terminou sem `done`/`error`/`blocked` (corte/frame
+                // descartado) → não deixar a UI presa em .generating pra sempre.
+                if case .generating = phase {
+                    lastError = "A geração foi interrompida antes de concluir. Tente novamente."
+                    phase = .error(message: lastError ?? "Erro")
+                    stopStreamingFeedback()
+                }
+            } catch is CancellationError {
+                // cancelada por reset/nova geração — encerra silenciosamente.
             } catch let error as APIError {
+                guard !Task.isCancelled else { return }
                 if case .unauthorized = error {
                     lastError = "Sessão expirada. Faça login novamente."
                 } else {
@@ -361,6 +377,7 @@ final class GenerateViewModel {
                 phase = .error(message: lastError ?? "Erro")
                 stopStreamingFeedback()
             } catch {
+                guard !Task.isCancelled else { return }
                 lastError = error.localizedDescription
                 phase = .error(message: lastError ?? "Erro")
                 stopStreamingFeedback()
@@ -446,11 +463,16 @@ final class GenerateViewModel {
         case .sanity:
             break
         case .done(let payload):
-            streamedOutput = payload.finalText
-            displayedOutput = payload.finalText
-            editedLaudoText = payload.finalText
+            // #10: se o `done` vier vazio/truncado, preserva o texto já
+            // transmitido por tokens em vez de zerar o laudo do usuário.
+            let resolved = payload.finalText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                ? streamedOutput
+                : payload.finalText
+            streamedOutput = resolved
+            displayedOutput = resolved
+            editedLaudoText = resolved
             lastReportId = payload.reportId
-            sanityIssues = SanityChecker.check(text: payload.finalText, category: category)
+            sanityIssues = SanityChecker.check(text: resolved, category: category)
             phase = .done(reportId: payload.reportId)
             activeTab = .laudo
             stopStreamingFeedback()
@@ -466,6 +488,7 @@ final class GenerateViewModel {
     }
 
     func reset() {
+        generateTask?.cancel()
         stopStreamingFeedback()
         lastReportId = nil
         inputText = ""

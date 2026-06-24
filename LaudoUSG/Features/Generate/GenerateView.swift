@@ -117,13 +117,12 @@ struct GenerateView: View {
                 categoryHint: vm.category,
                 onInsert: { vm.insertSnippet($0) },
                 onDismiss: { vm.isPlusSheetPresented = false },
-                onOpenConsultor: vm.canOpenConsultor ? {
+                // App Store (Guideline 2.1): sem paywall. O Consultor IA é gated
+                // pelo backend (hasPro) e fica oculto para quem não tem o plano —
+                // sem modal de "atualizar conta". Acesso é gerenciado pela conta.
+                onOpenConsultor: (vm.canOpenConsultor && app.profile?.hasPro == true) ? {
                     vm.isPlusSheetPresented = false
-                    if app.profile?.hasPro == true {
-                        vm.isConsultorSheetPresented = true
-                    } else {
-                        vm.isPaywallPresented = true
-                    }
+                    vm.isConsultorSheetPresented = true
                 } : nil,
                 reportText: vm.displayedOutput.isEmpty ? nil : vm.displayedOutput
             )
