@@ -11,9 +11,43 @@ final class AppState {
     var reportPreferences: [ReportPreferenceRecord] = []
     var availableVariants: [ReportTemplateVariantRecord] = []
     let preferencesStore = PreferencesStore()
+    /// Camada de In-App Purchase (StoreKit). Fonte de entitlement no dispositivo.
+    let store = StoreManager()
 
     var preferences: UserPreferences {
         preferencesStore.preferences
+    }
+
+    // MARK: - Entitlement efetivo (IAP OU plano do backend)
+    // A Apple (3.1.1/3.1.3b) exige que o que é comprado no app seja liberado por IAP.
+    // Mantemos compatibilidade com quem comprou na web: vale o MAIOR entre o plano do
+    // backend e a assinatura StoreKit ativa.
+
+    /// Nível derivado do `plan` vindo do backend (web).
+    private var backendTier: PlanTier? {
+        guard let profile else { return nil }
+        if profile.hasPro { return .pro }
+        if profile.hasEssencialOrAbove { return .essential }
+        return nil
+    }
+
+    /// Maior nível ativo considerando backend + IAP local.
+    var effectiveTier: PlanTier? {
+        [backendTier, store.entitlementTier].compactMap { $0 }.max()
+    }
+
+    /// Use estes nos gates de UI (em vez de `profile?.hasPro`).
+    var hasProEffective: Bool { effectiveTier == .pro }
+    var hasEssencialOrAboveEffective: Bool { effectiveTier != nil }
+    var hasActiveIAP: Bool { store.hasActiveSubscription }
+
+    /// Rótulo do plano considerando IAP + backend (para exibição).
+    var effectivePlanLabel: String {
+        switch effectiveTier {
+        case .pro: return "Profissional"
+        case .essential: return "Essencial"
+        case nil: return profile?.planLabel ?? "Gratuito"
+        }
     }
 
     var needsLegalAcceptance: Bool {

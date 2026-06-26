@@ -1,4 +1,5 @@
 import SwiftUI
+import StoreKit
 
 struct SettingsView: View {
     @Environment(AppState.self) private var app
@@ -8,6 +9,8 @@ struct SettingsView: View {
     @State private var savingVariantCategory: String?
     @State private var saveMessage: String?
     @State private var isSalaSheetPresented: Bool = false
+    @State private var isPaywallPresented: Bool = false
+    @State private var isManageSubscriptionsPresented: Bool = false
 
     enum ThemeOption: String, CaseIterable, Identifiable {
         case auto, light, dark
@@ -102,24 +105,8 @@ struct SettingsView: View {
                 section(title: "Conta") {
                     infoRow(label: "Email", value: app.profile?.email ?? "—")
                     Divider().padding(.leading, Spacing.md)
-                    infoRow(label: "Plano", value: app.profile?.planLabel ?? "Gratuito")
-                }
-
-                section(title: "Perfil") {
-                    NavigationLink(destination: EditProfileView()) {
-                        navRowLabel("Editar perfil")
-                    }
-                    .buttonStyle(PressableButtonStyle())
-                }
-
-                section(title: "Sobre") {
-                    NavigationLink(destination: AboutAppView()) {
-                        navRowLabel("Sobre o LaudoUSG")
-                    }
-                    .buttonStyle(PressableButtonStyle())
-                }
-
-                section(title: "Zona de risco") {
+                    infoRow(label: "Plano", value: app.effectivePlanLabel)
+                    Divider().padding(.leading, Spacing.md)
                     NavigationLink(destination: DeleteAccountView()) {
                         HStack {
                             Text("Excluir minha conta")
@@ -132,6 +119,48 @@ struct SettingsView: View {
                         }
                         .padding(.horizontal, Spacing.md)
                         .frame(minHeight: 52)
+                    }
+                    .buttonStyle(PressableButtonStyle())
+                }
+
+                section(title: "Assinatura") {
+                    Button {
+                        Haptics.tap()
+                        isPaywallPresented = true
+                    } label: {
+                        navRowLabel(app.hasEssencialOrAboveEffective ? "Ver planos" : "Assinar — 7 dias grátis")
+                    }
+                    .buttonStyle(PressableButtonStyle())
+
+                    Divider().padding(.leading, Spacing.md)
+                    Button {
+                        Task { await app.store.restore() }
+                    } label: {
+                        navRowLabel("Restaurar compras")
+                    }
+                    .buttonStyle(PressableButtonStyle())
+
+                    if app.hasActiveIAP {
+                        Divider().padding(.leading, Spacing.md)
+                        Button {
+                            isManageSubscriptionsPresented = true
+                        } label: {
+                            navRowLabel("Gerenciar assinatura")
+                        }
+                        .buttonStyle(PressableButtonStyle())
+                    }
+                }
+
+                section(title: "Perfil") {
+                    NavigationLink(destination: EditProfileView()) {
+                        navRowLabel("Editar perfil")
+                    }
+                    .buttonStyle(PressableButtonStyle())
+                }
+
+                section(title: "Sobre") {
+                    NavigationLink(destination: AboutAppView()) {
+                        navRowLabel("Sobre o LaudoUSG")
                     }
                     .buttonStyle(PressableButtonStyle())
                 }
@@ -152,6 +181,17 @@ struct SettingsView: View {
         .sheet(isPresented: $isSalaSheetPresented) {
             SalaPairingSheet(onDismiss: { isSalaSheetPresented = false })
         }
+        .sheet(isPresented: $isPaywallPresented) {
+            PaywallSheet(
+                store: app.store,
+                onSuccess: {
+                    isPaywallPresented = false
+                    Task { await app.refreshProfile() }
+                },
+                onDismiss: { isPaywallPresented = false }
+            )
+        }
+        .manageSubscriptionsSheet(isPresented: $isManageSubscriptionsPresented)
     }
 
     private func navRowLabel(_ title: String) -> some View {
