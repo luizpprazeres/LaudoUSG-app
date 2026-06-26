@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>02 · Categoria Chip Voa — LaudoUSG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #0a0f0d;
+    --paper: #f4f1e9;
+    --emerald: #059669;
+    --line: rgba(10, 15, 13, 0.12);
+    --muted: rgba(10, 15, 13, 0.55);
+    --mama: #F43F5E; --mama-deep: #BE123C;
+    --spring: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0e1216; color: var(--paper); font-family: 'Geist', sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 32px; }
+  body::before { content: ''; position: fixed; inset: -20%; background: radial-gradient(circle at 30% 40%, rgba(244, 63, 94, 0.1), transparent 60%); pointer-events: none; z-index: 0; }
+  .lab-header { position: relative; z-index: 1; text-align: center; max-width: 600px; margin-bottom: 24px; }
+  .lab-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.2em; color: var(--mama); margin-bottom: 8px; }
+  .lab-title { font-family: 'Instrument Serif', serif; font-size: 36px; line-height: 1.05; letter-spacing: -0.02em; }
+  .lab-title em { font-style: italic; color: var(--mama); }
+  .lab-desc { font-size: 13px; color: rgba(244, 241, 233, 0.55); margin-top: 8px; }
+  .lab-back { position: absolute; top: 32px; left: 32px; color: var(--mama); text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; z-index: 2; }
+
+  .phone {
+    width: 390px; height: 760px;
+    background: #fff; border-radius: 50px;
+    overflow: hidden; position: relative;
+    box-shadow: 0 60px 120px -40px rgba(0,0,0,0.6), 0 0 0 11px #1a1f23, 0 0 0 12px #2a3036;
+    margin: 24px 0; z-index: 1;
+  }
+  .notch { width: 120px; height: 30px; background: #1a1f23; border-radius: 0 0 18px 18px; position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 100; }
+  .screen { width: 100%; height: 100%; position: relative; overflow: hidden; background: #fafaf8; }
+
+  .list-header {
+    padding: 56px 24px 16px;
+    transition: opacity 0.4s var(--spring);
+  }
+  .list-title { font-family: 'Instrument Serif', serif; font-size: 32px; letter-spacing: -0.02em; }
+  .list-title em { font-style: italic; color: var(--emerald); }
+  .list-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .chips {
+    padding: 16px 24px 24px;
+    display: flex; flex-direction: column; gap: 10px;
+    transition: opacity 0.4s var(--spring);
+  }
+  .chip {
+    position: relative;
+    padding: 18px 20px;
+    border-radius: 18px;
+    background: var(--bg, white);
+    color: var(--fg, var(--ink));
+    border: 1px solid var(--border, var(--line));
+    display: flex; align-items: center; gap: 14px;
+    font-family: 'Geist', sans-serif;
+    cursor: pointer;
+    transition: all 0.3s var(--spring);
+    overflow: hidden;
+    transform-origin: top left;
+  }
+  .chip-mama {
+    --bg: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
+    --fg: #BE123C;
+    --border: rgba(244, 63, 94, 0.2);
+  }
+  .chip-tireoide {
+    --bg: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    --fg: #0369A1;
+    --border: rgba(14, 165, 233, 0.2);
+  }
+  .chip-abdome {
+    --bg: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+    --fg: #B45309;
+    --border: rgba(245, 158, 11, 0.2);
+  }
+  .chip-pelve {
+    --bg: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+    --fg: #6B21A8;
+    --border: rgba(168, 85, 247, 0.2);
+  }
+  .chip-doppler {
+    --bg: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    --fg: var(--emerald);
+    --border: rgba(5, 150, 105, 0.2);
+  }
+
+  .chip-icon {
+    width: 44px; height: 44px;
+    border-radius: 14px;
+    background: var(--icon-bg, white);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+    transition: all 0.7s var(--spring);
+  }
+  .chip-mama .chip-icon { background: #F43F5E; color: white; }
+  .chip-tireoide .chip-icon { background: #0EA5E9; color: white; }
+  .chip-abdome .chip-icon { background: #F59E0B; color: white; }
+  .chip-pelve .chip-icon { background: #A855F7; color: white; }
+  .chip-doppler .chip-icon { background: var(--emerald); color: white; }
+
+  .chip-text { flex: 1; transition: all 0.4s var(--spring); }
+  .chip-name { font-family: 'Instrument Serif', serif; font-size: 20px; font-weight: 500; letter-spacing: -0.01em; }
+  .chip-name em { font-style: italic; }
+  .chip-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; opacity: 0.6; text-transform: uppercase; margin-top: 2px; }
+  .chip-arrow { font-size: 18px; opacity: 0.4; }
+
+  /* New screen */
+  .generate-screen {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, #fff1f2 0%, #fafaf8 60%);
+    z-index: 3;
+    pointer-events: none;
+    transition: opacity 0.3s var(--spring);
+    opacity: 0;
+  }
+  .generate-header {
+    padding: 60px 24px 32px;
+    background: linear-gradient(135deg, #F43F5E 0%, #BE123C 100%);
+    color: white;
+    border-radius: 0 0 32px 32px;
+    position: relative; overflow: hidden;
+  }
+  .generate-header::before {
+    content: '';
+    position: absolute; top: -30%; right: -10%;
+    width: 200px; height: 200px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 50%; filter: blur(40px);
+  }
+  .generate-back-btn {
+    font-size: 13px; opacity: 0.8;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.1em;
+    margin-bottom: 24px;
+  }
+  .generate-title { font-family: 'Instrument Serif', serif; font-size: 38px; letter-spacing: -0.02em; line-height: 1.05; }
+  .generate-title em { font-style: italic; }
+  .generate-sub { font-size: 13px; opacity: 0.85; margin-top: 8px; }
+  .generate-hero-icon {
+    position: absolute; top: 60px; right: 24px;
+    width: 80px; height: 80px;
+    border-radius: 24px;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px; color: white;
+  }
+  .generate-body {
+    padding: 32px 24px;
+  }
+  .placeholder-card {
+    background: white;
+    border: 1px dashed var(--line);
+    border-radius: 18px;
+    padding: 40px 24px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  /* Animation */
+  .phone.playing .list-header { opacity: 0; pointer-events: none; }
+  .phone.playing .chips { opacity: 0; pointer-events: none; }
+  .phone.playing .chip-mama {
+    position: absolute; top: 0; left: 0; right: 0;
+    width: 100%; min-height: 240px;
+    padding: 60px 24px 32px;
+    background: linear-gradient(135deg, #F43F5E 0%, #BE123C 100%);
+    border-radius: 0 0 32px 32px;
+    border: 0;
+    color: white;
+    z-index: 5;
+    pointer-events: auto; opacity: 1;
+    transform: scale(1);
+    align-items: flex-start;
+  }
+  .phone.playing .chip-mama .chip-icon {
+    width: 80px; height: 80px;
+    border-radius: 24px;
+    background: rgba(255,255,255,0.2);
+    font-size: 40px;
+    position: absolute; top: 60px; right: 24px;
+  }
+  .phone.playing .chip-mama .chip-text { color: white; padding-top: 30px; }
+  .phone.playing .chip-mama .chip-name { font-size: 38px; line-height: 1.05; }
+  .phone.playing .chip-mama .chip-meta { opacity: 0.85; font-size: 11px; }
+  .phone.playing .chip-mama .chip-arrow { opacity: 0; }
+  .phone.playing .generate-screen { opacity: 1; transition-delay: 0.4s; }
+
+  .controls { display: flex; gap: 12px; margin-top: 24px; z-index: 2; }
+  .btn { padding: 12px 24px; background: var(--mama); color: white; border: 0; border-radius: 99px; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px -4px rgba(244, 63, 94, 0.5); }
+  .btn.secondary { background: transparent; border: 1px solid rgba(244, 241, 233, 0.3); color: var(--paper); }
+  .hint { text-align: center; margin-top: 16px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; color: rgba(244, 241, 233, 0.4); text-transform: uppercase; }
+</style>
+</head>
+<body>
+<a href="index.html" class="lab-back">← lab</a>
+
+<div class="lab-header">
+  <div class="lab-num">02 · NAVEGAÇÃO</div>
+  <h1 class="lab-title">Chip <em>vira</em> tela</h1>
+  <p class="lab-desc">Chip de categoria cresce continuamente até virar o cabeçalho da nova tela. O tint da categoria contamina o fundo.</p>
+</div>
+
+<div class="phone" id="phone">
+  <div class="notch"></div>
+  <div class="screen">
+    <!-- Generate screen (debaixo) -->
+    <div class="generate-screen">
+      <div class="generate-header">
+        <div class="generate-back-btn">← VOLTAR</div>
+        <div class="generate-title"><em>Mamária</em></div>
+        <div class="generate-sub">Toque no microfone para começar a ditar</div>
+      </div>
+      <div class="generate-body">
+        <div class="placeholder-card">
+          → ditado de voz<br>
+          → ia parser<br>
+          → laudo gerado
+        </div>
+      </div>
+    </div>
+
+    <!-- List -->
+    <div class="list-header">
+      <div class="list-title">Selecionar <em>exame</em></div>
+      <div class="list-sub">Toque na categoria pra criar laudo</div>
+    </div>
+    <div class="chips">
+      <div class="chip chip-mama" id="chipTrigger">
+        <div class="chip-icon">◐</div>
+        <div class="chip-text">
+          <div class="chip-name"><em>Mamária</em></div>
+          <div class="chip-meta">BI-RADS · 12 templates</div>
+        </div>
+        <div class="chip-arrow">→</div>
+      </div>
+      <div class="chip chip-tireoide">
+        <div class="chip-icon">◊</div>
+        <div class="chip-text">
+          <div class="chip-name"><em>Tireoide</em></div>
+          <div class="chip-meta">TI-RADS · 9 templates</div>
+        </div>
+        <div class="chip-arrow">→</div>
+      </div>
+      <div class="chip chip-abdome">
+        <div class="chip-icon">○</div>
+        <div class="chip-text">
+          <div class="chip-name"><em>Abdome</em> total</div>
+          <div class="chip-meta">26 templates · doppler</div>
+        </div>
+        <div class="chip-arrow">→</div>
+      </div>
+      <div class="chip chip-pelve">
+        <div class="chip-icon">◑</div>
+        <div class="chip-text">
+          <div class="chip-name"><em>Pelve</em> feminina</div>
+          <div class="chip-meta">FIGO · 14 templates</div>
+        </div>
+        <div class="chip-arrow">→</div>
+      </div>
+      <div class="chip chip-doppler">
+        <div class="chip-icon">~</div>
+        <div class="chip-text">
+          <div class="chip-name"><em>Doppler</em> MMII</div>
+          <div class="chip-meta">venoso · arterial</div>
+        </div>
+        <div class="chip-arrow">→</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn" id="play">▶ Reproduzir</button>
+  <button class="btn secondary" id="reset">↻ Reset</button>
+</div>
+<div class="hint">tap em qualquer chip · transição 0.7s</div>
+
+<script>
+  const phone = document.getElementById('phone');
+  function trig() {
+    phone.classList.remove('playing');
+    void phone.offsetWidth;
+    phone.classList.add('playing');
+  }
+  document.getElementById('play').onclick = trig;
+  document.getElementById('chipTrigger').onclick = trig;
+  document.getElementById('reset').onclick = () => phone.classList.remove('playing');
+</script>
+</body>
+</html>

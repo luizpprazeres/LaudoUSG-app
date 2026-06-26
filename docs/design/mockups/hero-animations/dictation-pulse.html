@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>07 · Dictation Pulse — LaudoUSG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #0a0f0d; --paper: #f4f1e9; --emerald: #059669; --emerald-deep: #065F46;
+    --emerald-bright: #10B981;
+    --line: rgba(10, 15, 13, 0.12); --muted: rgba(10, 15, 13, 0.55);
+    --spring: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0e1216; color: var(--paper); font-family: 'Geist', sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 32px; }
+  body::before { content: ''; position: fixed; inset: -20%; background: radial-gradient(circle at 50% 70%, rgba(5, 150, 105, 0.15), transparent 60%); pointer-events: none; z-index: 0; }
+  .lab-header { position: relative; z-index: 1; text-align: center; max-width: 600px; margin-bottom: 24px; }
+  .lab-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.2em; color: var(--emerald); margin-bottom: 8px; }
+  .lab-title { font-family: 'Instrument Serif', serif; font-size: 36px; line-height: 1.05; letter-spacing: -0.02em; }
+  .lab-title em { font-style: italic; color: var(--emerald); }
+  .lab-desc { font-size: 13px; color: rgba(244, 241, 233, 0.55); margin-top: 8px; }
+  .lab-back { position: absolute; top: 32px; left: 32px; color: var(--emerald); text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; z-index: 2; }
+
+  .phone { width: 390px; height: 760px; background: #fff; border-radius: 50px; overflow: hidden; position: relative; box-shadow: 0 60px 120px -40px rgba(0,0,0,0.6), 0 0 0 11px #1a1f23, 0 0 0 12px #2a3036; margin: 24px 0; z-index: 1; }
+  .notch { width: 120px; height: 30px; background: #1a1f23; border-radius: 0 0 18px 18px; position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 100; }
+  .screen { width: 100%; height: 100%; position: relative; overflow: hidden; background: #fafaf8; }
+
+  .gen-header {
+    padding: 56px 24px 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .gen-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; color: var(--emerald); text-transform: uppercase; }
+  .gen-title { font-family: 'Instrument Serif', serif; font-size: 28px; letter-spacing: -0.02em; margin-top: 6px; }
+  .gen-title em { font-style: italic; }
+
+  .gen-body {
+    padding: 24px;
+    font-size: 13px; line-height: 1.55;
+    color: var(--muted);
+  }
+  .gen-body p { margin-bottom: 12px; }
+  .gen-body em { font-style: italic; color: var(--ink); }
+
+  /* Listening status text */
+  .listening-status {
+    position: absolute;
+    bottom: 200px; left: 0; right: 0;
+    text-align: center;
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 22px;
+    color: var(--emerald-deep);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.5s var(--spring);
+    z-index: 5;
+  }
+  .listening-dots {
+    display: inline-block;
+    width: 30px;
+    text-align: left;
+    color: var(--emerald);
+    font-style: normal;
+  }
+  .listening-dots span {
+    opacity: 0;
+    animation: dot 1.4s infinite;
+  }
+  .listening-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .listening-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dot {
+    0%, 60%, 100% { opacity: 0; }
+    30% { opacity: 1; }
+  }
+
+  /* Visualizer bars */
+  .visualizer {
+    position: absolute;
+    bottom: 160px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; align-items: center; justify-content: center;
+    gap: 4px;
+    height: 28px;
+    opacity: 0;
+    transition: opacity 0.3s var(--spring);
+    z-index: 5;
+  }
+  .vis-bar {
+    width: 3px;
+    background: var(--emerald);
+    border-radius: 99px;
+    transform-origin: center;
+  }
+  .vis-bar:nth-child(1) { animation: bar 0.7s infinite alternate; }
+  .vis-bar:nth-child(2) { animation: bar 0.55s 0.05s infinite alternate; }
+  .vis-bar:nth-child(3) { animation: bar 0.85s 0.1s infinite alternate; }
+  .vis-bar:nth-child(4) { animation: bar 0.7s 0.15s infinite alternate; }
+  .vis-bar:nth-child(5) { animation: bar 0.6s 0.2s infinite alternate; }
+  .vis-bar:nth-child(6) { animation: bar 0.9s 0.25s infinite alternate; }
+  .vis-bar:nth-child(7) { animation: bar 0.7s 0.3s infinite alternate; }
+  .vis-bar:nth-child(8) { animation: bar 0.5s 0.35s infinite alternate; }
+  .vis-bar:nth-child(9) { animation: bar 0.8s 0.4s infinite alternate; }
+  @keyframes bar {
+    from { height: 4px; }
+    to { height: 28px; }
+  }
+
+  /* FAB Microphone */
+  .fab-wrap {
+    position: absolute;
+    bottom: 36px; left: 50%;
+    transform: translateX(-50%);
+    width: 76px; height: 76px;
+    z-index: 10;
+  }
+  .pulse-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid var(--emerald);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .pulse-ring.r1 { animation: ring 2.2s infinite; animation-delay: 0s; }
+  .pulse-ring.r2 { animation: ring 2.2s infinite; animation-delay: 0.7s; }
+  .pulse-ring.r3 { animation: ring 2.2s infinite; animation-delay: 1.4s; }
+  @keyframes ring {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(2.6); opacity: 0; }
+  }
+  .phone:not(.recording) .pulse-ring { animation: none; opacity: 0; }
+
+  .fab {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: white;
+    border: 1.5px solid var(--emerald);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.4s var(--spring);
+    box-shadow: 0 12px 30px -8px rgba(5, 150, 105, 0.35);
+  }
+  .fab:hover { transform: scale(1.05); }
+  .fab svg { width: 32px; height: 32px; transition: all 0.3s var(--spring); }
+  .fab svg path { stroke: var(--emerald); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: all 0.3s var(--spring); }
+
+  .phone.recording .fab {
+    background: var(--emerald);
+    border-color: var(--emerald);
+    box-shadow: 0 20px 50px -10px rgba(5, 150, 105, 0.6);
+  }
+  .phone.recording .fab svg path { stroke: white; }
+  .phone.recording .listening-status { opacity: 1; transform: translateY(0); }
+  .phone.recording .visualizer { opacity: 1; }
+
+  /* Done state (briefly checkmark) */
+  .check-svg {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 32px; height: 32px;
+    opacity: 0;
+    transition: opacity 0.3s var(--spring);
+  }
+  .check-svg path { stroke: white; fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .phone.done .check-svg { opacity: 1; }
+  .phone.done .fab svg.mic { opacity: 0; }
+  .phone.done .fab { background: var(--emerald-bright); border-color: var(--emerald-bright); }
+
+  .controls { display: flex; gap: 12px; margin-top: 24px; z-index: 2; }
+  .btn { padding: 12px 24px; background: var(--emerald); color: white; border: 0; border-radius: 99px; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px -4px rgba(5, 150, 105, 0.5); }
+  .btn.secondary { background: transparent; border: 1px solid rgba(244, 241, 233, 0.3); color: var(--paper); }
+  .hint { text-align: center; margin-top: 16px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; color: rgba(244, 241, 233, 0.4); text-transform: uppercase; }
+</style>
+</head>
+<body>
+<a href="index.html" class="lab-back">← lab</a>
+
+<div class="lab-header">
+  <div class="lab-num">07 · GRAVAÇÃO</div>
+  <h1 class="lab-title">Ondas <em>respiratórias</em></h1>
+  <p class="lab-desc">Tap no microfone dispara ondas concêntricas pulsantes. Visualizer de barras animadas. Ao parar, ondas convergem e botão fica brevemente verde.</p>
+</div>
+
+<div class="phone" id="phone">
+  <div class="notch"></div>
+  <div class="screen">
+    <div class="gen-header">
+      <div class="gen-eyebrow">DITAR LAUDO</div>
+      <div class="gen-title">Mamária <em>direita</em></div>
+    </div>
+    <div class="gen-body">
+      <p><em>Pronto para começar.</em> Toque no microfone abaixo e descreva os achados naturalmente, como se estivesse falando com um colega. A IA estrutura o laudo conforme você fala.</p>
+      <p>Exemplos: "imagem anecoica de 0,5 cm no QSL", "cisto bem definido às 10h", "linfonodos axilares preservados".</p>
+    </div>
+
+    <div class="listening-status">
+      Ouvindo<span class="listening-dots"><span>.</span><span>.</span><span>.</span></span>
+    </div>
+
+    <div class="visualizer">
+      <div class="vis-bar"></div>
+      <div class="vis-bar"></div>
+      <div class="vis-bar"></div>
+      <div class="vis-bar"></div>
+      <div class="vis-bar"></div>
+      <div class="vis-bar"></div>
+      <div class="vis-bar"></div>
+      <div class="vis-bar"></div>
+      <div class="vis-bar"></div>
+    </div>
+
+    <div class="fab-wrap">
+      <div class="pulse-ring r1"></div>
+      <div class="pulse-ring r2"></div>
+      <div class="pulse-ring r3"></div>
+      <div class="fab" id="fab">
+        <svg class="mic" viewBox="0 0 32 32">
+          <path d="M 16 6 a 4 4 0 0 0 -4 4 v 8 a 4 4 0 0 0 8 0 v -8 a 4 4 0 0 0 -4 -4 z M 10 16 v 2 a 6 6 0 0 0 12 0 v -2 M 16 24 v 4 M 12 28 h 8" />
+        </svg>
+        <svg class="check-svg" viewBox="0 0 32 32">
+          <path d="M 8 16 L 14 22 L 24 10" />
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn" id="play">▶ Reproduzir</button>
+  <button class="btn secondary" id="reset">↻ Reset</button>
+</div>
+<div class="hint">tap no microfone · pulse + bars · 4s loop</div>
+
+<script>
+  const phone = document.getElementById('phone');
+  const fab = document.getElementById('fab');
+  let timer = null;
+
+  function startRec() {
+    phone.classList.remove('done');
+    phone.classList.add('recording');
+    clearTimeout(timer);
+    timer = setTimeout(() => stopRec(), 4000);
+  }
+  function stopRec() {
+    phone.classList.remove('recording');
+    phone.classList.add('done');
+    setTimeout(() => phone.classList.remove('done'), 1200);
+  }
+
+  fab.onclick = () => {
+    if (phone.classList.contains('recording')) {
+      clearTimeout(timer);
+      stopRec();
+    } else {
+      startRec();
+    }
+  };
+  document.getElementById('play').onclick = startRec;
+  document.getElementById('reset').onclick = () => {
+    clearTimeout(timer);
+    phone.classList.remove('recording', 'done');
+  };
+</script>
+</body>
+</html>

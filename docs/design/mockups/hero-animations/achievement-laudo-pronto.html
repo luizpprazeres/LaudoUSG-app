@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>06 · Achievement — LaudoUSG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #0a0f0d; --paper: #f4f1e9; --emerald: #059669; --emerald-deep: #065F46;
+    --emerald-bright: #10B981;
+    --line: rgba(10, 15, 13, 0.12); --muted: rgba(10, 15, 13, 0.55);
+    --spring: cubic-bezier(0.16, 1, 0.3, 1);
+    --bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0e1216; color: var(--paper); font-family: 'Geist', sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 32px; }
+  body::before { content: ''; position: fixed; inset: -20%; background: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.15), transparent 50%); pointer-events: none; z-index: 0; }
+  .lab-header { position: relative; z-index: 1; text-align: center; max-width: 600px; margin-bottom: 24px; }
+  .lab-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.2em; color: var(--emerald-bright); margin-bottom: 8px; }
+  .lab-title { font-family: 'Instrument Serif', serif; font-size: 36px; line-height: 1.05; letter-spacing: -0.02em; }
+  .lab-title em { font-style: italic; color: var(--emerald-bright); }
+  .lab-desc { font-size: 13px; color: rgba(244, 241, 233, 0.55); margin-top: 8px; }
+  .lab-back { position: absolute; top: 32px; left: 32px; color: var(--emerald-bright); text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; z-index: 2; }
+
+  .phone { width: 390px; height: 760px; background: #fff; border-radius: 50px; overflow: hidden; position: relative; box-shadow: 0 60px 120px -40px rgba(0,0,0,0.6), 0 0 0 11px #1a1f23, 0 0 0 12px #2a3036; margin: 24px 0; z-index: 1; }
+  .notch { width: 120px; height: 30px; background: #1a1f23; border-radius: 0 0 18px 18px; position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 100; }
+  .screen { width: 100%; height: 100%; position: relative; overflow: hidden; background: #fafaf8; }
+
+  /* App background — paused state */
+  .app-paused {
+    padding: 56px 24px;
+    filter: blur(0px);
+    transition: filter 0.4s var(--spring);
+  }
+  .app-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; }
+  .app-title { font-family: 'Instrument Serif', serif; font-size: 28px; letter-spacing: -0.02em; margin-top: 4px; }
+  .app-title em { font-style: italic; color: var(--emerald); }
+  .app-card { background: white; border: 1px solid var(--line); border-radius: 18px; padding: 18px; margin-top: 16px; }
+  .app-card-title { font-family: 'Instrument Serif', serif; font-size: 18px; }
+  .app-card-text { font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: 6px; }
+
+  /* Overlay celebration */
+  .celebration {
+    position: absolute; inset: 0;
+    background: rgba(10, 15, 13, 0.5);
+    backdrop-filter: blur(20px);
+    z-index: 10;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.4s var(--spring);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+
+  .check-wrap {
+    position: relative;
+    width: 140px; height: 140px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .check-circle {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--emerald-bright) 0%, var(--emerald-deep) 100%);
+    box-shadow: 0 20px 60px -15px rgba(16, 185, 129, 0.6);
+    transform: scale(0);
+    transition: transform 0.7s var(--bounce);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .check-svg {
+    width: 80px; height: 80px;
+  }
+  .check-svg path {
+    stroke: white;
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    transition: stroke-dashoffset 0.5s var(--spring) 0.4s;
+  }
+
+  /* Sparkles */
+  .sparkle {
+    position: absolute;
+    width: 8px; height: 8px;
+    background: var(--emerald-bright);
+    border-radius: 50%;
+    opacity: 0;
+    box-shadow: 0 0 10px var(--emerald-bright);
+  }
+  .sparkle.s1 { top: 20%; left: 50%; animation-delay: 0.5s; --tx: -50px; --ty: -40px; }
+  .sparkle.s2 { top: 50%; left: 20%; --tx: -60px; --ty: 0; animation-delay: 0.55s; }
+  .sparkle.s3 { top: 80%; left: 50%; --tx: 0; --ty: 50px; animation-delay: 0.6s; }
+  .sparkle.s4 { top: 50%; left: 80%; --tx: 60px; --ty: 0; animation-delay: 0.65s; }
+  .sparkle.s5 { top: 30%; left: 30%; --tx: -45px; --ty: -30px; animation-delay: 0.7s; }
+  .sparkle.s6 { top: 30%; left: 70%; --tx: 45px; --ty: -30px; animation-delay: 0.75s; }
+  .sparkle.s7 { top: 70%; left: 30%; --tx: -45px; --ty: 30px; animation-delay: 0.8s; }
+  .sparkle.s8 { top: 70%; left: 70%; --tx: 45px; --ty: 30px; animation-delay: 0.85s; }
+  .sparkle.s9 { width: 4px; height: 4px; top: 10%; left: 40%; --tx: -30px; --ty: -50px; animation-delay: 0.6s; }
+  .sparkle.s10 { width: 4px; height: 4px; top: 90%; left: 60%; --tx: 30px; --ty: 50px; animation-delay: 0.7s; }
+  .sparkle.s11 { width: 6px; height: 6px; top: 40%; left: 10%; --tx: -70px; --ty: -10px; animation-delay: 0.65s; }
+  .sparkle.s12 { width: 6px; height: 6px; top: 60%; left: 90%; --tx: 70px; --ty: 10px; animation-delay: 0.75s; }
+
+  @keyframes sparkleOut {
+    0% { transform: translate(0, 0) scale(0); opacity: 0; }
+    20% { transform: translate(calc(var(--tx) * 0.4), calc(var(--ty) * 0.4)) scale(1); opacity: 1; }
+    100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+  }
+
+  /* Counter card */
+  .counter-card {
+    margin-top: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 18px 28px;
+    text-align: center;
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.6s var(--spring) 0.7s;
+  }
+  .counter-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.2em;
+    color: var(--emerald); text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .counter-value {
+    font-family: 'Instrument Serif', serif;
+    font-size: 32px; letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .counter-value em { font-style: italic; color: var(--emerald-deep); }
+  .counter-sub {
+    font-size: 11px; color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* Sub message */
+  .sub-msg {
+    margin-top: 20px;
+    font-family: 'Instrument Serif', serif; font-style: italic;
+    font-size: 17px;
+    color: rgba(244, 241, 233, 0.85);
+    text-align: center;
+    transform: translateY(15px);
+    opacity: 0;
+    transition: all 0.6s var(--spring) 0.9s;
+  }
+
+  /* Playing state */
+  .phone.playing .app-paused { filter: blur(6px); }
+  .phone.playing .celebration { opacity: 1; pointer-events: auto; }
+  .phone.playing .check-circle { transform: scale(1); }
+  .phone.playing .check-svg path { stroke-dashoffset: 0; }
+  .phone.playing .sparkle {
+    animation: sparkleOut 1.1s var(--spring) forwards;
+  }
+  .phone.playing .counter-card { opacity: 1; transform: translateY(0); }
+  .phone.playing .sub-msg { opacity: 1; transform: translateY(0); }
+
+  .controls { display: flex; gap: 12px; margin-top: 24px; z-index: 2; }
+  .btn { padding: 12px 24px; background: var(--emerald-bright); color: white; border: 0; border-radius: 99px; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px -4px rgba(16, 185, 129, 0.5); }
+  .btn.secondary { background: transparent; border: 1px solid rgba(244, 241, 233, 0.3); color: var(--paper); }
+  .hint { text-align: center; margin-top: 16px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; color: rgba(244, 241, 233, 0.4); text-transform: uppercase; }
+</style>
+</head>
+<body>
+<a href="index.html" class="lab-back">← lab</a>
+
+<div class="lab-header">
+  <div class="lab-num">06 · CONCLUSÃO</div>
+  <h1 class="lab-title">Pequena <em>celebração</em></h1>
+  <p class="lab-desc">Laudo salvo com sucesso. Checkmark com bounce, partículas espalhando, contador subindo. Estilo Apple Health ao bater meta.</p>
+</div>
+
+<div class="phone" id="phone">
+  <div class="notch"></div>
+  <div class="screen">
+    <div class="app-paused">
+      <div class="app-eyebrow">FINALIZAR</div>
+      <div class="app-title"><em>Salvar</em> laudo</div>
+      <div class="app-card">
+        <div class="app-card-title">M. Silva · 47 anos</div>
+        <div class="app-card-text">Mamária · BI-RADS 2 · cistos simples QSL direita.</div>
+      </div>
+    </div>
+
+    <div class="celebration">
+      <div class="check-wrap">
+        <div class="sparkle s1"></div>
+        <div class="sparkle s2"></div>
+        <div class="sparkle s3"></div>
+        <div class="sparkle s4"></div>
+        <div class="sparkle s5"></div>
+        <div class="sparkle s6"></div>
+        <div class="sparkle s7"></div>
+        <div class="sparkle s8"></div>
+        <div class="sparkle s9"></div>
+        <div class="sparkle s10"></div>
+        <div class="sparkle s11"></div>
+        <div class="sparkle s12"></div>
+        <div class="check-circle">
+          <svg class="check-svg" viewBox="0 0 80 80">
+            <path d="M 18 42 L 34 56 L 62 26" />
+          </svg>
+        </div>
+      </div>
+
+      <div class="counter-card">
+        <div class="counter-eyebrow">LAUDO #024</div>
+        <div class="counter-value"><em>24</em>/mês</div>
+        <div class="counter-sub">meta superada · +20% vs abril</div>
+      </div>
+
+      <div class="sub-msg">Bom trabalho.</div>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn" id="play">▶ Reproduzir</button>
+  <button class="btn secondary" id="reset">↻ Reset</button>
+</div>
+<div class="hint">checkmark + sparkles + counter · 1.5s</div>
+
+<script>
+  const phone = document.getElementById('phone');
+  function trig() { phone.classList.remove('playing'); void phone.offsetWidth; phone.classList.add('playing'); }
+  document.getElementById('play').onclick = trig;
+  document.getElementById('reset').onclick = () => phone.classList.remove('playing');
+</script>
+</body>
+</html>

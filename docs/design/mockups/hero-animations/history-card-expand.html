@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>03 · History Card Expand — LaudoUSG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #0a0f0d;
+    --paper: #f4f1e9;
+    --emerald: #059669;
+    --line: rgba(10, 15, 13, 0.12);
+    --muted: rgba(10, 15, 13, 0.55);
+    --spring: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0e1216; color: var(--paper); font-family: 'Geist', sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 32px; }
+  body::before { content: ''; position: fixed; inset: -20%; background: radial-gradient(circle at 50% 30%, rgba(5, 150, 105, 0.1), transparent 60%); pointer-events: none; z-index: 0; }
+  .lab-header { position: relative; z-index: 1; text-align: center; max-width: 600px; margin-bottom: 24px; }
+  .lab-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.2em; color: var(--emerald); margin-bottom: 8px; }
+  .lab-title { font-family: 'Instrument Serif', serif; font-size: 36px; line-height: 1.05; letter-spacing: -0.02em; }
+  .lab-title em { font-style: italic; color: var(--emerald); }
+  .lab-desc { font-size: 13px; color: rgba(244, 241, 233, 0.55); margin-top: 8px; }
+  .lab-back { position: absolute; top: 32px; left: 32px; color: var(--emerald); text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; z-index: 2; }
+
+  .phone { width: 390px; height: 760px; background: #fff; border-radius: 50px; overflow: hidden; position: relative; box-shadow: 0 60px 120px -40px rgba(0,0,0,0.6), 0 0 0 11px #1a1f23, 0 0 0 12px #2a3036; margin: 24px 0; z-index: 1; }
+  .notch { width: 120px; height: 30px; background: #1a1f23; border-radius: 0 0 18px 18px; position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 100; }
+  .screen { width: 100%; height: 100%; position: relative; overflow: hidden; background: #fafaf8; }
+
+  .list-header { padding: 56px 24px 12px; }
+  .list-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; color: var(--emerald); text-transform: uppercase; }
+  .list-title { font-family: 'Instrument Serif', serif; font-size: 32px; letter-spacing: -0.02em; margin-top: 4px; }
+  .list-title em { font-style: italic; }
+
+  .cards { padding: 16px 24px 24px; display: flex; flex-direction: column; gap: 10px; }
+  .card {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 16px 18px;
+    display: flex; gap: 14px;
+    cursor: pointer;
+    transition: all 0.3s var(--spring);
+    transform-origin: top center;
+    position: relative;
+  }
+  .card-target {
+    z-index: 10;
+  }
+  .card-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: var(--c-bg, #fef2f2);
+    color: var(--c-fg, #BE123C);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+    transition: all 0.7s var(--spring);
+  }
+  .card-icon.mama { --c-bg: #fff1f2; --c-fg: #BE123C; }
+  .card-icon.tireoide { --c-bg: #f0f9ff; --c-fg: #0369A1; }
+  .card-icon.abdome { --c-bg: #fff7ed; --c-fg: #B45309; }
+  .card-icon.doppler { --c-bg: #ecfdf5; --c-fg: var(--emerald); }
+  .card-content { flex: 1; min-width: 0; transition: all 0.4s var(--spring); }
+  .card-row { display: flex; justify-content: space-between; align-items: baseline; }
+  .card-cat { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; }
+  .card-date { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.1em; }
+  .card-title { font-family: 'Instrument Serif', serif; font-size: 20px; letter-spacing: -0.01em; margin-top: 2px; line-height: 1.15; }
+  .card-title em { font-style: italic; }
+  .card-preview { font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  /* Detail expanded view */
+  .detail-overlay {
+    position: absolute; inset: 0;
+    background: white;
+    z-index: 5;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s var(--spring) 0.2s;
+    overflow-y: auto;
+  }
+  .detail-padding { padding: 60px 24px 24px; }
+  .detail-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; color: var(--emerald); text-transform: uppercase; }
+  .detail-title { font-family: 'Instrument Serif', serif; font-size: 32px; letter-spacing: -0.02em; line-height: 1.05; margin-top: 6px; }
+  .detail-title em { font-style: italic; }
+  .detail-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 8px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .detail-body { margin-top: 24px; font-size: 13px; line-height: 1.7; color: var(--ink); white-space: pre-line; }
+  .detail-body p { margin-bottom: 12px; }
+  .detail-section { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; color: var(--emerald); text-transform: uppercase; margin-top: 20px; margin-bottom: 8px; }
+
+  /* Playing state: card grows to fill screen */
+  .phone.playing .card-target {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border-radius: 0;
+    padding: 0;
+    border: 0;
+    background: white;
+    z-index: 4;
+    transform-origin: top left;
+  }
+  .phone.playing .card-target .card-icon {
+    margin: 60px 24px 0;
+    width: 56px; height: 56px;
+    border-radius: 16px;
+    font-size: 26px;
+  }
+  .phone.playing .card-target .card-content {
+    margin: 12px 24px 0;
+    padding-bottom: 30px;
+    border-bottom: 1px solid var(--line);
+  }
+  .phone.playing .card-target .card-title { font-size: 30px; }
+  .phone.playing .card-target .card-preview { opacity: 0; height: 0; }
+  .phone.playing .detail-overlay { opacity: 1; pointer-events: auto; }
+  .phone.playing .card:not(.card-target) { opacity: 0; transform: scale(0.95); }
+  .phone.playing .list-header { opacity: 0; }
+
+  .controls { display: flex; gap: 12px; margin-top: 24px; z-index: 2; }
+  .btn { padding: 12px 24px; background: var(--emerald); color: white; border: 0; border-radius: 99px; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px -4px rgba(5, 150, 105, 0.5); }
+  .btn.secondary { background: transparent; border: 1px solid rgba(244, 241, 233, 0.3); color: var(--paper); }
+  .hint { text-align: center; margin-top: 16px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; color: rgba(244, 241, 233, 0.4); text-transform: uppercase; }
+</style>
+</head>
+<body>
+<a href="index.html" class="lab-back">← lab</a>
+
+<div class="lab-header">
+  <div class="lab-num">03 · HISTÓRICO</div>
+  <h1 class="lab-title">Card <em>se abre</em></h1>
+  <p class="lab-desc">Tap em qualquer card e ele se expande pra ocupar a tela inteira. Ícone se torna badge, preview some, texto completo aparece.</p>
+</div>
+
+<div class="phone" id="phone">
+  <div class="notch"></div>
+  <div class="screen">
+    <div class="list-header">
+      <div class="list-eyebrow">HISTÓRICO</div>
+      <div class="list-title"><em>23</em> laudos · maio</div>
+    </div>
+    <div class="cards">
+      <div class="card card-target" id="cardTrigger">
+        <div class="card-icon mama">◐</div>
+        <div class="card-content">
+          <div class="card-row">
+            <span class="card-cat">MAMÁRIA</span>
+            <span class="card-date">25/05 · 14:32</span>
+          </div>
+          <div class="card-title"><em>M. Silva</em>, 47 anos</div>
+          <div class="card-preview">Imagens anecoicas medindo 0,5 e 0,8 cm no QSL da mama direita, compatíveis com cistos simples. BI-RADS 2.</div>
+          <div class="detail-overlay">
+            <div class="detail-padding">
+              <div style="height: 100px;"></div>
+              <div class="detail-section">Comentários</div>
+              <div class="detail-body">Exame realizado com transdutor linear de alta frequência, com a paciente em decúbito dorsal. Realizadas múltiplas varreduras dos quadrantes mamários bilaterais e fossas axilares.</div>
+              <div class="detail-section">Achados</div>
+              <div class="detail-body">Mama direita com parênquima fibroglandular heterogêneo (padrão ACR C).
+No quadrante súpero-lateral da mama direita identificam-se duas imagens anecoicas, com paredes finas e reforço acústico posterior, medindo 0,5 e 0,8 cm — compatíveis com cistos simples.
+Mama esquerda sem achados focais. Linfonodos axilares de aspecto preservado bilateralmente.</div>
+              <div class="detail-section">Conclusão</div>
+              <div class="detail-body">1) Cistos simples no quadrante súpero-lateral da mama direita.
+2) Demais estruturas mamárias e axilares estudadas sem evidência de alterações ecográficas.
+BI-RADS 2.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-icon tireoide">◊</div>
+        <div class="card-content">
+          <div class="card-row">
+            <span class="card-cat">TIREOIDE</span>
+            <span class="card-date">25/05 · 11:08</span>
+          </div>
+          <div class="card-title"><em>J. Pereira</em>, 62 anos</div>
+          <div class="card-preview">Nódulo no LD com calcificações grosseiras periféricas, TR-3. Microlitíase residual no LE.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-icon abdome">○</div>
+        <div class="card-content">
+          <div class="card-row">
+            <span class="card-cat">ABDOME TOTAL</span>
+            <span class="card-date">24/05 · 16:45</span>
+          </div>
+          <div class="card-title"><em>R. Cardoso</em>, 55 anos</div>
+          <div class="card-preview">Esteatose hepática grau moderado. Microcálculos vesiculares. Demais órgãos normais.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-icon doppler">~</div>
+        <div class="card-content">
+          <div class="card-row">
+            <span class="card-cat">DOPPLER MMII</span>
+            <span class="card-date">24/05 · 09:20</span>
+          </div>
+          <div class="card-title"><em>F. Mendes</em>, 71 anos</div>
+          <div class="card-preview">Sistema venoso profundo pérvio bilateral. Refluxo na safena magna proximal à esquerda.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn" id="play">▶ Reproduzir</button>
+  <button class="btn secondary" id="reset">↻ Reset</button>
+</div>
+<div class="hint">tap no primeiro card · expand 0.7s</div>
+
+<script>
+  const phone = document.getElementById('phone');
+  function trig() { phone.classList.remove('playing'); void phone.offsetWidth; phone.classList.add('playing'); }
+  document.getElementById('play').onclick = trig;
+  document.getElementById('cardTrigger').onclick = trig;
+  document.getElementById('reset').onclick = () => phone.classList.remove('playing');
+</script>
+</body>
+</html>

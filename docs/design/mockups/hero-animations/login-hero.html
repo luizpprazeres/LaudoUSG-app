@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>01 · Login Hero — LaudoUSG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #0a0f0d;
+    --paper: #f4f1e9;
+    --emerald: #059669;
+    --emerald-deep: #065F46;
+    --emerald-pale: #ecfdf5;
+    --line: rgba(10, 15, 13, 0.12);
+    --muted: rgba(10, 15, 13, 0.55);
+    --mama: #F43F5E;
+    --tireoide: #0EA5E9;
+    --pelve: #A855F7;
+    --abdome: #F59E0B;
+    --spring: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0e1216; color: var(--paper); font-family: 'Geist', sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 32px; position: relative; overflow-x: hidden; }
+  body::before {
+    content: ''; position: fixed; inset: -20% -20% -20% -20%;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(5, 150, 105, 0.15), transparent 60%),
+      radial-gradient(circle at 80% 70%, rgba(6, 95, 70, 0.1), transparent 50%);
+    pointer-events: none; z-index: 0;
+  }
+  .lab-header { position: relative; z-index: 1; text-align: center; max-width: 600px; margin-bottom: 24px; }
+  .lab-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.2em; color: var(--emerald); margin-bottom: 8px; }
+  .lab-title { font-family: 'Instrument Serif', serif; font-size: 36px; line-height: 1.05; letter-spacing: -0.02em; }
+  .lab-title em { font-style: italic; color: var(--emerald); }
+  .lab-desc { font-size: 13px; color: rgba(244, 241, 233, 0.55); margin-top: 8px; }
+  .lab-back { position: absolute; top: 32px; left: 32px; color: var(--emerald); text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; z-index: 2; }
+  .lab-back:hover { opacity: 0.7; }
+
+  /* iPhone frame */
+  .phone {
+    width: 390px; height: 760px;
+    background: #fff;
+    border-radius: 50px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 60px 120px -40px rgba(0,0,0,0.6), 0 0 0 11px #1a1f23, 0 0 0 12px #2a3036;
+    margin: 24px 0;
+    z-index: 1;
+  }
+  .notch {
+    width: 120px; height: 30px;
+    background: #1a1f23;
+    border-radius: 0 0 18px 18px;
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    z-index: 100;
+  }
+  .screen { width: 100%; height: 100%; position: relative; overflow: hidden; background: #fafaf8; }
+
+  /* Login state */
+  .login-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 30% 25%, rgba(5, 150, 105, 0.08), transparent 60%),
+      radial-gradient(circle at 70% 80%, rgba(6, 95, 70, 0.06), transparent 50%),
+      #fafaf8;
+  }
+  .login-content {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 40px;
+    z-index: 2;
+  }
+  .logo-shape {
+    width: 110px; height: 110px;
+    border-radius: 28px;
+    background: linear-gradient(135deg, var(--emerald) 0%, var(--emerald-deep) 100%);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 32px;
+    box-shadow: 0 20px 50px -10px rgba(5, 150, 105, 0.5);
+    position: relative;
+    transform-origin: center;
+    transition: all 1.2s var(--spring);
+  }
+  .logo-shape svg { width: 56px; height: 56px; }
+  .logo-name {
+    font-family: 'Instrument Serif', serif;
+    font-size: 44px; letter-spacing: -0.02em;
+    color: var(--ink);
+    transition: all 0.6s var(--spring);
+  }
+  .logo-name em { font-style: italic; color: var(--emerald); }
+  .tagline {
+    font-size: 14px; color: var(--muted);
+    margin-top: 8px;
+    transition: all 0.6s var(--spring);
+  }
+  .login-form {
+    width: 100%; max-width: 280px;
+    margin-top: 48px;
+    transition: all 0.6s var(--spring);
+  }
+  .input {
+    width: 100%; padding: 14px 16px;
+    border: 1px solid var(--line); border-radius: 14px;
+    background: white;
+    font-size: 14px; font-family: 'Geist', sans-serif;
+    margin-bottom: 12px;
+  }
+  .login-btn {
+    width: 100%; padding: 16px;
+    background: var(--emerald); color: white;
+    border: 0; border-radius: 14px;
+    font-size: 15px; font-weight: 600;
+    font-family: 'Geist', sans-serif;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 4px;
+  }
+  .login-btn:hover { background: var(--emerald-deep); }
+
+  /* Home state */
+  .home-content {
+    position: absolute; inset: 0;
+    padding: 60px 24px 24px;
+    z-index: 1;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.6s var(--spring);
+  }
+  .home-header {
+    display: flex; align-items: center; gap: 12px;
+    padding-bottom: 24px;
+  }
+  .home-greeting {
+    font-family: 'Instrument Serif', serif;
+    font-size: 22px; letter-spacing: -0.01em;
+  }
+  .home-greeting em { font-style: italic; color: var(--emerald); }
+  .home-greeting-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 16px;
+  }
+  .tile {
+    aspect-ratio: 1;
+    border-radius: 22px;
+    padding: 18px;
+    display: flex; flex-direction: column;
+    justify-content: space-between;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    opacity: 0;
+    transform: scale(0.6) translateY(40px);
+    transition: all 0.8s var(--spring);
+  }
+  .tile::before {
+    content: '';
+    position: absolute; top: -30%; right: -30%;
+    width: 100px; height: 100px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 50%;
+    filter: blur(20px);
+  }
+  .tile-mama { background: linear-gradient(135deg, #F43F5E 0%, #BE123C 100%); }
+  .tile-tireoide { background: linear-gradient(135deg, #0EA5E9 0%, #0369A1 100%); }
+  .tile-pelve { background: linear-gradient(135deg, #A855F7 0%, #6B21A8 100%); }
+  .tile-abdome { background: linear-gradient(135deg, #F59E0B 0%, #B45309 100%); }
+  .tile-icon { font-size: 28px; opacity: 0.95; line-height: 1; }
+  .tile-label { font-family: 'Instrument Serif', serif; font-size: 18px; font-style: italic; letter-spacing: -0.01em; }
+  .tile-count { font-family: 'JetBrains Mono', monospace; font-size: 10px; opacity: 0.7; letter-spacing: 0.1em; text-transform: uppercase; }
+
+  /* Orbit elements */
+  .orbit {
+    position: absolute; top: 50%; left: 50%;
+    width: 56px; height: 56px;
+    border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; color: white;
+    opacity: 0;
+    z-index: 5;
+    pointer-events: none;
+  }
+  .orbit-mama { background: var(--mama); }
+  .orbit-tireoide { background: var(--tireoide); }
+  .orbit-pelve { background: var(--pelve); }
+  .orbit-abdome { background: var(--abdome); }
+
+  /* Animation states */
+  .phone.playing .logo-shape {
+    transform: scale(0.5) translateY(-220px) translateX(-110px);
+  }
+  .phone.playing .logo-name {
+    transform: scale(0.45) translateY(-260px) translateX(-25px);
+  }
+  .phone.playing .tagline {
+    opacity: 0; transform: translateY(20px);
+  }
+  .phone.playing .login-form {
+    opacity: 0; transform: translateY(40px) scale(0.95);
+  }
+  .phone.playing .home-content { opacity: 1; }
+  .phone.playing .tile {
+    opacity: 1; transform: scale(1) translateY(0);
+  }
+  .phone.playing .tile-1 { transition-delay: 0.5s; }
+  .phone.playing .tile-2 { transition-delay: 0.6s; }
+  .phone.playing .tile-3 { transition-delay: 0.7s; }
+  .phone.playing .tile-4 { transition-delay: 0.8s; }
+
+  /* Orbit animation */
+  .phone.playing .orbit {
+    animation: orbit 1.4s var(--spring) forwards;
+  }
+  .orbit-mama { animation-delay: 0.1s !important; }
+  .orbit-tireoide { animation-delay: 0.2s !important; }
+  .orbit-pelve { animation-delay: 0.3s !important; }
+  .orbit-abdome { animation-delay: 0.4s !important; }
+
+  @keyframes orbit {
+    0% {
+      transform: translate(-50%, -50%) scale(0);
+      opacity: 0;
+    }
+    30% {
+      transform: translate(var(--ox-mid, 0), var(--oy-mid, 0)) scale(1);
+      opacity: 1;
+    }
+    70% {
+      transform: translate(var(--ox-end, 0), var(--oy-end, 0)) scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(var(--ox-end, 0), var(--oy-end, 0)) scale(0.7);
+      opacity: 0;
+    }
+  }
+
+  .orbit-mama { --ox-mid: -120%; --oy-mid: -80%; --ox-end: -85%; --oy-end: 60%; }
+  .orbit-tireoide { --ox-mid: 70%; --oy-mid: -80%; --ox-end: 0%; --oy-end: 60%; }
+  .orbit-pelve { --ox-mid: -120%; --oy-mid: 80%; --ox-end: -85%; --oy-end: 180%; }
+  .orbit-abdome { --ox-mid: 70%; --oy-mid: 80%; --ox-end: 0%; --oy-end: 180%; }
+
+  /* Controls */
+  .controls {
+    display: flex; gap: 12px;
+    margin-top: 24px;
+    z-index: 2;
+  }
+  .btn {
+    padding: 12px 24px;
+    background: var(--emerald);
+    color: white;
+    border: 0;
+    border-radius: 99px;
+    font-family: 'Geist', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: all 0.2s;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px -4px rgba(5, 150, 105, 0.5); }
+  .btn.secondary { background: transparent; border: 1px solid rgba(244, 241, 233, 0.3); color: var(--paper); }
+  .btn.secondary:hover { border-color: var(--emerald); color: var(--emerald); }
+  .hint {
+    text-align: center; margin-top: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.15em;
+    color: rgba(244, 241, 233, 0.4); text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<a href="index.html" class="lab-back">← lab</a>
+
+<div class="lab-header">
+  <div class="lab-num">01 · ENTRADA</div>
+  <h1 class="lab-title">Logo <em>voa</em> pra home</h1>
+  <p class="lab-desc">Logo se transforma no header da home enquanto quatro categorias orbitam brevemente antes de pousar como tiles.</p>
+</div>
+
+<div class="phone" id="phone">
+  <div class="notch"></div>
+  <div class="screen">
+    <div class="login-bg"></div>
+
+    <div class="home-content">
+      <div class="home-header">
+        <div>
+          <div class="home-greeting">Bom dia, <em>Dr. Luiz</em></div>
+          <div class="home-greeting-sub">3 laudos hoje · meta 5/dia</div>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="tile tile-mama tile-1">
+          <div class="tile-icon">◐</div>
+          <div>
+            <div class="tile-label">Mamária</div>
+            <div class="tile-count">12 templates</div>
+          </div>
+        </div>
+        <div class="tile tile-tireoide tile-2">
+          <div class="tile-icon">◊</div>
+          <div>
+            <div class="tile-label">Tireoide</div>
+            <div class="tile-count">9 templates</div>
+          </div>
+        </div>
+        <div class="tile tile-abdome tile-3">
+          <div class="tile-icon">○</div>
+          <div>
+            <div class="tile-label">Abdome</div>
+            <div class="tile-count">26 templates</div>
+          </div>
+        </div>
+        <div class="tile tile-pelve tile-4">
+          <div class="tile-icon">◑</div>
+          <div>
+            <div class="tile-label">Pelve</div>
+            <div class="tile-count">14 templates</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="login-content">
+      <div class="logo-shape">
+        <svg viewBox="0 0 56 56" fill="none">
+          <path d="M14 36 Q20 22 28 28 Q36 34 42 20" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+          <circle cx="14" cy="36" r="3" fill="white"/>
+          <circle cx="42" cy="20" r="3" fill="white"/>
+        </svg>
+      </div>
+      <div class="logo-name"><em>Laudo</em>USG</div>
+      <div class="tagline">laudos com voz · ia clínica</div>
+      <div class="login-form">
+        <input type="email" class="input" placeholder="email@clinica.com.br" />
+        <input type="password" class="input" placeholder="senha" />
+        <button class="login-btn" id="loginBtn">Entrar</button>
+      </div>
+    </div>
+
+    <!-- Orbit pieces -->
+    <div class="orbit orbit-mama">◐</div>
+    <div class="orbit orbit-tireoide">◊</div>
+    <div class="orbit orbit-pelve">◑</div>
+    <div class="orbit orbit-abdome">○</div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn" id="play">▶ Reproduzir</button>
+  <button class="btn secondary" id="reset">↻ Reset</button>
+</div>
+<div class="hint">duração total · 1.4s</div>
+
+<script>
+  const phone = document.getElementById('phone');
+  const play = document.getElementById('play');
+  const reset = document.getElementById('reset');
+  const loginBtn = document.getElementById('loginBtn');
+
+  function trigger() {
+    phone.classList.remove('playing');
+    void phone.offsetWidth;
+    phone.classList.add('playing');
+  }
+  function resetIt() {
+    phone.classList.remove('playing');
+  }
+
+  play.addEventListener('click', trigger);
+  loginBtn.addEventListener('click', trigger);
+  reset.addEventListener('click', resetIt);
+</script>
+</body>
+</html>

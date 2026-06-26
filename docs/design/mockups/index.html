@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LaudoUSG.lab — Mockups P7</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            display: ['Barlow', 'Inter', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50:  '#ECFDF5',
+              100: '#D1FAE5',
+              500: '#10B981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065F46',
+              900: '#064E3B',
+              ink: '#18533F',
+            },
+          },
+          boxShadow: {
+            card: '0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 1px rgba(15, 23, 42, 0.03)',
+            cardHover: '0 4px 12px rgba(6, 95, 70, 0.06), 0 2px 4px rgba(15, 23, 42, 0.04)',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { -webkit-font-smoothing: antialiased; }
+  </style>
+</head>
+<body class="min-h-screen bg-stone-50 font-sans text-stone-900">
+  <div class="mx-auto max-w-7xl px-8 py-16">
+    <!-- header -->
+    <div class="mb-12 flex items-end justify-between">
+      <div>
+        <div class="mb-3 flex items-center gap-2">
+          <span class="grid h-9 w-9 place-items-center rounded-lg bg-brand-600 text-white shadow-card">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3v18M9 3l5 5M9 21l5-5"/><path d="M14 3h6v18h-6"/></svg>
+          </span>
+          <span class="font-display text-2xl font-bold tracking-tight">
+            <span class="text-stone-900">LaudoUSG</span><span class="text-brand-600">.lab</span>
+          </span>
+          <span class="ml-2 rounded-full border border-stone-200 bg-white px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-stone-500">Mockups P7</span>
+        </div>
+        <h1 class="font-display text-4xl font-extrabold tracking-tight text-stone-900">5 telas pra calibrar o RAG</h1>
+        <p class="mt-2 max-w-xl text-base text-stone-600">Painel de observabilidade e tuning. Cada tela tem um propósito específico no fluxo de iteração: rodar, auditar, editar, revisar.</p>
+      </div>
+      <div class="flex items-center gap-3 text-xs text-stone-500">
+        <span class="font-mono">v0.1 · 2026-05-22</span>
+        <span class="h-3 w-px bg-stone-300"></span>
+        <span>lab.laudousg.com</span>
+      </div>
+    </div>
+
+    <!-- grid -->
+    <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+      <a href="dashboard.html" class="group relative overflow-hidden rounded-2xl border border-stone-200 bg-white p-6 shadow-card transition hover:shadow-cardHover">
+        <div class="mb-4 flex items-center justify-between">
+          <span class="grid h-10 w-10 place-items-center rounded-lg bg-emerald-50 text-brand-700">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+          </span>
+          <span class="font-mono text-[10px] uppercase tracking-wider text-stone-400">01</span>
+        </div>
+        <h3 class="font-display text-xl font-bold text-stone-900">Dashboard</h3>
+        <p class="mt-1.5 text-sm leading-relaxed text-stone-600">Visão consolidada — métricas operacionais, saúde por categoria, atividade recente.</p>
+        <div class="mt-5 inline-flex items-center gap-1.5 text-xs font-medium text-brand-700 group-hover:gap-2.5 transition-all">Abrir mockup <span aria-hidden="true">→</span></div>
+      </a>
+
+      <a href="testbench.html" class="group relative overflow-hidden rounded-2xl border border-stone-200 bg-white p-6 shadow-card transition hover:shadow-cardHover">
+        <div class="absolute right-4 top-4 rounded-full bg-amber-100 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase text-amber-800">★ flagship</div>
+        <div class="mb-4 flex items-center justify-between">
+          <span class="grid h-10 w-10 place-items-center rounded-lg bg-emerald-50 text-brand-700">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 2v6L4 18a3 3 0 0 0 2.7 4.3h10.6A3 3 0 0 0 20 18L15 8V2"/><line x1="9" y1="2" x2="15" y2="2"/><line x1="6" y1="14" x2="18" y2="14"/></svg>
+          </span>
+          <span class="font-mono text-[10px] uppercase tracking-wider text-stone-400">02</span>
+        </div>
+        <h3 class="font-display text-xl font-bold text-stone-900">Testbench</h3>
+        <p class="mt-1.5 text-sm leading-relaxed text-stone-600">Input → laudo gerado + source map completo. Hover revela origem de cada trecho.</p>
+        <div class="mt-5 inline-flex items-center gap-1.5 text-xs font-medium text-brand-700 group-hover:gap-2.5 transition-all">Abrir mockup <span aria-hidden="true">→</span></div>
+      </a>
+
+      <a href="audit.html" class="group relative overflow-hidden rounded-2xl border border-stone-200 bg-white p-6 shadow-card transition hover:shadow-cardHover">
+        <div class="mb-4 flex items-center justify-between">
+          <span class="grid h-10 w-10 place-items-center rounded-lg bg-emerald-50 text-brand-700">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+          </span>
+          <span class="font-mono text-[10px] uppercase tracking-wider text-stone-400">03</span>
+        </div>
+        <h3 class="font-display text-xl font-bold text-stone-900">Audit Log</h3>
+        <p class="mt-1.5 text-sm leading-relaxed text-stone-600">Trilha forense — toda geração com retrieved + skipped + similarity. Filtros e drill-down.</p>
+        <div class="mt-5 inline-flex items-center gap-1.5 text-xs font-medium text-brand-700 group-hover:gap-2.5 transition-all">Abrir mockup <span aria-hidden="true">→</span></div>
+      </a>
+
+      <a href="blocks-editor.html" class="group relative overflow-hidden rounded-2xl border border-stone-200 bg-white p-6 shadow-card transition hover:shadow-cardHover">
+        <div class="mb-4 flex items-center justify-between">
+          <span class="grid h-10 w-10 place-items-center rounded-lg bg-emerald-50 text-brand-700">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </span>
+          <span class="font-mono text-[10px] uppercase tracking-wider text-stone-400">04</span>
+        </div>
+        <h3 class="font-display text-xl font-bold text-stone-900">Blocks Editor</h3>
+        <p class="mt-1.5 text-sm leading-relaxed text-stone-600">Tree de blocks por categoria → editor markdown com frontmatter. Re-ingest no salvar.</p>
+        <div class="mt-5 inline-flex items-center gap-1.5 text-xs font-medium text-brand-700 group-hover:gap-2.5 transition-all">Abrir mockup <span aria-hidden="true">→</span></div>
+      </a>
+
+      <a href="reviewer.html" class="group relative overflow-hidden rounded-2xl border border-stone-200 bg-white p-6 shadow-card transition hover:shadow-cardHover">
+        <div class="mb-4 flex items-center justify-between">
+          <span class="grid h-10 w-10 place-items-center rounded-lg bg-emerald-50 text-brand-700">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </span>
+          <span class="font-mono text-[10px] uppercase tracking-wider text-stone-400">05</span>
+        </div>
+        <h3 class="font-display text-xl font-bold text-stone-900">Reviewer</h3>
+        <p class="mt-1.5 text-sm leading-relaxed text-stone-600">Análise forense de UM laudo. Hover→source. Cobertura, sugestões, drill no editor.</p>
+        <div class="mt-5 inline-flex items-center gap-1.5 text-xs font-medium text-brand-700 group-hover:gap-2.5 transition-all">Abrir mockup <span aria-hidden="true">→</span></div>
+      </a>
+
+      <div class="rounded-2xl border-2 border-dashed border-stone-200 bg-stone-50 p-6">
+        <div class="mb-4 flex items-center justify-between">
+          <span class="grid h-10 w-10 place-items-center rounded-lg bg-stone-100 text-stone-400">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </span>
+          <span class="font-mono text-[10px] uppercase tracking-wider text-stone-400">06</span>
+        </div>
+        <h3 class="font-display text-xl font-bold text-stone-500">Config</h3>
+        <p class="mt-1.5 text-sm leading-relaxed text-stone-500">Quotas, prompts globais, whitelist admin. Mockup futuro.</p>
+        <div class="mt-5 inline-flex items-center gap-1.5 text-xs font-medium text-stone-400">Em definição</div>
+      </div>
+    </div>
+
+    <!-- footer note -->
+    <div class="mt-12 rounded-xl border border-stone-200 bg-white p-5 text-sm text-stone-600">
+      <p class="font-medium text-stone-900">Notas técnicas</p>
+      <ul class="mt-2 space-y-1 text-stone-600">
+        <li>• Tokens de cor seguem o app iOS (emerald-600 primary, emerald-800 deep, wordmark #18533F).</li>
+        <li>• Tipografia: Inter (UI), Barlow (display) e JetBrains Mono (dados técnicos: similarity, IDs, paths).</li>
+        <li>• Stack alvo: Next.js 15 + Tailwind 3.4. App Router, Server Components por default.</li>
+        <li>• Layouts são <em>desktop-first</em> (1280px+) — admin usado em monitor, não mobile.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LaudoUSG — Hero Animations Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #0a0f0d;
+    --paper: #f4f1e9;
+    --emerald: #059669;
+    --emerald-deep: #065F46;
+    --emerald-pale: #ecfdf5;
+    --line: rgba(10, 15, 13, 0.12);
+    --muted: rgba(10, 15, 13, 0.55);
+    --grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--paper); color: var(--ink); font-family: 'Geist', -apple-system, sans-serif; min-height: 100vh; position: relative; }
+  body::before { content: ''; position: fixed; inset: 0; background-image: var(--grain); pointer-events: none; z-index: 0; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 80px 32px 120px; position: relative; z-index: 1; }
+  header.top { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 48px; border-bottom: 1px solid var(--line); }
+  .brand {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 64px;
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+  }
+  .brand .accent { color: var(--emerald); }
+  .meta { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+  .meta strong { display: block; color: var(--ink); font-size: 13px; margin-bottom: 4px; }
+  .intro { display: grid; grid-template-columns: 2fr 3fr; gap: 64px; padding: 56px 0; border-bottom: 1px solid var(--line); align-items: center; }
+  .intro h1 { font-family: 'Instrument Serif', serif; font-size: 48px; line-height: 1.05; letter-spacing: -0.02em; max-width: 480px; }
+  .intro h1 em { font-style: italic; color: var(--emerald-deep); }
+  .intro p { font-size: 15px; line-height: 1.6; color: var(--muted); max-width: 480px; }
+  .legend { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-top: 24px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; margin-top: 56px; }
+  .card {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    display: block;
+  }
+  .card:hover { transform: translateY(-6px); border-color: var(--emerald); box-shadow: 0 20px 60px -20px rgba(5, 150, 105, 0.3); }
+  .card::after {
+    content: '→';
+    position: absolute;
+    top: 24px;
+    right: 28px;
+    font-size: 24px;
+    color: var(--muted);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .card:hover::after { color: var(--emerald); transform: translateX(4px); }
+  .num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--emerald); letter-spacing: 0.15em; margin-bottom: 12px; display: block; }
+  .card h3 { font-family: 'Instrument Serif', serif; font-size: 28px; line-height: 1.1; margin-bottom: 12px; letter-spacing: -0.01em; }
+  .card h3 em { font-style: italic; }
+  .card p { font-size: 13px; line-height: 1.55; color: var(--muted); }
+  .tag { display: inline-block; margin-top: 16px; padding: 4px 10px; background: var(--emerald-pale); color: var(--emerald-deep); border-radius: 99px; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; }
+  footer.bottom { margin-top: 96px; padding-top: 32px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+  @media (max-width: 760px) {
+    .intro { grid-template-columns: 1fr; gap: 32px; }
+    .brand { font-size: 44px; }
+    .intro h1 { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><span class="accent">Laudo</span>USG<span class="accent">.</span></div>
+    <div class="meta">
+      <strong>Hero Animations Lab</strong>
+      v0.1 · brainstorm visual
+    </div>
+  </header>
+
+  <div class="intro">
+    <div>
+      <h1>Sete momentos de <em>delight</em> espalhados pelo app.</h1>
+    </div>
+    <div>
+      <p>Cada protótipo abaixo isola uma transição candidata pra ser aplicada no app SwiftUI via <code style="font-family: 'JetBrains Mono'; font-size: 12px; background: var(--emerald-pale); padding: 2px 6px; border-radius: 4px;">matchedGeometryEffect</code>. São animações <em>shared element</em> no espírito da Hero (UIKit), mas nativas SwiftUI iOS 17+.</p>
+      <p class="legend">— Toque qualquer card pra abrir o protótipo isolado.</p>
+    </div>
+  </div>
+
+  <div class="grid">
+    <a class="card" href="login-hero.html">
+      <span class="num">01 · ENTRADA</span>
+      <h3>Logo voa <em>pra home</em></h3>
+      <p>Logo central da tela de login se transforma no header da home; quatro ícones de categoria orbitam brevemente antes de pousar na grid.</p>
+      <span class="tag">login → home</span>
+    </a>
+
+    <a class="card" href="categoria-chip-voa.html">
+      <span class="num">02 · NAVEGAÇÃO</span>
+      <h3>Chip <em>vira</em> tela</h3>
+      <p>Chip de categoria (Mamária rosa, Tireoide azul…) cresce continuamente até virar o cabeçalho da nova tela. Cor de fundo herda o tint.</p>
+      <span class="tag">lista → generate</span>
+    </a>
+
+    <a class="card" href="history-card-expand.html">
+      <span class="num">03 · HISTÓRICO</span>
+      <h3>Card <em>se abre</em></h3>
+      <p>Card de laudo no histórico se expande pra ocupar a tela inteira, no espírito do Apple Photos abrindo uma foto.</p>
+      <span class="tag">lista → detail</span>
+    </a>
+
+    <a class="card" href="plus-sheet-calculator.html">
+      <span class="num">04 · FERRAMENTA</span>
+      <h3>Calculadora <em>respira</em></h3>
+      <p>Card colorido no PlusSheet cresce ocupando metade superior da sheet como hero header; o form desliza de baixo.</p>
+      <span class="tag">plus → calculadora</span>
+    </a>
+
+    <a class="card" href="streaming-laudo.html">
+      <span class="num">05 · GERAÇÃO</span>
+      <h3>Achados <em>em cascata</em></h3>
+      <p>Texto sendo digitado pela IA palavra a palavra. Conforme o parser detecta achados, chips coloridos aparecem em sequência no rodapé.</p>
+      <span class="tag">streaming + parser</span>
+    </a>
+
+    <a class="card" href="achievement-laudo-pronto.html">
+      <span class="num">06 · CONCLUSÃO</span>
+      <h3>Pequena <em>celebração</em></h3>
+      <p>Laudo salvo. Checkmark verde explode com partículas; contador "23º laudo do mês" sobe e some em 1.8s. Estilo Apple Health.</p>
+      <span class="tag">salvar laudo</span>
+    </a>
+
+    <a class="card" href="dictation-pulse.html">
+      <span class="num">07 · GRAVAÇÃO</span>
+      <h3>Ondas <em>respiratórias</em></h3>
+      <p>Microfone com ondas concêntricas emerald pulsando ao gravar. Visualizer de barras animadas. Convergência ao parar.</p>
+      <span class="tag">dictation FAB</span>
+    </a>
+  </div>
+
+  <footer class="bottom">
+    <span>matched geometry effect · iOS 17+</span>
+    <span>cubic-bezier(0.16, 1, 0.3, 1)</span>
+  </footer>
+</div>
+</body>
+</html>

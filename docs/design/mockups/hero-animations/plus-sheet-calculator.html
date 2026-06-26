@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>04 · Plus Sheet Calculator — LaudoUSG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #0a0f0d; --paper: #f4f1e9; --emerald: #059669;
+    --line: rgba(10, 15, 13, 0.12); --muted: rgba(10, 15, 13, 0.55);
+    --birads: #F43F5E; --birads-deep: #BE123C;
+    --spring: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0e1216; color: var(--paper); font-family: 'Geist', sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 32px; }
+  body::before { content: ''; position: fixed; inset: -20%; background: radial-gradient(circle at 50% 60%, rgba(244, 63, 94, 0.1), transparent 60%); pointer-events: none; z-index: 0; }
+  .lab-header { position: relative; z-index: 1; text-align: center; max-width: 600px; margin-bottom: 24px; }
+  .lab-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.2em; color: var(--birads); margin-bottom: 8px; }
+  .lab-title { font-family: 'Instrument Serif', serif; font-size: 36px; line-height: 1.05; letter-spacing: -0.02em; }
+  .lab-title em { font-style: italic; color: var(--birads); }
+  .lab-desc { font-size: 13px; color: rgba(244, 241, 233, 0.55); margin-top: 8px; }
+  .lab-back { position: absolute; top: 32px; left: 32px; color: var(--birads); text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; z-index: 2; }
+
+  .phone { width: 390px; height: 760px; background: #fff; border-radius: 50px; overflow: hidden; position: relative; box-shadow: 0 60px 120px -40px rgba(0,0,0,0.6), 0 0 0 11px #1a1f23, 0 0 0 12px #2a3036; margin: 24px 0; z-index: 1; }
+  .notch { width: 120px; height: 30px; background: #1a1f23; border-radius: 0 0 18px 18px; position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 100; }
+  .screen { width: 100%; height: 100%; position: relative; overflow: hidden; background: rgba(10,15,13,0.4); }
+
+  /* Background do app (esmaecido) */
+  .app-bg {
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(180deg, #fafaf8 0%, #f0eee6 100%);
+    padding: 56px 24px;
+    filter: blur(2px);
+    opacity: 0.5;
+  }
+  .app-bg h2 { font-family: 'Instrument Serif', serif; font-size: 28px; }
+  .app-bg p { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+  /* Plus Sheet */
+  .sheet {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 90%;
+    background: white;
+    border-radius: 28px 28px 0 0;
+    padding: 16px 0 24px;
+    z-index: 5;
+    transition: all 0.6s var(--spring);
+    overflow: hidden;
+  }
+  .sheet-handle { width: 40px; height: 5px; background: rgba(10,15,13,0.15); border-radius: 99px; margin: 0 auto 24px; }
+  .sheet-header { padding: 0 24px 16px; transition: opacity 0.3s var(--spring); }
+  .sheet-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; color: var(--emerald); text-transform: uppercase; }
+  .sheet-title { font-family: 'Instrument Serif', serif; font-size: 26px; letter-spacing: -0.02em; margin-top: 4px; }
+  .sheet-title em { font-style: italic; }
+
+  .calc-grid {
+    padding: 8px 24px;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    transition: opacity 0.3s var(--spring);
+  }
+  .calc {
+    aspect-ratio: 1.05;
+    border-radius: 20px;
+    padding: 16px;
+    color: white;
+    display: flex; flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    position: relative; overflow: hidden;
+    transition: transform 0.3s var(--spring);
+  }
+  .calc::before {
+    content: ''; position: absolute; top: -40%; right: -40%;
+    width: 100px; height: 100px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%; filter: blur(20px);
+  }
+  .calc-birads { background: linear-gradient(135deg, #F43F5E 0%, #BE123C 100%); }
+  .calc-tirads { background: linear-gradient(135deg, #0EA5E9 0%, #0369A1 100%); }
+  .calc-hadlock { background: linear-gradient(135deg, #6366F1 0%, #4338CA 100%); }
+  .calc-doppler { background: linear-gradient(135deg, #F59E0B 0%, #B45309 100%); }
+  .calc-ila { background: linear-gradient(135deg, #14B8A6 0%, #0F766E 100%); }
+  .calc-anemia { background: linear-gradient(135deg, #EC4899 0%, #BE185D 100%); }
+  .calc-name { font-family: 'Instrument Serif', serif; font-size: 22px; line-height: 1.05; letter-spacing: -0.01em; }
+  .calc-name em { font-style: italic; }
+  .calc-meta { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.85; }
+  .calc:hover { transform: translateY(-3px); }
+
+  /* Hero state: calc-birads expands */
+  .phone.playing .sheet-header { opacity: 0; }
+  .phone.playing .calc-grid > .calc:not(.calc-birads) { opacity: 0; transform: scale(0.9); }
+  .phone.playing .calc-birads {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 48%;
+    aspect-ratio: auto;
+    border-radius: 0 0 28px 28px;
+    padding: 60px 24px 28px;
+    z-index: 6;
+  }
+  .phone.playing .calc-birads .calc-name { font-size: 40px; line-height: 1.05; }
+  .phone.playing .calc-birads .calc-meta { font-size: 11px; margin-top: 12px; }
+
+  /* Form slides up */
+  .calc-form {
+    position: absolute;
+    bottom: -100%;
+    left: 0; right: 0;
+    height: 52%;
+    background: white;
+    padding: 28px 24px;
+    z-index: 7;
+    transition: bottom 0.7s var(--spring) 0.2s;
+    overflow-y: auto;
+  }
+  .form-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; color: var(--birads); text-transform: uppercase; }
+  .form-title { font-family: 'Instrument Serif', serif; font-size: 22px; letter-spacing: -0.01em; margin-top: 4px; margin-bottom: 20px; }
+  .form-row { margin-bottom: 14px; }
+  .form-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; display: block; letter-spacing: 0.04em; }
+  .form-input { width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; font-family: 'Geist', sans-serif; font-size: 14px; }
+  .form-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pill { padding: 8px 12px; border: 1px solid var(--line); border-radius: 99px; font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; cursor: pointer; transition: all 0.2s; }
+  .pill.selected { background: var(--birads); border-color: var(--birads); color: white; }
+  .form-cta { width: 100%; padding: 14px; background: var(--birads); color: white; border: 0; border-radius: 14px; font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 12px; }
+
+  .phone.playing .calc-form { bottom: 0; }
+
+  .controls { display: flex; gap: 12px; margin-top: 24px; z-index: 2; }
+  .btn { padding: 12px 24px; background: var(--birads); color: white; border: 0; border-radius: 99px; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px -4px rgba(244, 63, 94, 0.5); }
+  .btn.secondary { background: transparent; border: 1px solid rgba(244, 241, 233, 0.3); color: var(--paper); }
+  .hint { text-align: center; margin-top: 16px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; color: rgba(244, 241, 233, 0.4); text-transform: uppercase; }
+</style>
+</head>
+<body>
+<a href="index.html" class="lab-back">← lab</a>
+
+<div class="lab-header">
+  <div class="lab-num">04 · FERRAMENTA</div>
+  <h1 class="lab-title">Calculadora <em>respira</em></h1>
+  <p class="lab-desc">Card colorido vira hero header da calculadora. Form sobe de baixo. Cor da categoria contamina toda a sheet.</p>
+</div>
+
+<div class="phone" id="phone">
+  <div class="notch"></div>
+  <div class="screen">
+    <div class="app-bg">
+      <h2>Mama direita</h2>
+      <p>Toque no microfone para começar a ditar...</p>
+    </div>
+
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div class="sheet-eyebrow">FERRAMENTAS</div>
+        <div class="sheet-title">Calculadoras <em>clínicas</em></div>
+      </div>
+      <div class="calc-grid">
+        <div class="calc calc-birads" id="calcTrigger">
+          <div class="calc-meta">ACR 0-6</div>
+          <div class="calc-name"><em>BI-</em>RADS</div>
+        </div>
+        <div class="calc calc-tirads">
+          <div class="calc-meta">ACR TR1-5</div>
+          <div class="calc-name"><em>TI-</em>RADS</div>
+        </div>
+        <div class="calc calc-hadlock">
+          <div class="calc-meta">DBP·CC·CA·CF</div>
+          <div class="calc-name"><em>Hadlock</em></div>
+        </div>
+        <div class="calc calc-doppler">
+          <div class="calc-meta">Percentil FMF</div>
+          <div class="calc-name"><em>Doppler</em></div>
+        </div>
+        <div class="calc calc-ila">
+          <div class="calc-meta">4 quadrantes</div>
+          <div class="calc-name"><em>ILA</em></div>
+        </div>
+        <div class="calc calc-anemia">
+          <div class="calc-meta">MCA-PSV · Mari</div>
+          <div class="calc-name"><em>Anemia</em></div>
+        </div>
+      </div>
+
+      <div class="calc-form">
+        <div class="form-eyebrow">CATEGORIA BI-RADS</div>
+        <div class="form-title">Classificar <em>achado</em></div>
+        <div class="form-row">
+          <label class="form-label">Lado</label>
+          <div class="form-pills">
+            <div class="pill">Direita</div>
+            <div class="pill selected">Esquerda</div>
+            <div class="pill">Bilateral</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Categoria</label>
+          <div class="form-pills">
+            <div class="pill">0</div>
+            <div class="pill">1</div>
+            <div class="pill selected">2</div>
+            <div class="pill">3</div>
+            <div class="pill">4A</div>
+            <div class="pill">4B</div>
+            <div class="pill">4C</div>
+            <div class="pill">5</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Observação clínica</label>
+          <input class="form-input" placeholder="Ex: cisto simples bem definido..." />
+        </div>
+        <button class="form-cta">Inserir no laudo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn" id="play">▶ Reproduzir</button>
+  <button class="btn secondary" id="reset">↻ Reset</button>
+</div>
+<div class="hint">tap em qualquer card · hero + form slide 0.9s</div>
+
+<script>
+  const phone = document.getElementById('phone');
+  function trig() { phone.classList.remove('playing'); void phone.offsetWidth; phone.classList.add('playing'); }
+  document.getElementById('play').onclick = trig;
+  document.getElementById('calcTrigger').onclick = trig;
+  document.getElementById('reset').onclick = () => phone.classList.remove('playing');
+</script>
+</body>
+</html>
