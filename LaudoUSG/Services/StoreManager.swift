@@ -115,6 +115,7 @@ final class StoreManager {
                     return false
                 }
                 await transaction.finish()
+                await syncTransactionWithBackend(verification)
                 await refreshEntitlements()
                 return true
             case .pending:
@@ -145,6 +146,18 @@ final class StoreManager {
     private func handle(transactionResult result: VerificationResult<Transaction>) async {
         guard case .verified(let transaction) = result else { return }
         await transaction.finish()
+        await syncTransactionWithBackend(result)
         await refreshEntitlements()
+    }
+
+    /// Registra a transação no backend (cria/atualiza a assinatura e o `plan` do
+    /// usuário). Best-effort: o entitlement local não depende disto — se falhar, o
+    /// webhook da Apple (App Store Server Notifications) e a próxima abertura sincronizam.
+    private func syncTransactionWithBackend(_ verification: VerificationResult<Transaction>) async {
+        let jws = verification.jwsRepresentation
+        guard let body = try? JSONSerialization.data(
+            withJSONObject: ["signedTransactionJwt": jws]
+        ) else { return }
+        _ = try? await APIClient.shared.postRawJSON("api/iap/validate-receipt", body: body)
     }
 }
