@@ -55,6 +55,15 @@ struct OnboardingFlow: View {
 
             skipButton
         }
+        .overlay(alignment: .top) {
+            OnboardingProgressDots(
+                index: step.rawValue,
+                count: OnboardingFlowStep.allCases.count,
+                onDark: isPhotoStep
+            )
+            .padding(.top, Spacing.sm)
+            .animation(.easeOut(duration: 0.2), value: step)
+        }
         .interactiveDismissDisabled(true)
         .sensoryFeedback(.success, trigger: completionCelebration)
         .onDisappear {
@@ -69,7 +78,7 @@ struct OnboardingFlow: View {
         switch step {
         case .welcome:
             WelcomeStep(
-                doctorName: app.profile?.displayName ?? "doutor",
+                doctorName: app.profile?.greetingFirstName ?? "",
                 onStart: goToMicPermission
             )
         case .micPermission:
@@ -115,6 +124,11 @@ struct OnboardingFlow: View {
                 onFinish: completeAndDismiss
             )
         }
+    }
+
+    // Telas com foto full-bleed (fundo escuro) — define o estilo do indicador.
+    private var isPhotoStep: Bool {
+        step == .welcome || step == .micPermission || step == .completion
     }
 
     private var skipButton: some View {

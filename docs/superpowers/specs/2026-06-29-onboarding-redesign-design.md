@@ -59,7 +59,8 @@ O fluxo tem 6 etapas (`OnboardingFlowStep`). O indicador mostra **6 pontos** (um
 
 Para evitar duplicação e manter unidades bem-delimitadas:
 
-- **Novo:** `Features/Onboarding/OnboardingPhotoBackdrop.swift` — view reutilizável que recebe `imageName: String`, `stepIndex`/`stepCount` e um `@ViewBuilder` de conteúdo; renderiza foto full-bleed + gradiente + indicador de progresso + slot de conteúdo ancorado embaixo. Faz fallback gracioso (fundo escuro sólido) se a imagem não existir.
+- **Novo:** `Features/Onboarding/OnboardingPhotoBackdrop.swift` — view reutilizável que recebe `imageName: String` e um `@ViewBuilder` de conteúdo; renderiza foto full-bleed + gradiente + slot de conteúdo ancorado embaixo. Faz fallback gracioso (fundo escuro sólido) se a imagem não existir.
+- **Novo:** `Features/Onboarding/OnboardingProgressDots.swift` — indicador de progresso. **Decisão de implementação:** vive como overlay único no `OnboardingFlow` (cobre as 6 telas, com `onDark` adaptando as cores), em vez de dentro do backdrop — evita duplicação e não toca nos steps funcionais.
 - **Refatorar:** `WelcomeStep`, `MicPermissionStep`, `CompletionStep` para usar o `OnboardingPhotoBackdrop`.
 - **Inalterado (estrutura):** `FirstRecordingStep`, `ProcessingStep`, `FirstLaudoStep` — só recebem o indicador de progresso.
 - `OnboardingStepContainer` (hoje em `WelcomeStep.swift`) permanece para as telas funcionais.

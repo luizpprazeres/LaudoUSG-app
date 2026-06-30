@@ -6,71 +6,26 @@ struct CompletionStep: View {
     let celebrationTrigger: Int
     let onFinish: () -> Void
 
-    @State private var phaseTrigger = 0
-
     var body: some View {
         ZStack {
-            ConfettiCanvas(trigger: celebrationTrigger)
-                .allowsHitTesting(false)
-
-            OnboardingStepContainer {
-                Spacer(minLength: Spacing.xl)
-
-                Image(systemName: "checkmark")
-                    .font(.system(size: 48, weight: .bold))
+            OnboardingPhotoBackdrop(imageName: "OnboardingDone") {
+                Text("Foi assim.\nAgora é com você.")
+                    .font(TextStyle.h1)
                     .foregroundStyle(.white)
-                    .frame(width: 108, height: 108)
-                    .background(Circle().fill(BrandColor.primary))
-                    .shadow(color: BrandColor.primary.opacity(0.24), radius: 24, y: 10)
-                    .scaleEffect(phaseTrigger == 0 ? 0.82 : 1)
-                    .animation(.spring(duration: 0.6, bounce: 0.4), value: phaseTrigger)
-                    .symbolEffect(.bounce, value: phaseTrigger)
 
-                PhaseAnimator([0, 1], trigger: phaseTrigger) { phase in
-                    VStack(spacing: Spacing.sm) {
-                        Text("Foi assim.\nAgora é com você.")
-                            .font(TextStyle.h1)
-                            .foregroundStyle(AppSurface.textPrimary)
-                            .multilineTextAlignment(.center)
-                        Text("Pra fazer o próximo laudo, é só tocar no botão verde da tela inicial.")
-                            .font(TextStyle.bodyLarge)
-                            .foregroundStyle(AppSurface.textSecondary)
-                            .multilineTextAlignment(.center)
-                            .lineSpacing(3)
-                    }
-                    .opacity(phase == 0 ? 0 : 1)
-                    .offset(y: phase == 0 ? 14 : 0)
-                } animation: { _ in
-                    .spring(duration: 0.48, bounce: 0.16)
-                }
-
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Dica")
-                        .font(TextStyle.captionMedium)
-                        .foregroundStyle(AppSurface.textMuted)
-                        .textCase(.uppercase)
-                    Text("Você pode trocar categoria, escolher o estilo de escrita e editar qualquer parte do laudo.")
-                        .font(TextStyle.body)
-                        .foregroundStyle(AppSurface.textSecondary)
-                        .lineSpacing(2)
-                }
-                .padding(Spacing.md)
-                .background(AppSurface.card, in: RoundedRectangle(cornerRadius: Radius.xl, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
-                        .stroke(AppSurface.border, lineWidth: 1)
-                )
+                Text("Pra fazer o próximo laudo, é só tocar no botão verde da tela inicial.")
+                    .font(TextStyle.bodyLarge)
+                    .foregroundStyle(.white.opacity(0.9))
+                    .lineSpacing(3)
 
                 if let errorMessage {
                     Text(errorMessage)
                         .font(TextStyle.body)
-                        .foregroundStyle(SemanticColor.errorText)
+                        .foregroundStyle(.white)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(Spacing.sm)
-                        .background(SemanticColor.errorBg, in: RoundedRectangle(cornerRadius: Radius.lg, style: .continuous))
+                        .background(SemanticColor.errorText.opacity(0.85), in: RoundedRectangle(cornerRadius: Radius.lg, style: .continuous))
                 }
-
-                Spacer()
 
                 PrimaryButton(
                     title: "Entrar no app",
@@ -80,10 +35,12 @@ struct CompletionStep: View {
                 ) {
                     onFinish()
                 }
+                .padding(.top, Spacing.xs)
             }
-        }
-        .onAppear {
-            phaseTrigger += 1
+
+            ConfettiCanvas(trigger: celebrationTrigger)
+                .allowsHitTesting(false)
+                .ignoresSafeArea()
         }
     }
 }
