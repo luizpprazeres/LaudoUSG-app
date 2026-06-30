@@ -173,7 +173,7 @@ private struct DayData {
         case .tireoide: return "Tireoide"
         case .morfologico: return "Morfol."
         case .viasUrinarias: return "Vias urin."
-        case .musculoesqueletico, .musculoesqueleticoV2, .musculoesqueleticoRaras: return "Músculo"
+        case .musculoesqueletico, .musculoesqueleticoRaras: return "Músculo"
         case let category?: return category.label
         case nil: return code
         }

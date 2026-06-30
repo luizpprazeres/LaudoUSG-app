@@ -84,7 +84,7 @@ enum PathologyExtractor {
             Pattern(expression: "di[aá]stole\\s+reversa", label: "Diástole reversa"),
             Pattern(expression: "centraliza[cç][aã]o", label: "Centralização fetal")
         ],
-        "MUSCULOESQUELETICO": [
+        "MUSCULOESQUELETICO_V2": [
             Pattern(expression: "rotura", label: "Rotura tendínea"),
             Pattern(expression: "tendinit|tendinop", label: "Tendinopatia"),
             Pattern(expression: "calcifica[cç][aã]o\\s+(?:tend[aã]o|ten)", label: "Tendinite calcificante"),

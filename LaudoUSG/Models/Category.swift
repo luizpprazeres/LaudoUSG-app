@@ -14,8 +14,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
     case obstetrica = "OBSTETRICA"
     case dopplerObstetrico = "DOPPLER_OBSTETRICO"
     case morfologico = "MORFOLOGICO"
-    case musculoesqueletico = "MUSCULOESQUELETICO"
-    case musculoesqueleticoV2 = "MUSCULOESQUELETICO_V2"
+    case musculoesqueletico = "MUSCULOESQUELETICO_V2"
     case musculoesqueleticoRaras = "MUSCULOESQUELETICO_RARAS"
     case escrotal = "ESCROTAL"
     case regiaoInguinal = "REGIAO_INGUINAL"
@@ -50,7 +49,6 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .dopplerObstetrico: return "Doppler Obstétrico"
         case .morfologico: return "Morfológico"
         case .musculoesqueletico: return "Musculoesquelético"
-        case .musculoesqueleticoV2: return "Musculoesquelético v2"
         case .musculoesqueleticoRaras: return "Musculo raras"
         case .escrotal: return "Escrotal"
         case .regiaoInguinal: return "Região Inguinal"
@@ -85,7 +83,6 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .dopplerObstetrico: return "Hemodinâmica fetal"
         case .morfologico: return "Anatomia fetal completa"
         case .musculoesqueletico: return "Articulações e partes moles"
-        case .musculoesqueleticoV2: return "Musculoesquelético v2"
         case .musculoesqueleticoRaras: return "Indicações raras"
         case .escrotal: return "Testículos, epidídimos"
         case .regiaoInguinal: return "Canal inguinal e hérnias"
@@ -114,7 +111,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .obstetrica: return "EC4899"
         case .dopplerObstetrico: return "F97316"
         case .morfologico: return "8B5CF6"
-        case .musculoesqueletico, .musculoesqueleticoV2, .musculoesqueleticoRaras: return "84CC16"
+        case .musculoesqueletico, .musculoesqueleticoRaras: return "84CC16"
         case .escrotal, .regiaoInguinal, .paredeAbdominal, .partesMoles, .prostataTransretal, .prostataSuprapubica: return "10B981"
         case .transfontanela, .ocular: return "6366F1"
         case .dopplerCarotidas, .dopplerVenosoMmii, .dopplerVenosoMmiiMedidas, .dopplerArterialMmii, .dopplerFistulaAv, .dopplerRenal: return "F59E0B"
@@ -132,7 +129,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .mamaria: return "heart.text.square"
         case .pelveFeminina: return "figure.stand"
         case .obstetrica, .dopplerObstetrico, .morfologico: return "figure.and.child.holdinghands"
-        case .musculoesqueletico, .musculoesqueleticoV2, .musculoesqueleticoRaras: return "figure.run"
+        case .musculoesqueletico, .musculoesqueleticoRaras: return "figure.run"
         case .escrotal, .regiaoInguinal, .paredeAbdominal, .partesMoles: return "circle.dashed"
         case .prostataTransretal, .prostataSuprapubica: return "circle.grid.cross"
         case .transfontanela: return "brain.head.profile"
@@ -150,7 +147,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         .dopplerObstetrico,
         .morfologico,
         .viasUrinarias,
-        .musculoesqueleticoV2,
+        .musculoesqueletico,
         .dopplerCarotidas,
         .dopplerVenosoMmii,
         .dopplerArterialMmii,
