@@ -21,6 +21,24 @@ struct OnboardingPhotoBackdrop<Content: View>: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
+            // Fundo full-bleed: foto + gradiente vazam pra fora da safe area.
+            backdrop
+                .ignoresSafeArea()
+
+            // Conteúdo RESPEITA a safe area (não cola no topo/base/laterais) e
+            // ganha margens próprias. Largura limitada pra o texto nunca cortar.
+            VStack(alignment: .leading, spacing: Spacing.md) {
+                content
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, Spacing.lg)
+            .padding(.bottom, Spacing.md)
+        }
+    }
+
+    @ViewBuilder
+    private var backdrop: some View {
+        ZStack {
             if imageExists {
                 Image(imageName)
                     .resizable()
@@ -30,19 +48,11 @@ struct OnboardingPhotoBackdrop<Content: View>: View {
             }
 
             LinearGradient(
-                colors: [.clear, .black.opacity(0.15), .black.opacity(0.88)],
+                colors: [.clear, .black.opacity(0.2), .black.opacity(0.92)],
                 startPoint: .top,
                 endPoint: .bottom
             )
-
-            VStack(alignment: .leading, spacing: Spacing.md) {
-                content
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, Spacing.lg)
-            .padding(.bottom, Spacing.xxl)
         }
-        .ignoresSafeArea()
     }
 }
 
