@@ -7,13 +7,16 @@ struct DeleteAccountView: View {
     @State private var step = 1
     @State private var confirmText = ""
     @State private var isDeleting = false
+    @State private var didDelete = false
     @State private var errorMessage: String?
     @FocusState private var isConfirmFocused: Bool
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.lg) {
-                if step == 1 {
+                if didDelete {
+                    successStep
+                } else if step == 1 {
                     firstStep
                 } else {
                     secondStep
@@ -88,6 +91,32 @@ struct DeleteAccountView: View {
                 step = 1
             }
         }
+    }
+
+    private var successStep: some View {
+        HStack(alignment: .top, spacing: Spacing.md) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 32))
+                .foregroundStyle(SemanticColor.successText)
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                Text("Conta excluída com sucesso")
+                    .font(TextStyle.bodyLargeSemibold)
+                    .foregroundStyle(SemanticColor.successText)
+                Text("Seus dados foram apagados. Você será desconectado.")
+                    .font(TextStyle.body)
+                    .foregroundStyle(SemanticColor.successText)
+            }
+            Spacer()
+        }
+        .padding(Spacing.md)
+        .background(
+            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
+                .fill(SemanticColor.successBg)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
+                .stroke(SemanticColor.successBorder, lineWidth: 1)
+        )
     }
 
     private var destructiveCard: some View {
@@ -184,6 +213,13 @@ struct DeleteAccountView: View {
         Task { @MainActor in
             do {
                 try await AuthService.shared.deleteAccount()
+                // Confirma a exclusão (5.1.1v: o vídeo do review precisa mostrar a
+                // confirmação) antes de deslogar e voltar pra tela de login.
+                Haptics.success()
+                withAnimation { didDelete = true }
+                isDeleting = false
+                isConfirmFocused = false
+                try? await Task.sleep(for: .seconds(1.8))
                 app.signOut()
                 dismiss()
             } catch {

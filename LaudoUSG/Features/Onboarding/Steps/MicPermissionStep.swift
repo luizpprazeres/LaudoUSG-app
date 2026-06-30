@@ -28,7 +28,7 @@ struct MicPermissionStep: View {
                 .padding(.top, Spacing.xs)
             } else {
                 PrimaryButton(
-                    title: "Permitir microfone",
+                    title: "Continuar",
                     icon: "mic.fill",
                     isLoading: isRequesting,
                     isDisabled: isRequesting

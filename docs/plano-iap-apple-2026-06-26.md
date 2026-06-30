@@ -86,12 +86,17 @@ Pode **manter** quem comprou na web E ter IAP, **desde que** as mesmas assinatur
 - [ ] Validar em **TestFlight**: `Product.products(for:)` retorna os 4; compra sandbox gera entitlement; restore funciona.
 - [ ] Build **147** + Archive/Upload + selecionar build + colar resposta no Resolution Center + Submit.
 
-## FASE 3 — Backend robusto (P1, depois de aprovar — não bloqueia a 1ª aprovação)
-- [ ] App Store **Server Notifications v2** + **Server API**: validar transação, persistir
-      `original_transaction_id`/`product_id`/`expires_at`/`environment`/`status`/plano, reconciliar refund/cancel/
-      expiração/upgrade/downgrade/family sharing → `profile.plan` reflete IAP e web.
-- [ ] Tela "Gerenciar assinatura", pending/Ask-to-Buy/billing-retry/grace-period, erros localizados.
-- [ ] Revisar **Privacy nutrition labels** se enviar transaction IDs ao backend.
+## FASE 3 — Backend robusto (P1) — ✅ MAJORITARIAMENTE FEITO (2026-06-26)
+- [x] **Backend já tinha** `apps/api/.../iap/validate-receipt` (app envia JWS → registra `subscriptions` + atualiza
+      `profiles.plan`) e `iap/notifications` (App Store Server Notifications v2: SUBSCRIBED/DID_RENEW→active,
+      EXPIRED/DID_FAIL→expired, REFUND→refunded+downgrade, GRACE_PERIOD_EXPIRED). Persiste `appleOriginalTxId`,
+      `appleLatestTxId`, `productId`, `tier`, `period`, `expiresAt`, `isTrial`, `status`.
+- [x] **`parseProductId` alinhado** aos Product IDs reais do ASC (`com.laudousg.LaudoUSG.<tier>`), normaliza
+      `essential`→`essencial`. (commit `d2de896` em `laudousgmobile-def`)
+- [x] **App chama `validate-receipt`** após a compra e em `Transaction.updates` (best-effort). (commit `f31bb33`)
+- [ ] **Falta:** configurar a **URL do webhook** (App Store Server Notifications) no ASC apontando para
+      `…/api/iap/notifications` (fazer ao subir / via API). Confirmar que a tabela `subscriptions` (migration) existe em prod.
+- [ ] Privacy nutrition labels: revisar (o app passa a enviar transaction JWS ao backend).
 
 ## Riscos-chave (Dex2)
 1. **Conta demo errada** (Pro = esconde IAP; grátis sem visibilidade = reviewer não acha) → maior causa de re-rejeição.
