@@ -244,4 +244,12 @@ struct UserProfile: Equatable {
         let trimmed = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? "?" : String(trimmed.prefix(1)).uppercased()
     }
+
+    /// Primeiro nome para saudação. nil quando só há e-mail (o displayName cai no
+    /// e-mail quando o cadastro não traz nome) — nesse caso a UI usa saudação neutra.
+    var greetingFirstName: String? {
+        let trimmed = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, !trimmed.contains("@") else { return nil }
+        return trimmed.split(separator: " ").first.map(String.init)
+    }
 }

@@ -39,3 +39,6 @@ Pods/
 .idea/
 *.swp
 *.swo
+
+# Visual Companion (brainstorming) — arquivos de trabalho
+.superpowers/

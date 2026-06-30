@@ -45,15 +45,18 @@ struct OnboardingFlow: View {
     @State private var speech = SpeechService()
 
     var body: some View {
-        ZStack(alignment: .topTrailing) {
+        ZStack {
             AppSurface.background.ignoresSafeArea()
 
             currentStep
                 .id(step)
                 .transition(.scale(scale: 0.98).combined(with: .opacity))
                 .animation(.spring(duration: 0.42, bounce: 0.18), value: step)
-
-            skipButton
+        }
+        // Controles de topo (progresso + pular) num safeAreaInset: ficam sempre
+        // abaixo do notch, em qualquer aparelho, sem colar na borda.
+        .safeAreaInset(edge: .top) {
+            topControls
         }
         .interactiveDismissDisabled(true)
         .sensoryFeedback(.success, trigger: completionCelebration)
@@ -69,7 +72,7 @@ struct OnboardingFlow: View {
         switch step {
         case .welcome:
             WelcomeStep(
-                doctorName: app.profile?.displayName ?? "doutor",
+                doctorName: app.profile?.greetingFirstName ?? "",
                 onStart: goToMicPermission
             )
         case .micPermission:
@@ -117,20 +120,43 @@ struct OnboardingFlow: View {
         }
     }
 
+    // Telas com foto full-bleed (fundo escuro) — define o estilo do indicador.
+    private var isPhotoStep: Bool {
+        step == .welcome || step == .micPermission || step == .completion
+    }
+
+    // Faixa de topo: progresso centralizado + botão "Pular" à direita. Vive num
+    // safeAreaInset (no body) pra respeitar o notch em qualquer aparelho.
+    private var topControls: some View {
+        ZStack {
+            OnboardingProgressDots(
+                index: step.rawValue,
+                count: OnboardingFlowStep.allCases.count,
+                onDark: isPhotoStep
+            )
+            .animation(.easeOut(duration: 0.2), value: step)
+
+            HStack {
+                Spacer()
+                skipButton
+            }
+        }
+        .padding(.horizontal, Spacing.md)
+        .padding(.top, Spacing.xs)
+    }
+
     private var skipButton: some View {
         Button {
             completeAndDismiss()
         } label: {
             Text("Pular")
                 .font(TextStyle.bodyMedium)
-                .foregroundStyle(AppSurface.textMuted)
+                .foregroundStyle(isPhotoStep ? Color.white.opacity(0.9) : AppSurface.textMuted)
                 .padding(.horizontal, Spacing.md)
                 .padding(.vertical, Spacing.xs)
                 .background(.ultraThinMaterial, in: Capsule())
         }
         .buttonStyle(PressableButtonStyle())
-        .padding(.top, Spacing.lg)
-        .padding(.trailing, Spacing.lg)
         .disabled(isCompleting)
     }
 
