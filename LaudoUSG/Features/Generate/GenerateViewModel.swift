@@ -26,7 +26,7 @@ struct GenerateShortcut: Identifiable, Hashable {
                 GenerateShortcut(label: "Calcular IG pela biometria", action: .calcularIGporCF),
                 GenerateShortcut(label: "Calcular IG pela DUM", action: .calcularIGporDUM),
                 GenerateShortcut(label: "Calcular percentis", action: .calcularPercentis),
-                GenerateShortcut(label: "BCF presentes", action: .insertText("Feto único, em situação longitudinal e apresentação cefálica, com BCF presentes."))
+                GenerateShortcut(label: "Sem vitalidade", action: .insertText("Gestação sem vitalidade embrionária/fetal. Manter o mesmo modelo do exame obstétrico (diâmetro médio do saco gestacional e CCN). Aplicar substituições padronizadas: (1) na frequência cardíaca, substituir a frase pela seguinte: \"Batimentos cardíacos fetais não visualizados pelo modo B e nem pelo modo Doppler.\"; (2) na CONCLUSÃO, no item da idade gestacional, escrever: \"gestação em torno de X semanas e Y dias, contendo embrião/feto sem vitalidade.\" (usar \"embrião\" ou \"feto\" conforme a idade gestacional ditada)."))
             ]
         case .dopplerObstetrico:
             return [

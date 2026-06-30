@@ -13,6 +13,9 @@ struct GenerateView: View {
     @State private var isNegativeFeedbackExpanded: Bool = false
     @State private var feedbackComment: String = ""
     @Namespace private var tabNamespace
+    @FocusState private var isAchadosFocused: Bool
+    // Espelha a flag do AppShellView pra saber se o tour ainda vai aparecer por cima.
+    @AppStorage("laudousg.hasSeenTour") private var hasSeenTour: Bool = false
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -36,6 +39,25 @@ struct GenerateView: View {
                 }
         }
         .task { vm.prewarmMic() }   // pré-aquece o token Deepgram (início instantâneo)
+    }
+
+    // Só foca (abre teclado) quando a tela de geração está em primeiro plano de
+    // fato: aba Achados ativa e sem os fullScreenCovers de termos/onboarding/tour
+    // por cima (apresentados no AppShellView).
+    private var canFocusAchados: Bool {
+        vm.activeTab == .achados
+            && !app.needsLegalAcceptance
+            && !app.needsOnboarding
+            && hasSeenTour
+    }
+
+    private func focusAchadosIfReady() {
+        guard canFocusAchados else { return }
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            // Revalida: o estado pode ter mudado durante o atraso.
+            if canFocusAchados { isAchadosFocused = true }
+        }
     }
 
     private var content: some View {
@@ -74,6 +96,17 @@ struct GenerateView: View {
                         }
                         .padding(.horizontal, Spacing.md)
                         .padding(.top, Spacing.sm)
+                    }
+                    // Abre já com o teclado ativo: campo focado assim que a aba
+                    // Achados aparece (e a cada retorno a ela), pra a tela não ficar
+                    // subindo/descendo com o teclado entrando e saindo. O atraso curto
+                    // é necessário porque o foco no onAppear "cru" é engolido na
+                    // primeira montagem (layout ainda não pronto). Só foca quando os
+                    // gates (termos/onboarding/tour) já saíram da frente — senão o
+                    // teclado subiria atrás dessas telas.
+                    .onAppear { focusAchadosIfReady() }
+                    .onChange(of: canFocusAchados) { _, ready in
+                        if ready { focusAchadosIfReady() }
                     }
                 } else {
                     laudoEditor
@@ -333,6 +366,10 @@ struct GenerateView: View {
         Button {
             Haptics.tap()
             vm.runShortcut(shortcut)
+            // Atalhos que inserem texto mantêm o teclado aberto (não derruba o foco).
+            if case .insertText = shortcut.action {
+                isAchadosFocused = true
+            }
         } label: {
             Text(shortcut.label)
                 .font(TextStyle.body)
@@ -352,6 +389,7 @@ struct GenerateView: View {
                 .foregroundStyle(AppSurface.textPrimary)
                 .frame(minHeight: 300)
                 .padding(.horizontal, -4)
+                .focused($isAchadosFocused)
 
             if vm.inputText.isEmpty {
                 Text("Dite ou digite os achados.")

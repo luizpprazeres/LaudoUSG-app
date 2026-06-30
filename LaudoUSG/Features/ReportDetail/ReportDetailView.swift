@@ -65,6 +65,7 @@ struct ReportDetailView: View {
     @State private var vm: ReportDetailViewModel
     @State private var selectedTab: Tab = .laudo
     @State private var didCopy: Bool = false
+    @State private var didCopyRaw: Bool = false
     @StateObject private var editorBridge = MarkdownEditorBridge()
     @State private var isSalaSheetPresented: Bool = false
     // Default visualização (highlight roxo nas linhas com ____) — espelha
@@ -77,13 +78,12 @@ struct ReportDetailView: View {
     }
 
     enum Tab: String, CaseIterable, Identifiable {
-        case laudo, entendido, rag, meta
+        case laudo, entendido, meta
         var id: String { rawValue }
         var label: String {
             switch self {
             case .laudo: return "Laudo"
             case .entendido: return "Entendido"
-            case .rag: return "RAG"
             case .meta: return "Meta"
             }
         }
@@ -150,7 +150,6 @@ struct ReportDetailView: View {
                 VStack(alignment: .leading, spacing: Spacing.md) {
                     switch selectedTab {
                     case .entendido: entendidoTab
-                    case .rag: ragTab
                     case .meta: metaTab
                     default: EmptyView()
                     }
@@ -360,17 +359,59 @@ struct ReportDetailView: View {
     }
 
     private var entendidoTab: some View {
-        infoCard(
-            title: "Entrada bruta",
-            body: vm.report?.rawInput ?? "—"
+        let raw = vm.report?.rawInput ?? ""
+        return VStack(alignment: .leading, spacing: Spacing.xs) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Entrada bruta")
+                    .font(TextStyle.bodyLargeSemibold)
+                    .foregroundStyle(AppSurface.textPrimary)
+                Spacer()
+                Button {
+                    performCopyRaw(raw)
+                } label: {
+                    HStack(spacing: Spacing.xxs) {
+                        Image(systemName: didCopyRaw ? "checkmark" : "doc.on.doc")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text(didCopyRaw ? "Copiado" : "Copiar")
+                            .font(TextStyle.captionMedium)
+                    }
+                    .foregroundStyle(AppSurface.textSecondary)
+                    .padding(.horizontal, Spacing.sm)
+                    .frame(minHeight: 30)
+                    .background(Capsule().fill(AppSurface.background))
+                    .overlay(Capsule().stroke(AppSurface.border, lineWidth: 1))
+                }
+                .buttonStyle(PressableButtonStyle())
+                .disabled(raw.isEmpty)
+                .accessibilityLabel("Copiar entrada bruta")
+            }
+            Text(raw.isEmpty ? "—" : raw)
+                .font(TextStyle.body)
+                .foregroundStyle(AppSurface.textSecondary)
+                .textSelection(.enabled)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Spacing.md)
+        .background(
+            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
+                .fill(AppSurface.card)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
+                .stroke(AppSurface.border, lineWidth: 1)
         )
     }
 
-    private var ragTab: some View {
-        infoCard(
-            title: "Conhecimento usado",
-            body: "Blocos RAG aplicados estão disponíveis no laudo. Próximos sprints expõem lista detalhada."
-        )
+    private func performCopyRaw(_ text: String) {
+        #if canImport(UIKit)
+        UIPasteboard.general.string = text
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        #endif
+        withAnimation(.easeOut(duration: 0.18)) { didCopyRaw = true }
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            withAnimation(.easeOut(duration: 0.18)) { didCopyRaw = false }
+        }
     }
 
     private var metaTab: some View {
@@ -403,27 +444,6 @@ struct ReportDetailView: View {
                 .foregroundStyle(AppSurface.textPrimary)
                 .multilineTextAlignment(.trailing)
         }
-    }
-
-    private func infoCard(title: String, body: String) -> some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text(title)
-                .font(TextStyle.bodyLargeSemibold)
-                .foregroundStyle(AppSurface.textPrimary)
-            Text(body)
-                .font(TextStyle.body)
-                .foregroundStyle(AppSurface.textSecondary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Spacing.md)
-        .background(
-            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
-                .fill(AppSurface.card)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
-                .stroke(AppSurface.border, lineWidth: 1)
-        )
     }
 
     private func formatted(_ date: Date?) -> String {
