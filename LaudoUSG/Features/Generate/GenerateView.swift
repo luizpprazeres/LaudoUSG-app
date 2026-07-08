@@ -161,7 +161,9 @@ struct GenerateView: View {
                         vm.isPaywallPresented = true
                     }
                 } : nil,
-                reportText: vm.displayedOutput.isEmpty ? nil : vm.displayedOutput
+                reportText: vm.displayedOutput.isEmpty ? nil : vm.displayedOutput,
+                venousScheme: vm.latestVenousScheme,
+                reportId: vm.lastReportId
             )
         }
         .sheet(isPresented: Binding(get: { vm.isConsultorSheetPresented }, set: { vm.isConsultorSheetPresented = $0 })) {

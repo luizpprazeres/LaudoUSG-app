@@ -95,6 +95,7 @@ final class GenerateViewModel {
     var displayedOutput: String = ""
     var currentStatusMessage: String = ""
     var generationFindings: [String] = []
+    var latestVenousScheme: VenousSchemePayload?
     var liveTranscript: String = ""
 
     var phase: GenerationPhase = .idle
@@ -335,6 +336,7 @@ final class GenerateViewModel {
         displayedOutput = ""
         editedLaudoText = ""
         generationFindings = []
+        latestVenousScheme = nil
         saveStatus = .idle
         feedbackState = .idle
         lastError = nil
@@ -476,6 +478,10 @@ final class GenerateViewModel {
             phase = .done(reportId: payload.reportId)
             activeTab = .laudo
             stopStreamingFeedback()
+        case .scheme(let payload):
+            if payload.examType == "VENOSO_MMII" {
+                latestVenousScheme = payload
+            }
         case .blocked(let payload):
             lastError = payload.reason
             phase = .error(message: payload.reason)
@@ -497,6 +503,7 @@ final class GenerateViewModel {
         editedLaudoText = ""
         liveTranscript = ""
         generationFindings = []
+        latestVenousScheme = nil
         phase = .idle
         activeTab = .achados
         saveStatus = .idle

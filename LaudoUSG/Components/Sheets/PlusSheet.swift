@@ -9,6 +9,8 @@ struct PlusSheet: View {
     /// Texto do laudo (quando disponível) — usado por features como o esquema mamário
     /// que importam achados via parser.
     var reportText: String? = nil
+    var venousScheme: VenousSchemePayload? = nil
+    var reportId: String? = nil
 
     @State private var path: [PlusDestination] = []
     @State private var phrases: [UserPhrase] = []
@@ -144,6 +146,8 @@ struct PlusSheet: View {
                 case .venousSchema:
                     VenousSchemaSheet(
                         reportText: reportText,
+                        scheme: venousScheme,
+                        reportId: reportId,
                         onInsert: { insert($0) },
                         onDismiss: onDismiss
                     )

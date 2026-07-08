@@ -79,11 +79,26 @@ enum SSEStreamer {
         }
 
         do {
-            let event = try JSONDecoder.api.decode(Event.self, from: data)
+            let event = try decodeEvent(Event.self, from: data)
             continuation.yield(event)
         } catch {
             print("SSEStreamer: falha ao decodificar frame SSE: \(error)")
         }
+    }
+
+    private static func decodeEvent<Event: Decodable & Sendable>(
+        _ eventType: Event.Type,
+        from data: Data
+    ) throws -> Event {
+        if eventType == GenerateSSEEvent.self, isSchemeEvent(data) {
+            return try JSONDecoder().decode(GenerateSSEEvent.self, from: data) as! Event
+        }
+        return try JSONDecoder.api.decode(eventType, from: data)
+    }
+
+    private static func isSchemeEvent(_ data: Data) -> Bool {
+        guard let probe = try? JSONDecoder().decode(SSETypeProbe.self, from: data) else { return false }
+        return probe.type == "scheme"
     }
 
     private static func dataValue(from line: String) -> String? {
@@ -94,5 +109,9 @@ enum SSEStreamer {
             value.removeFirst()
         }
         return value
+    }
+
+    private struct SSETypeProbe: Decodable {
+        let type: String
     }
 }

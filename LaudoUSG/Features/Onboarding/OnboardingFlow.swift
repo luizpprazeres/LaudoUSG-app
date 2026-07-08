@@ -306,6 +306,8 @@ struct OnboardingFlow: View {
             streamedLaudo += payload.delta
         case .sanity:
             generationStages.insert(.rules)
+        case .scheme:
+            break
         case .done(let payload):
             generationStages = Set(OnboardingGenerationStage.allCases)
             streamedLaudo = payload.finalText

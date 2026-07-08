@@ -12,6 +12,7 @@ enum GenerateSSEEvent: Sendable {
     case token(TokenPayload)
     case sanity(SanityPayload)
     case done(DonePayload)
+    case scheme(VenousSchemePayload)
     case blocked(BlockedPayload)
     case error(ErrorPayload)
 }
@@ -48,6 +49,8 @@ extension GenerateSSEEvent: Decodable {
             self = .sanity(try SanityPayload(from: decoder))
         case "done":
             self = .done(try DonePayload(from: decoder))
+        case "scheme":
+            self = .scheme(try VenousSchemePayload(from: decoder))
         case "blocked":
             self = .blocked(try BlockedPayload(from: decoder))
         case "error":
