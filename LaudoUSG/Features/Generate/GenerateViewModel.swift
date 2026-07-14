@@ -123,6 +123,8 @@ final class GenerateViewModel {
     // linguagem natural com diff-guard no servidor.
     var isAdjustSheetPresented = false
     var adjustInstruction = ""
+    var adjustTarget: AdjustTarget = .body
+    var adjustRecording = false
     var adjustInProgress = false
     var adjustReason: String?
     var adjustPendingText: String?
@@ -436,10 +438,44 @@ final class GenerateViewModel {
 
     func presentAdjust() {
         adjustInstruction = ""
+        adjustTarget = .body
+        adjustRecording = false
         adjustReason = nil
         adjustPendingText = nil
         adjustError = nil
         isAdjustSheetPresented = true
+    }
+
+    /// Voz no ajuste: liga/desliga a gravação (reusa o Deepgram). Enquanto grava, a
+    /// view copia deepgram.liveTranscript pra adjustInstruction (onChange).
+    func toggleAdjustRecording() {
+        if adjustRecording {
+            adjustRecording = false
+            Task { @MainActor in
+                await deepgram.stop()
+                let transcript = deepgram.liveTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !transcript.isEmpty { adjustInstruction = transcript }
+            }
+        } else {
+            adjustError = nil
+            adjustInstruction = ""
+            liveTranscript = ""
+            adjustRecording = true
+            Task { @MainActor in
+                await deepgram.start()
+                if !deepgram.isStreaming {
+                    adjustRecording = false
+                    adjustError = deepgram.errorMessage ?? "Não foi possível iniciar a gravação."
+                }
+            }
+        }
+    }
+
+    /// Chamado ao fechar o sheet: garante que a gravação pare.
+    func stopAdjustRecordingIfNeeded() {
+        guard adjustRecording else { return }
+        adjustRecording = false
+        Task { @MainActor in await deepgram.stop() }
     }
 
     func submitAdjust() async {
@@ -451,7 +487,7 @@ final class GenerateViewModel {
         adjustPendingText = nil
         defer { adjustInProgress = false }
         do {
-            let result = try await ReportService.editReport(reportId: reportId, instruction: instruction)
+            let result = try await ReportService.editReport(reportId: reportId, instruction: instruction, target: adjustTarget.rawValue)
             if result.accepted {
                 applyAdjustedText(result.editedText)
                 isAdjustSheetPresented = false

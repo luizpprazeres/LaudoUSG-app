@@ -22,7 +22,33 @@ struct AdjustLaudoSheet: View {
                 TextField("O que ajustar?", text: $vm.adjustInstruction, axis: .vertical)
                     .lineLimit(3...6)
                     .textFieldStyle(.roundedBorder)
+                    .disabled(vm.adjustInProgress || vm.adjustRecording)
+
+                Button {
+                    vm.toggleAdjustRecording()
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: vm.adjustRecording ? "stop.circle.fill" : "mic.fill")
+                        Text(vm.adjustRecording ? "Gravando… toque para parar" : "Ditar o ajuste")
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .tint(vm.adjustRecording ? .red : .accentColor)
+                .disabled(vm.adjustInProgress)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Onde aplicar")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Picker("Onde aplicar", selection: $vm.adjustTarget) {
+                        ForEach(AdjustTarget.allCases) { target in
+                            Text(target.label).tag(target)
+                        }
+                    }
+                    .pickerStyle(.segmented)
                     .disabled(vm.adjustInProgress)
+                }
 
                 if let reason = vm.adjustReason {
                     VStack(alignment: .leading, spacing: 8) {
@@ -71,10 +97,18 @@ struct AdjustLaudoSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Fechar") { vm.isAdjustSheetPresented = false }
+                    Button("Fechar") {
+                        vm.stopAdjustRecordingIfNeeded()
+                        vm.isAdjustSheetPresented = false
+                    }
                 }
             }
         }
         .presentationDetents([.medium, .large])
+        .onChange(of: vm.deepgram.liveTranscript) { _, newValue in
+            if vm.adjustRecording {
+                vm.adjustInstruction = newValue
+            }
+        }
     }
 }
