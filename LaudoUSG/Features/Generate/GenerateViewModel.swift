@@ -119,6 +119,24 @@ final class GenerateViewModel {
     var isPaywallPresented = false
     var isMiomaEditorPresented = false
 
+    // Ajustar laudo (edição incremental via /api/edit) — ajuste pontual por
+    // linguagem natural com diff-guard no servidor.
+    var isAdjustSheetPresented = false
+    var adjustInstruction = ""
+    var adjustInProgress = false
+    var adjustReason: String?
+    var adjustPendingText: String?
+    var adjustError: String?
+
+    var canAdjustLaudo: Bool {
+        if case .done = phase {
+            return lastReportId != nil
+                && !displayedOutput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                && !phase.isBusy
+        }
+        return false
+    }
+
     var canOpenConsultor: Bool {
         if case .done = phase {
             return !displayedOutput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -412,6 +430,51 @@ final class GenerateViewModel {
         } catch {
             saveStatus = .failed(error.localizedDescription)
         }
+    }
+
+    // MARK: - Ajustar laudo (edição incremental)
+
+    func presentAdjust() {
+        adjustInstruction = ""
+        adjustReason = nil
+        adjustPendingText = nil
+        adjustError = nil
+        isAdjustSheetPresented = true
+    }
+
+    func submitAdjust() async {
+        let instruction = adjustInstruction.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let reportId = lastReportId, instruction.count >= 2 else { return }
+        adjustInProgress = true
+        adjustError = nil
+        adjustReason = nil
+        adjustPendingText = nil
+        defer { adjustInProgress = false }
+        do {
+            let result = try await ReportService.editReport(reportId: reportId, instruction: instruction)
+            if result.accepted {
+                applyAdjustedText(result.editedText)
+                isAdjustSheetPresented = false
+            } else {
+                adjustReason = result.reason ?? "A edição alterou mais do que o pedido."
+                adjustPendingText = result.editedText
+            }
+        } catch {
+            adjustError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+        }
+    }
+
+    func applyAdjustOverride() {
+        if let text = adjustPendingText {
+            applyAdjustedText(text)
+        }
+        isAdjustSheetPresented = false
+    }
+
+    /// Aplica o texto editado na UI. O /api/edit já persistiu no servidor; o
+    /// laudoTextChanged reaplica o autosave (idempotente, mesmo conteúdo).
+    private func applyAdjustedText(_ text: String) {
+        laudoTextChanged(text)
     }
 
     func submitFeedback(verdict: String, comment: String?) async {

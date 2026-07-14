@@ -233,6 +233,9 @@ struct GenerateView: View {
         .sheet(isPresented: Binding(get: { vm.isSalaSheetPresented }, set: { vm.isSalaSheetPresented = $0 })) {
             SalaPairingSheet(onDismiss: { vm.isSalaSheetPresented = false })
         }
+        .sheet(isPresented: Binding(get: { vm.isAdjustSheetPresented }, set: { vm.isAdjustSheetPresented = $0 })) {
+            AdjustLaudoSheet(vm: vm)
+        }
         .overlay {
             if vm.isRecordingOverlayPresented {
                 RecordingOverlay(
@@ -753,6 +756,27 @@ struct GenerateView: View {
                     .overlay(Capsule().stroke(AppSurface.border, lineWidth: 1))
                 }
                 .buttonStyle(PressableButtonStyle())
+
+                if vm.canAdjustLaudo {
+                    Button {
+                        Haptics.tap()
+                        vm.presentAdjust()
+                    } label: {
+                        HStack(spacing: Spacing.xxs) {
+                            Image(systemName: "wand.and.stars")
+                                .font(.system(size: 12, weight: .semibold))
+                            Text("Ajustar laudo")
+                                .font(TextStyle.captionMedium)
+                        }
+                        .foregroundStyle(AppSurface.textSecondary)
+                        .padding(.horizontal, Spacing.sm)
+                        .frame(minHeight: 30)
+                        .background(Capsule().fill(AppSurface.card))
+                        .overlay(Capsule().stroke(AppSurface.border, lineWidth: 1))
+                    }
+                    .buttonStyle(PressableButtonStyle())
+                    .accessibilityLabel("Ajustar laudo por linguagem natural")
+                }
 
                 Button {
                     Haptics.tap()
