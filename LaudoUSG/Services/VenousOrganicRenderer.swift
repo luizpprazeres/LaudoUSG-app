@@ -11,11 +11,15 @@ enum VenousOrganicRenderer {
         case outputFailed
     }
 
-    static func renderImage(map: MapaVenoso) throws -> UIImage {
-        guard let base = UIImage(named: "VenosoLineartVeias")?.cgImage else {
+    static func renderImage(
+        map: MapaVenoso,
+        assetVersion: String = VenousSchemeAsset.anteriorVersion
+    ) throws -> UIImage {
+        let isFourView = assetVersion == VenousSchemeAsset.fourViewVersion
+        let assetName = isFourView ? "Venous4View" : "VenosoLineartVeias"
+        guard let base = UIImage(named: assetName)?.cgImage else {
             throw RenderError.missingBaseImage
         }
-        let coords = try loadCoords()
         let width = base.width
         let height = base.height
         let bytesPerPixel = 4
@@ -37,8 +41,15 @@ enum VenousOrganicRenderer {
         }
 
         context.draw(base, in: CGRect(x: 0, y: 0, width: width, height: height))
-        recolor(&pixels, width: width, height: height, map: map, coords: coords)
-        drawCallouts(in: context, map: map, coords: coords)
+        if isFourView {
+            let coords = try loadCoords4()
+            recolor4(&pixels, width: width, height: height, map: map, coords: coords)
+            drawAnnotations4(in: context, map: map, coords: coords)
+        } else {
+            let coords = try loadCoords()
+            recolor(&pixels, width: width, height: height, map: map, coords: coords)
+            drawCallouts(in: context, map: map, coords: coords)
+        }
 
         guard let out = context.makeImage() else {
             throw RenderError.outputFailed
@@ -46,8 +57,11 @@ enum VenousOrganicRenderer {
         return UIImage(cgImage: out, scale: 1, orientation: .up)
     }
 
-    static func renderPNG(map: MapaVenoso) throws -> Data {
-        guard let png = try renderImage(map: map).pngData() else {
+    static func renderPNG(
+        map: MapaVenoso,
+        assetVersion: String = VenousSchemeAsset.anteriorVersion
+    ) throws -> Data {
+        guard let png = try renderImage(map: map, assetVersion: assetVersion).pngData() else {
             throw RenderError.outputFailed
         }
         return png
@@ -63,6 +77,18 @@ enum VenousOrganicRenderer {
         }
         let data = try Data(contentsOf: url)
         return try JSONDecoder().decode(VenousCoords.self, from: data)
+    }
+
+    private static func loadCoords4() throws -> VenousCoords4 {
+        guard let url = Bundle.main.url(
+            forResource: "coords-4view",
+            withExtension: "json",
+            subdirectory: "Venous"
+        ) ?? Bundle.main.url(forResource: "coords-4view", withExtension: "json") else {
+            throw RenderError.missingCoords
+        }
+        let data = try Data(contentsOf: url)
+        return try JSONDecoder().decode(VenousCoords4.self, from: data)
     }
 
     private static func recolor(
@@ -90,6 +116,101 @@ enum VenousOrganicRenderer {
                     rgb: rgb
                 )
             }
+        }
+    }
+
+    private static func recolor4(
+        _ pixels: inout [UInt8],
+        width: Int,
+        height: Int,
+        map: MapaVenoso,
+        coords: VenousCoords4
+    ) {
+        let lateralSides = lateralVaricosidadeSides(map: map)
+        for (cellKey, segments) in coords.vistas {
+            guard let rawSide = cellKey.split(separator: "__", maxSplits: 1).first,
+                  let side = VenousSide(rawValue: String(rawSide)) else {
+                continue
+            }
+            let states = map.side(side).segmentos
+            for (segment, points) in segments where points.count >= 2 {
+                let color: (UInt8, UInt8, UInt8)?
+                if segment == "tributaria_lateral" {
+                    color = lateralSides.contains(side) ? rgb(for: .varicosidade) : nil
+                } else if let state = states[segment] {
+                    color = rgb(for: state)
+                } else {
+                    color = nil
+                }
+                guard let color else { continue }
+                recolorSegment(
+                    &pixels,
+                    width: width,
+                    height: height,
+                    points: points,
+                    radius: tubeRadius(for: segment, base: 13),
+                    rgb: color
+                )
+            }
+        }
+    }
+
+    private static func lateralVaricosidadeSides(map: MapaVenoso) -> Set<VenousSide> {
+        Set(map.lesoes.compactMap { lesion in
+            guard lesion.estado == .varicosidade else { return nil }
+            let text = "\(lesion.label) \(lesion.sub ?? "")".lowercased()
+            return text.contains("lateral") ? lesion.lado : nil
+        })
+    }
+
+    private static func drawAnnotations4(in context: CGContext, map: MapaVenoso, coords: VenousCoords4) {
+        let layout = VenousAnnotations.build(map: map, coords: coords)
+        guard !layout.labels.isEmpty else { return }
+
+        let color = UIColor(red: 122 / 255, green: 31 / 255, blue: 43 / 255, alpha: 1)
+        let font = UIFont(name: "Caveat-Regular", size: 64)
+            ?? UIFont(name: "Caveat", size: 64)
+            ?? UIFont.systemFont(ofSize: 64, weight: .bold)
+
+        context.saveGState()
+        defer { context.restoreGState() }
+        // Flip para y-down (origem no topo, como uma UIView): faz o texto UIKit
+        // (NSString.draw) sair EM PÉ neste CGContext bitmap (que é y-up por padrão)
+        // e permite usar as coords do layout diretamente (mesmo lugar dos traços).
+        context.translateBy(x: 0, y: CGFloat(layout.height))
+        context.scaleBy(x: 1, y: -1)
+        context.setStrokeColor(color.cgColor)
+        context.setFillColor(color.cgColor)
+        context.setLineWidth(3)
+        context.setLineCap(.round)
+        context.setAllowsAntialiasing(true)
+        context.setShouldAntialias(true)
+
+        UIGraphicsPushContext(context)
+        defer { UIGraphicsPopContext() }
+
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: color,
+        ]
+
+        for label in layout.labels {
+            let anchor = CGPoint(x: label.anchor.x, y: label.anchor.y)
+            let textPosition = CGPoint(x: label.textPos.x, y: label.textPos.y)
+            context.beginPath()
+            context.move(to: anchor)
+            context.addLine(to: textPosition)
+            context.strokePath()
+            context.fillEllipse(in: CGRect(x: anchor.x - 6, y: anchor.y - 6, width: 12, height: 12))
+
+            let textWidth = (label.texto as NSString).size(withAttributes: attributes).width
+            let drawX = label.side == .left ? textPosition.x - textWidth : textPosition.x
+            // NSString.draw(at:) usa o canto superior-esquerdo; centra na linha-guia.
+            let topY = textPosition.y - font.lineHeight / 2
+            (label.texto as NSString).draw(
+                at: CGPoint(x: drawX, y: topY),
+                withAttributes: attributes
+            )
         }
     }
 
@@ -128,8 +249,8 @@ enum VenousOrganicRenderer {
         Int(b) - Int(r) > 14 && b > 108 && r < 205
     }
 
-    private static func tubeRadius(for segment: String) -> Double {
-        segment == "jsf" || segment == "jsp" ? 12 : 17
+    private static func tubeRadius(for segment: String, base: Double = 17) -> Double {
+        segment == "jsf" || segment == "jsp" ? max(10, base - 4) : base
     }
 
     private static func rgb(for state: EstadoSegmento) -> (UInt8, UInt8, UInt8)? {

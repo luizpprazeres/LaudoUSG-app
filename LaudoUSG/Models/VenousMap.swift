@@ -1,7 +1,12 @@
 import Foundation
 
 enum VenousSchemeAsset {
-    static let currentVersion = "venoso-anterior-1"
+    static let anteriorVersion = "venoso-anterior-1"
+    static let fourViewVersion = "venous-4view-1"
+
+    static func isSupported(_ version: String) -> Bool {
+        version == anteriorVersion || version == fourViewVersion
+    }
 }
 
 enum VenousSide: String, Codable, Sendable, CaseIterable, Hashable {
@@ -50,16 +55,47 @@ struct MapaVenoso: Codable, Sendable, Hashable {
     var lesoes: [VenousMapLesion]
     var perfurantes: [VenousMapPerforator]
     var tvpPresente: Bool
+    var anotacoes: [VenousAnnotation]? = nil
 
     private enum CodingKeys: String, CodingKey {
         case lados
         case lesoes
         case perfurantes
         case tvpPresente = "tvp_presente"
+        case anotacoes
     }
 
     func side(_ side: VenousSide) -> VenousMapSide {
         side == .direito ? lados.direito : lados.esquerdo
+    }
+}
+
+enum VenousAnnotationType: String, Codable, Sendable, Hashable {
+    case calibre
+    case perfurante
+    case refluxo
+}
+
+enum VenousAnnotationTopography: String, Codable, Sendable, Hashable {
+    case coxa
+    case joelho
+    case pernaMedial = "perna_medial"
+    case panturrilha
+}
+
+struct VenousAnnotation: Codable, Sendable, Hashable {
+    let lado: VenousSide
+    let tipo: VenousAnnotationType
+    let texto: String
+    let segmento: String?
+    let topografia: VenousAnnotationTopography?
+
+    private enum CodingKeys: String, CodingKey {
+        case lado
+        case tipo
+        case texto
+        case segmento
+        case topografia
     }
 }
 
@@ -98,6 +134,11 @@ struct VenousPoint: Decodable, Sendable, Hashable {
     let x: Double
     let y: Double
 
+    init(x: Double, y: Double) {
+        self.x = x
+        self.y = y
+    }
+
     init(from decoder: Decoder) throws {
         var container = try decoder.unkeyedContainer()
         x = try container.decode(Double.self)
@@ -117,4 +158,10 @@ struct VenousCoords: Decodable, Sendable, Hashable {
         case .esquerdo: return esquerdo[segment]
         }
     }
+}
+
+struct VenousCoords4: Decodable, Sendable, Hashable {
+    let width: Int
+    let height: Int
+    let vistas: [String: [String: [VenousPoint]]]
 }

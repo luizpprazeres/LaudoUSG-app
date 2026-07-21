@@ -178,8 +178,8 @@ struct VenousSchemaSheet: View {
 
     private func schemeSummary(_ scheme: VenousSchemePayload) -> some View {
         HStack(spacing: Spacing.sm) {
-            Image(systemName: scheme.assetVersion == VenousSchemeAsset.currentVersion ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                .foregroundStyle(scheme.assetVersion == VenousSchemeAsset.currentVersion ? SemanticColor.successText : SemanticColor.warningText)
+            Image(systemName: VenousSchemeAsset.isSupported(scheme.assetVersion) ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                .foregroundStyle(VenousSchemeAsset.isSupported(scheme.assetVersion) ? SemanticColor.successText : SemanticColor.warningText)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Mapa estruturado recebido")
                     .font(TextStyle.captionMedium)
@@ -247,7 +247,10 @@ struct VenousSchemaSheet: View {
             return
         }
         do {
-            renderedImage = try VenousOrganicRenderer.renderImage(map: map)
+            renderedImage = try VenousOrganicRenderer.renderImage(
+                map: map,
+                assetVersion: scheme?.assetVersion ?? VenousSchemeAsset.anteriorVersion
+            )
             renderError = nil
         } catch {
             renderedImage = nil
@@ -262,10 +265,16 @@ struct VenousSchemaSheet: View {
         let url: URL? = await Task.detached { @MainActor in
             switch format {
             case .pdf:
-                guard let data = VenousSchemaExporter.renderPDF(map: map) else { return nil }
+                guard let data = VenousSchemaExporter.renderPDF(
+                    map: map,
+                    assetVersion: scheme?.assetVersion ?? VenousSchemeAsset.anteriorVersion
+                ) else { return nil }
                 return Self.writeTemp(data: data, ext: "pdf")
             case .png:
-                guard let data = VenousSchemaExporter.renderPNG(map: map) else { return nil }
+                guard let data = VenousSchemaExporter.renderPNG(
+                    map: map,
+                    assetVersion: scheme?.assetVersion ?? VenousSchemeAsset.anteriorVersion
+                ) else { return nil }
                 return Self.writeTemp(data: data, ext: "png")
             }
         }.value
@@ -280,6 +289,7 @@ struct VenousSchemaSheet: View {
         defer { sendingSala = false }
         let ok = await VenousSchemaExporter.send(
             map: map,
+            assetVersion: scheme?.assetVersion ?? VenousSchemeAsset.anteriorVersion,
             examLabel: "Doppler venoso MMII — cartografia",
             reportId: reportId
         )

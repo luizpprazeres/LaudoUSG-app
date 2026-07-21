@@ -3,12 +3,12 @@ import UIKit
 
 @MainActor
 enum VenousSchemaExporter {
-    static func renderPNG(map: MapaVenoso) -> Data? {
-        try? VenousOrganicRenderer.renderPNG(map: map)
+    static func renderPNG(map: MapaVenoso, assetVersion: String = VenousSchemeAsset.anteriorVersion) -> Data? {
+        try? VenousOrganicRenderer.renderPNG(map: map, assetVersion: assetVersion)
     }
 
-    static func renderPDF(map: MapaVenoso) -> Data? {
-        guard let image = try? VenousOrganicRenderer.renderImage(map: map) else { return nil }
+    static func renderPDF(map: MapaVenoso, assetVersion: String = VenousSchemeAsset.anteriorVersion) -> Data? {
+        guard let image = try? VenousOrganicRenderer.renderImage(map: map, assetVersion: assetVersion) else { return nil }
         let pageW: CGFloat = 595
         let pageH: CGFloat = 842
         let margin: CGFloat = 24
@@ -41,9 +41,14 @@ enum VenousSchemaExporter {
         }
     }
 
-    static func send(map: MapaVenoso, examLabel: String, reportId: String?) async -> Bool {
-        guard let png = renderPNG(map: map) else { return false }
-        let pdf = renderPDF(map: map)
+    static func send(
+        map: MapaVenoso,
+        assetVersion: String = VenousSchemeAsset.anteriorVersion,
+        examLabel: String,
+        reportId: String?
+    ) async -> Bool {
+        guard let png = renderPNG(map: map, assetVersion: assetVersion) else { return false }
+        let pdf = renderPDF(map: map, assetVersion: assetVersion)
         return await SalaSchemaUploader.upload(
             png: png,
             pdf: pdf,
