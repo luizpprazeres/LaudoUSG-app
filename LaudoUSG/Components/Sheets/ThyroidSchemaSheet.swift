@@ -6,11 +6,11 @@ import SwiftUI
 @MainActor
 struct ThyroidSchemaSheet: View {
     var reportText: String? = nil
+    var reportId: String? = nil
     let onInsert: (String) -> Void
     let onDismiss: () -> Void
 
     @State private var findings: [ThyroidFinding] = []
-    @State private var didAutoImport: Bool = false
     @State private var lastImportCount: Int? = nil
     @State private var shareURL: URL? = nil
     @State private var isExporting: Bool = false
@@ -80,16 +80,6 @@ struct ThyroidSchemaSheet: View {
         .background(AppSurface.background.ignoresSafeArea())
         .navigationTitle("Esquema tireoidiano")
         .navigationBarTitleDisplayMode(.inline)
-        .task {
-            guard !didAutoImport, hasReport, let text = reportText else { return }
-            didAutoImport = true
-            let parsed = ThyroidFindingsParser.parse(text)
-            if !parsed.isEmpty {
-                findings = parsed
-                lastImportCount = parsed.count
-                scheduleToastHide()
-            }
-        }
         .sheet(item: Binding(
             get: { shareURL.map(ThyroidShareItem.init) },
             set: { shareURL = $0?.url }
@@ -148,7 +138,7 @@ struct ThyroidSchemaSheet: View {
         let pngURL = ThyroidSchemaExporter.exportPNG(findings: findings)
         let pdfURL = ThyroidSchemaExporter.exportPDF(findings: findings)
         let ok = await SalaSchemaUploader.upload(
-            pngURL: pngURL, pdfURL: pdfURL, examType: "TIREOIDE", examLabel: "Tireoide — esquema", reportId: nil
+            pngURL: pngURL, pdfURL: pdfURL, examType: "TIREOIDE", examLabel: "Tireoide — esquema", reportId: reportId
         )
         if ok { Haptics.success() }
         salaResult = ok ? "Enviado pra Sala ✓" : "Falha ao enviar. Tente de novo."

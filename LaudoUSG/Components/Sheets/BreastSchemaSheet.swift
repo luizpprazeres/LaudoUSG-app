@@ -6,11 +6,11 @@ import SwiftUI
 @MainActor
 struct BreastSchemaSheet: View {
     var reportText: String? = nil
+    var reportId: String? = nil
     let onInsert: (String) -> Void
     let onDismiss: () -> Void
 
     @State private var findings: [BreastFinding] = []
-    @State private var didAutoImport: Bool = false
     @State private var lastImportCount: Int? = nil
     @State private var shareURL: URL? = nil
     @State private var isExporting: Bool = false
@@ -80,17 +80,6 @@ struct BreastSchemaSheet: View {
         .background(AppSurface.background.ignoresSafeArea())
         .navigationTitle("Esquema mamário")
         .navigationBarTitleDisplayMode(.inline)
-        .task {
-            // Auto-import na primeira abertura, se há texto do laudo
-            guard !didAutoImport, hasReport, let text = reportText else { return }
-            didAutoImport = true
-            let parsed = BreastFindingsParser.parse(text)
-            if !parsed.isEmpty {
-                findings = parsed
-                lastImportCount = parsed.count
-                scheduleToastHide()
-            }
-        }
         .sheet(item: Binding(
             get: { shareURL.map(ShareItem.init) },
             set: { shareURL = $0?.url }
@@ -149,7 +138,7 @@ struct BreastSchemaSheet: View {
         let pngURL = BreastSchemaExporter.exportPNG(findings: findings)
         let pdfURL = BreastSchemaExporter.exportPDF(findings: findings)
         let ok = await SalaSchemaUploader.upload(
-            pngURL: pngURL, pdfURL: pdfURL, examType: "MAMA", examLabel: "Mama — esquema", reportId: nil
+            pngURL: pngURL, pdfURL: pdfURL, examType: "MAMA", examLabel: "Mama — esquema", reportId: reportId
         )
         if ok { Haptics.success() }
         salaResult = ok ? "Enviado pra Sala ✓" : "Falha ao enviar. Tente de novo."

@@ -134,12 +134,14 @@ struct PlusSheet: View {
                 case .breastSchema:
                     BreastSchemaSheet(
                         reportText: reportText,
+                        reportId: reportId,
                         onInsert: { insert($0) },
                         onDismiss: onDismiss
                     )
                 case .thyroidSchema:
                     ThyroidSchemaSheet(
                         reportText: reportText,
+                        reportId: reportId,
                         onInsert: { insert($0) },
                         onDismiss: onDismiss
                     )
