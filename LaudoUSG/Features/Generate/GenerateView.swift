@@ -273,6 +273,7 @@ struct GenerateView: View {
 
             Spacer()
 
+            hardModeToggle
             categoryChip
         }
         .padding(.horizontal, Spacing.md)
@@ -305,6 +306,32 @@ struct GenerateView: View {
         }
         .buttonStyle(PressableButtonStyle())
         .accessibilityLabel("Categoria \(vm.category.label). Toque para trocar.")
+    }
+
+    private var hardModeToggle: some View {
+        Button {
+            Haptics.tap()
+            withAnimation(.easeOut(duration: 0.18)) {
+                vm.hardMode.toggle()
+            }
+        } label: {
+            Image(systemName: "brain.head.profile")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(vm.hardMode ? .white : AppSurface.textMuted)
+                .frame(width: 36, height: 36)
+                .background(
+                    Circle().fill(vm.hardMode ? BrandColor.advanced : AppSurface.card)
+                )
+                .overlay(
+                    Circle().stroke(vm.hardMode ? BrandColor.advanced : AppSurface.border, lineWidth: 1)
+                )
+        }
+        .buttonStyle(PressableButtonStyle())
+        .disabled(vm.phase.isBusy)
+        .opacity(vm.phase.isBusy ? 0.55 : 1)
+        .accessibilityLabel("Modo avançado (laudo difícil)")
+        .accessibilityValue(vm.hardMode ? "Ativado" : "Desativado")
+        .accessibilityHint("Alterna o modelo usado na próxima geração")
     }
 
     private var tabSwitcher: some View {
@@ -1016,7 +1043,8 @@ struct GenerateView: View {
                 title: vm.phaseLabel,
                 icon: nil,
                 isLoading: vm.phase.isBusy,
-                isDisabled: !vm.canGenerate
+                isDisabled: !vm.canGenerate,
+                fillColor: vm.hardMode ? BrandColor.advanced : BrandColor.primary
             ) {
                 Haptics.press()
                 vm.generate(writingStyleId: app.defaultWritingStyleId)

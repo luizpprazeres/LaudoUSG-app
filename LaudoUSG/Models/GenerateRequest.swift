@@ -9,6 +9,7 @@ struct GenerateRequest: Codable, Sendable {
     let consolidatedTranscript: String?
     let resumeFromReportId: String?
     let clarifyAnswers: [ClarifyAnswer]?
+    let mode: String?
 
     init(
         rawInput: String,
@@ -16,7 +17,8 @@ struct GenerateRequest: Codable, Sendable {
         writingStyleId: String = GenerateRequest.defaultWritingStyleId,
         consolidatedTranscript: String? = nil,
         resumeFromReportId: String? = nil,
-        clarifyAnswers: [ClarifyAnswer]? = nil
+        clarifyAnswers: [ClarifyAnswer]? = nil,
+        mode: String? = nil
     ) {
         self.rawInput = rawInput
         self.categoryHint = categoryHint
@@ -24,6 +26,7 @@ struct GenerateRequest: Codable, Sendable {
         self.consolidatedTranscript = consolidatedTranscript
         self.resumeFromReportId = resumeFromReportId
         self.clarifyAnswers = clarifyAnswers
+        self.mode = mode
     }
 }
 

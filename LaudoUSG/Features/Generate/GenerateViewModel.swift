@@ -97,6 +97,7 @@ final class GenerateViewModel {
     var generationFindings: [String] = []
     var latestVenousScheme: VenousSchemePayload?
     var liveTranscript: String = ""
+    var hardMode: Bool = false
 
     var phase: GenerationPhase = .idle
     var lastError: String?
@@ -350,7 +351,8 @@ final class GenerateViewModel {
         let req = GenerateRequest(
             rawInput: inputText,
             categoryHint: category,
-            writingStyleId: writingStyleId
+            writingStyleId: writingStyleId,
+            mode: hardMode ? "hard" : "standard"
         )
 
         generateTask?.cancel()

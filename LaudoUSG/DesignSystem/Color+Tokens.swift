@@ -48,6 +48,7 @@ enum BrandColor {
     static let primarySoft = Color(hex: "D1FAE5")
     static let primaryBorder = Color(hex: "A7F3D0")
     static let primaryTint = Color(hex: "ECFDF5")
+    static let advanced = Color(hex: "7C3AED")
 
     static let wordmark = Color(hex: "18533F")
     static let wordmarkAccent = Color(hex: "4A8A6A")

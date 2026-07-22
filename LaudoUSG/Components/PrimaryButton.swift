@@ -5,6 +5,7 @@ struct PrimaryButton: View {
     var icon: String? = nil
     var isLoading: Bool = false
     var isDisabled: Bool = false
+    var fillColor: Color = BrandColor.primary
     let action: () -> Void
     @State private var showsCompletion = false
     @State private var completionTask: Task<Void, Never>?
@@ -47,10 +48,11 @@ struct PrimaryButton: View {
             .foregroundStyle(.white)
             .background(
                 RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
-                    .fill(isDisabled ? BrandColor.primary.opacity(0.5) : BrandColor.primary)
+                    .fill(isDisabled ? fillColor.opacity(0.5) : fillColor)
             )
             .animation(.laudousgSmooth, value: isLoading)
             .animation(.laudousgSmooth, value: showsCompletion)
+            .animation(.easeOut(duration: 0.18), value: fillColor)
         }
         .buttonStyle(PressableButtonStyle(pressedScale: 0.96))
         .disabled(isDisabled || isLoading || showsCompletion)
