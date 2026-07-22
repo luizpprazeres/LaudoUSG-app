@@ -185,6 +185,15 @@ struct GenerateView: View {
                 )
             }
         }
+        .sheet(isPresented: Binding(get: { vm.isVenousSchemaPresented }, set: { vm.isVenousSchemaPresented = $0 })) {
+            VenousSchemaSheet(
+                reportText: vm.displayedOutput.isEmpty ? nil : vm.displayedOutput,
+                scheme: vm.latestVenousScheme,
+                reportId: vm.lastReportId,
+                onInsert: { vm.insertSnippet($0) },
+                onDismiss: { vm.isVenousSchemaPresented = false }
+            )
+        }
         .sheet(isPresented: Binding(get: { vm.isPaywallPresented }, set: { vm.isPaywallPresented = $0 })) {
             PaywallSheet(
                 store: app.store,
@@ -232,9 +241,6 @@ struct GenerateView: View {
         }
         .sheet(isPresented: Binding(get: { vm.isSalaSheetPresented }, set: { vm.isSalaSheetPresented = $0 })) {
             SalaPairingSheet(onDismiss: { vm.isSalaSheetPresented = false })
-        }
-        .sheet(isPresented: Binding(get: { vm.isAdjustSheetPresented }, set: { vm.isAdjustSheetPresented = $0 })) {
-            AdjustLaudoSheet(vm: vm)
         }
         .overlay {
             if vm.isRecordingOverlayPresented {
@@ -717,55 +723,20 @@ struct GenerateView: View {
     }
 
     private var laudoToolbar: some View {
-        HStack(spacing: Spacing.xs) {
-            saveIndicator
-            Spacer()
-            if vm.hasLaudoOutput {
-                // Botão toggle: visualização (com highlight roxo) ↔ edição (TextEditor)
-                Button {
-                    Haptics.tap()
-                    isEditingLaudo.toggle()
-                } label: {
-                    HStack(spacing: Spacing.xxs) {
-                        Image(systemName: isEditingLaudo ? "eye.fill" : "pencil")
-                            .font(.system(size: 12, weight: .semibold))
-                        Text(isEditingLaudo ? "Visualizar" : "Editar")
-                            .font(TextStyle.captionMedium)
-                    }
-                    .foregroundStyle(AppSurface.textSecondary)
-                    .padding(.horizontal, Spacing.sm)
-                    .frame(minHeight: 30)
-                    .background(Capsule().fill(AppSurface.card))
-                    .overlay(Capsule().stroke(AppSurface.border, lineWidth: 1))
-                }
-                .buttonStyle(PressableButtonStyle())
-
-                Button {
-                    performCopyLaudo()
-                } label: {
-                    HStack(spacing: Spacing.xxs) {
-                        Image(systemName: didCopyLaudo ? "checkmark" : "doc.on.doc")
-                            .font(.system(size: 12, weight: .semibold))
-                        Text(didCopyLaudo ? "Copiado" : "Copiar")
-                            .font(TextStyle.captionMedium)
-                    }
-                    .foregroundStyle(AppSurface.textSecondary)
-                    .padding(.horizontal, Spacing.sm)
-                    .frame(minHeight: 30)
-                    .background(Capsule().fill(AppSurface.card))
-                    .overlay(Capsule().stroke(AppSurface.border, lineWidth: 1))
-                }
-                .buttonStyle(PressableButtonStyle())
-
-                if vm.canAdjustLaudo {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            HStack(spacing: Spacing.xs) {
+                saveIndicator
+                Spacer()
+                if vm.hasLaudoOutput {
+                    // Botão toggle: visualização (com highlight roxo) ↔ edição (TextEditor)
                     Button {
                         Haptics.tap()
-                        vm.presentAdjust()
+                        isEditingLaudo.toggle()
                     } label: {
                         HStack(spacing: Spacing.xxs) {
-                            Image(systemName: "wand.and.stars")
+                            Image(systemName: isEditingLaudo ? "eye.fill" : "pencil")
                                 .font(.system(size: 12, weight: .semibold))
-                            Text("Ajustar laudo")
+                            Text(isEditingLaudo ? "Visualizar" : "Editar")
                                 .font(TextStyle.captionMedium)
                         }
                         .foregroundStyle(AppSurface.textSecondary)
@@ -775,36 +746,14 @@ struct GenerateView: View {
                         .overlay(Capsule().stroke(AppSurface.border, lineWidth: 1))
                     }
                     .buttonStyle(PressableButtonStyle())
-                    .accessibilityLabel("Ajustar laudo por linguagem natural")
-                }
 
-                Button {
-                    Haptics.tap()
-                    vm.isSalaSheetPresented = true
-                } label: {
-                    HStack(spacing: Spacing.xxs) {
-                        Image(systemName: "paperplane.fill")
-                            .font(.system(size: 12, weight: .semibold))
-                        Text("Enviar p/ Sala")
-                            .font(TextStyle.captionMedium)
-                    }
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, Spacing.sm)
-                    .frame(minHeight: 30)
-                    .background(Capsule().fill(BrandColor.primary))
-                }
-                .buttonStyle(PressableButtonStyle())
-                .accessibilityLabel("Enviar laudo para Sala do Auxiliar")
-
-                if vm.category == .pelveFeminina {
                     Button {
-                        Haptics.tap()
-                        vm.isMiomaEditorPresented = true
+                        performCopyLaudo()
                     } label: {
                         HStack(spacing: Spacing.xxs) {
-                            Image(systemName: "square.on.square")
+                            Image(systemName: didCopyLaudo ? "checkmark" : "doc.on.doc")
                                 .font(.system(size: 12, weight: .semibold))
-                            Text("Esquema de miomas")
+                            Text(didCopyLaudo ? "Copiado" : "Copiar")
                                 .font(TextStyle.captionMedium)
                         }
                         .foregroundStyle(AppSurface.textSecondary)
@@ -814,9 +763,60 @@ struct GenerateView: View {
                         .overlay(Capsule().stroke(AppSurface.border, lineWidth: 1))
                     }
                     .buttonStyle(PressableButtonStyle())
-                    .accessibilityLabel("Abrir esquema visual de miomas")
+
+                    Button {
+                        Haptics.tap()
+                        vm.isSalaSheetPresented = true
+                    } label: {
+                        HStack(spacing: Spacing.xxs) {
+                            Image(systemName: "paperplane.fill")
+                                .font(.system(size: 12, weight: .semibold))
+                            Text("Enviar p/ Sala")
+                                .font(TextStyle.captionMedium)
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, Spacing.sm)
+                        .frame(minHeight: 30)
+                        .background(Capsule().fill(BrandColor.primary))
+                    }
+                    .buttonStyle(PressableButtonStyle())
+                    .accessibilityLabel("Enviar laudo para Sala do Auxiliar")
                 }
             }
+
+            if vm.hasLaudoOutput && hasVisualSchema {
+                Button {
+                    Haptics.tap()
+                    openVisualSchema()
+                } label: {
+                    HStack(spacing: Spacing.xs) {
+                        Image(systemName: "square.on.square")
+                            .font(.system(size: 14, weight: .semibold))
+                        Text("Esquema visual")
+                            .font(TextStyle.captionMedium)
+                    }
+                    .foregroundStyle(AppSurface.textSecondary)
+                    .frame(maxWidth: .infinity, minHeight: 38)
+                    .background(Capsule().fill(AppSurface.card))
+                    .overlay(Capsule().stroke(AppSurface.border, lineWidth: 1))
+                }
+                .buttonStyle(PressableButtonStyle())
+                .accessibilityLabel("Abrir esquema visual")
+            }
+        }
+    }
+
+    private var hasVisualSchema: Bool {
+        vm.category == .pelveFeminina
+            || vm.category == .dopplerVenosoMmii
+            || vm.category == .dopplerVenosoMmiiMedidas
+    }
+
+    private func openVisualSchema() {
+        if vm.category == .pelveFeminina {
+            vm.isMiomaEditorPresented = true
+        } else {
+            vm.isVenousSchemaPresented = true
         }
     }
 

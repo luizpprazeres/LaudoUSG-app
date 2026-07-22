@@ -118,26 +118,7 @@ final class GenerateViewModel {
     var isConsultorSheetPresented = false
     var isPaywallPresented = false
     var isMiomaEditorPresented = false
-
-    // Ajustar laudo (edição incremental via /api/edit) — ajuste pontual por
-    // linguagem natural com diff-guard no servidor.
-    var isAdjustSheetPresented = false
-    var adjustInstruction = ""
-    var adjustTarget: AdjustTarget = .body
-    var adjustRecording = false
-    var adjustInProgress = false
-    var adjustReason: String?
-    var adjustPendingText: String?
-    var adjustError: String?
-
-    var canAdjustLaudo: Bool {
-        if case .done = phase {
-            return lastReportId != nil
-                && !displayedOutput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                && !phase.isBusy
-        }
-        return false
-    }
+    var isVenousSchemaPresented = false
 
     var canOpenConsultor: Bool {
         if case .done = phase {
@@ -432,85 +413,6 @@ final class GenerateViewModel {
         } catch {
             saveStatus = .failed(error.localizedDescription)
         }
-    }
-
-    // MARK: - Ajustar laudo (edição incremental)
-
-    func presentAdjust() {
-        adjustInstruction = ""
-        adjustTarget = .body
-        adjustRecording = false
-        adjustReason = nil
-        adjustPendingText = nil
-        adjustError = nil
-        isAdjustSheetPresented = true
-    }
-
-    /// Voz no ajuste: liga/desliga a gravação (reusa o Deepgram). Enquanto grava, a
-    /// view copia deepgram.liveTranscript pra adjustInstruction (onChange).
-    func toggleAdjustRecording() {
-        if adjustRecording {
-            adjustRecording = false
-            Task { @MainActor in
-                await deepgram.stop()
-                let transcript = deepgram.liveTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !transcript.isEmpty { adjustInstruction = transcript }
-            }
-        } else {
-            adjustError = nil
-            adjustInstruction = ""
-            liveTranscript = ""
-            adjustRecording = true
-            Task { @MainActor in
-                await deepgram.start()
-                if !deepgram.isStreaming {
-                    adjustRecording = false
-                    adjustError = deepgram.errorMessage ?? "Não foi possível iniciar a gravação."
-                }
-            }
-        }
-    }
-
-    /// Chamado ao fechar o sheet: garante que a gravação pare.
-    func stopAdjustRecordingIfNeeded() {
-        guard adjustRecording else { return }
-        adjustRecording = false
-        Task { @MainActor in await deepgram.stop() }
-    }
-
-    func submitAdjust() async {
-        let instruction = adjustInstruction.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let reportId = lastReportId, instruction.count >= 2 else { return }
-        adjustInProgress = true
-        adjustError = nil
-        adjustReason = nil
-        adjustPendingText = nil
-        defer { adjustInProgress = false }
-        do {
-            let result = try await ReportService.editReport(reportId: reportId, instruction: instruction, target: adjustTarget.rawValue)
-            if result.accepted {
-                applyAdjustedText(result.editedText)
-                isAdjustSheetPresented = false
-            } else {
-                adjustReason = result.reason ?? "A edição alterou mais do que o pedido."
-                adjustPendingText = result.editedText
-            }
-        } catch {
-            adjustError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-        }
-    }
-
-    func applyAdjustOverride() {
-        if let text = adjustPendingText {
-            applyAdjustedText(text)
-        }
-        isAdjustSheetPresented = false
-    }
-
-    /// Aplica o texto editado na UI. O /api/edit já persistiu no servidor; o
-    /// laudoTextChanged reaplica o autosave (idempotente, mesmo conteúdo).
-    private func applyAdjustedText(_ text: String) {
-        laudoTextChanged(text)
     }
 
     func submitFeedback(verdict: String, comment: String?) async {
