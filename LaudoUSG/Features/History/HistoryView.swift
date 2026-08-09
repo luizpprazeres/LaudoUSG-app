@@ -91,9 +91,11 @@ final class HistoryViewModel {
         let inResults = Set(reports.compactMap { $0.category })
         let union = inFilter.union(inResults)
         if union.isEmpty {
-            availableCategories = ReportCategory.allCases
+            availableCategories = ReportCategory.selectable
         } else {
-            let extras = ReportCategory.allCases.filter { !union.contains($0) }
+            // `union` vem dos laudos que existem — se já houver um de TESTE, o
+            // chip aparece. `extras` só completa com as categorias oferecidas.
+            let extras = ReportCategory.selectable.filter { !union.contains($0) }
             availableCategories = Array(union).sorted { $0.label < $1.label } + extras
         }
     }
@@ -118,7 +120,7 @@ struct HistoryView: View {
                     get: { vm.filter },
                     set: { vm.filter = $0 }
                 ),
-                availableCategories: vm.availableCategories.isEmpty ? ReportCategory.allCases : vm.availableCategories,
+                availableCategories: vm.availableCategories.isEmpty ? ReportCategory.selectable : vm.availableCategories,
                 onChange: vm.applyFilterAndReload
             )
             .padding(.top, Spacing.xs)

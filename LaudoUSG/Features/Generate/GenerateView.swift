@@ -38,7 +38,18 @@ struct GenerateView: View {
                     }
                 }
         }
-        .task { vm.prewarmMic() }   // pré-aquece o token Deepgram (início instantâneo)
+        // O motor precisa estar escolhido ANTES do prewarm — é ele que decide se o
+        // que se pré-aquece é o token do Deepgram ou o modelo de voz da Apple.
+        .task {
+            vm.transcriptionEngine = app.preferences.transcriptionEngine
+            vm.prewarmMic()
+        }
+        // Trocar a preferência com a tela aberta passa a valer na hora, sem
+        // precisar sair e voltar.
+        .onChange(of: app.preferences.transcriptionEngine) { _, newValue in
+            vm.transcriptionEngine = newValue
+            vm.prewarmMic()
+        }
     }
 
     // Só foca (abre teclado) quando a tela de geração está em primeiro plano de
@@ -246,7 +257,7 @@ struct GenerateView: View {
             if vm.isRecordingOverlayPresented {
                 RecordingOverlay(
                     isPresented: Binding(get: { vm.isRecordingOverlayPresented }, set: { vm.isRecordingOverlayPresented = $0 }),
-                    deepgram: vm.deepgram,
+                    deepgram: vm.activeEngine,
                     onCancel: { vm.cancelRecording() },
                     onStop: { vm.finishRecording() }
                 )

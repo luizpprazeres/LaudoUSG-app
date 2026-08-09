@@ -30,8 +30,19 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
     case dopplerFistulaAv = "DOPPLER_FISTULA_AV"
     case dopplerRenal = "DOPPLER_RENAL"
     case ocular = "OCULAR"
+    /// Sandbox de experimentos. No backend usa writer puro; no app, ativa o
+    /// microfone on-device da Apple (ver `GenerateViewModel.engine(for:)`).
+    /// Só aparece no seletor quando `AppExperiments.showTestCategory` é true.
+    case teste = "TESTE"
 
     var id: String { rawValue }
+
+    /// Categorias que aparecem para o usuário escolher. Filtra as experimentais.
+    static var selectable: [ReportCategory] {
+        allCases.filter { !$0.isExperimental || AppExperiments.showTestCategory }
+    }
+
+    var isExperimental: Bool { self == .teste }
 
     var label: String {
         switch self {
@@ -64,6 +75,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .dopplerFistulaAv: return "Doppler Fístula AV"
         case .dopplerRenal: return "Doppler Renal"
         case .ocular: return "Ocular"
+        case .teste: return "Teste"
         }
     }
 
@@ -98,6 +110,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .dopplerFistulaAv: return "FAV para hemodiálise"
         case .dopplerRenal: return "Artérias renais"
         case .ocular: return "Globo ocular e órbita"
+        case .teste: return "Sandbox — microfone da Apple, no aparelho"
         }
     }
 
@@ -115,6 +128,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .escrotal, .regiaoInguinal, .paredeAbdominal, .partesMoles, .prostataTransretal, .prostataSuprapubica: return "10B981"
         case .transfontanela, .ocular: return "6366F1"
         case .dopplerCarotidas, .dopplerVenosoMmii, .dopplerVenosoMmiiMedidas, .dopplerArterialMmii, .dopplerFistulaAv, .dopplerRenal: return "F59E0B"
+        case .teste: return "64748B"
         }
     }
 
@@ -135,6 +149,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .transfontanela: return "brain.head.profile"
         case .ocular: return "eye"
         case .dopplerCarotidas, .dopplerVenosoMmii, .dopplerVenosoMmiiMedidas, .dopplerArterialMmii, .dopplerFistulaAv, .dopplerRenal: return "waveform.path.ecg"
+        case .teste: return "testtube.2"
         }
     }
 

@@ -12,7 +12,7 @@ struct CategorySheet: View {
 
     private var otherCategories: [ReportCategory] {
         let prioritySet = Set(ReportCategory.priority)
-        return filtered(ReportCategory.allCases.filter { !prioritySet.contains($0) })
+        return filtered(ReportCategory.selectable.filter { !prioritySet.contains($0) })
     }
 
     private var hasResults: Bool {

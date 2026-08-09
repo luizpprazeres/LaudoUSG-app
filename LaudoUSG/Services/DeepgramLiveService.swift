@@ -189,8 +189,21 @@ final class DeepgramLiveService {
         let keyterms: [String]?   // boost de vocabulário (controlado pelo backend)
     }
 
+    /// Categoria do exame em curso. O backend usa pra ENXUGAR os keyterms:
+    /// mandar o glossário inteiro faz os termos obstétricos competirem com os
+    /// da tireoide no mesmo decode e dilui o boost (medido em 03/08, ver
+    /// docs/brainstorm-transcricao-ao-vivo-2026-08-02.md §1.1 no repo do backend).
+    /// `nil` = backend cai no glossário completo (comportamento antigo).
+    var categoryCode: String?
+
     private func fetchToken() async throws -> TokenInfo {
-        let data = try await APIClient.shared.postRawJSON("/api/deepgram/token", body: Data("{}".utf8))
+        // A query vai em `queryItems` — valor CRU. Montar "?category=…" à mão no
+        // path fazia o `appendingPathComponent` escapar o "?" e o servidor
+        // devolvia 404. Ver o comentário em `APIClient.makeURL`.
+        let query = categoryCode.map { [URLQueryItem(name: "category", value: $0)] } ?? []
+        let data = try await APIClient.shared.postRawJSON(
+            "/api/deepgram/token", body: Data("{}".utf8), queryItems: query
+        )
         return try JSONDecoder().decode(TokenInfo.self, from: data)
     }
 

@@ -3,7 +3,8 @@ import Combine
 
 struct RecordingOverlay: View {
     @Binding var isPresented: Bool
-    @Bindable var deepgram: DeepgramLiveService
+    /// Motor de ditado ao vivo. A tela só lê — quem escolhe é o GenerateViewModel.
+    let deepgram: any LiveMicEngine
     let onCancel: () -> Void
     let onStop: () -> Void
 
@@ -87,6 +88,18 @@ struct RecordingOverlay: View {
                     .tracking(0.15 * 11)
                     .foregroundStyle(.white.opacity(0.9))
                     .contentTransition(.opacity)
+            }
+
+            // Só motores NÃO-padrão se anunciam (hoje: o on-device da Apple na
+            // categoria TESTE). Serve pra você saber, olhando, o que gerou o texto.
+            if let engineLabel = deepgram.engineLabel {
+                Text("·")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.4))
+                Text(engineLabel)
+                    .font(.system(size: 11, weight: .semibold))
+                    .tracking(0.12 * 11)
+                    .foregroundStyle(.white.opacity(0.62))
             }
         }
         .padding(.horizontal, 14)

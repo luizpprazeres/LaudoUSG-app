@@ -132,6 +132,40 @@ final class GenerateViewModel {
     /// Engine de gravação ao vivo (Deepgram streaming) — substitui o Whisper batch
     /// no fluxo de ditado: texto aparece ao vivo e já fica pronto ao parar.
     let deepgram = DeepgramLiveService()
+
+    /// Motor on-device da Apple (`SpeechTranscriber`, iOS 26+). Criado sob demanda
+    /// e guardado como existencial — o tipo concreto só pode ser nomeado dentro de
+    /// um `if #available`, já que o alvo mínimo do app é iOS 17.6.
+    private var onDeviceEngine: (any LiveMicEngine)?
+
+    /// Motor que está de fato gravando. A UI lê daqui e não sabe qual é.
+    private(set) var activeEngine: any LiveMicEngine
+
+    init() {
+        activeEngine = deepgram
+    }
+
+    /// Motor escolhido pelo usuário em Preferências → Ditado. A View empurra o
+    /// valor pra cá porque o ViewModel não tem acesso ao `AppState`.
+    var transcriptionEngine: TranscriptionEngine = .laudousg
+
+    /// Resolve o motor para esta gravação.
+    ///
+    /// `effective` já rebaixa "nativa" para "LaudoUSG" em iOS < 26, então aqui não
+    /// há caminho em que o usuário fique sem ditado por ter escolhido algo que o
+    /// aparelho não suporta.
+    private func engine(for category: ReportCategory) -> any LiveMicEngine {
+        // O backend usa a categoria pra enxugar os keyterms — precisa estar
+        // setada ANTES do prewarm, que já busca o token.
+        deepgram.categoryCode = category.rawValue
+        guard transcriptionEngine.effective == .nativa else { return deepgram }
+        if #available(iOS 26.0, *) {
+            if onDeviceEngine == nil { onDeviceEngine = AppleSpeechLiveService() }
+            return onDeviceEngine ?? deepgram
+        }
+        return deepgram
+    }
+
     private var saveTask: Task<Void, Never>?
 
     var canGenerate: Bool {
@@ -272,31 +306,37 @@ final class GenerateViewModel {
         return "\(rawValue) \(unit)"
     }
 
-    /// Pré-aquece o token Deepgram ao abrir a tela — o toque no mic fica
-    /// instantâneo (sem ida ao backend no caminho crítico).
+    /// Pré-aquece o motor da categoria atual ao abrir a tela — o toque no mic fica
+    /// instantâneo. No Deepgram isso busca o token; no motor da Apple, garante que
+    /// o modelo de pt-BR já está baixado (o download é caro na primeira vez).
     func prewarmMic() {
-        Task { @MainActor in await deepgram.prewarm() }
+        let target = engine(for: category)
+        Task { @MainActor in await target.prewarm() }
     }
 
     func startRecording() {
         guard !phase.isBusy else { return }
+        // Escolhe o motor ANTES de mostrar o overlay — a UI já abre lendo o certo.
+        activeEngine = engine(for: category)
         // Mostra o overlay JÁ (estado "Conectando…") — resposta instantânea ao
         // toque, sem esperar token + conexão + áudio (vira "Ouvindo" quando pronto).
         liveTranscript = ""
         phase = .recording
         isRecordingOverlayPresented = true
+        let mic = activeEngine
         Task { @MainActor in
-            await deepgram.start()   // pede permissão + conecta internamente
-            if !deepgram.isStreaming {
+            await mic.start()   // pede permissão + conecta/prepara internamente
+            if !mic.isStreaming {
                 isRecordingOverlayPresented = false
                 phase = inputText.isEmpty ? .idle : .ready
-                lastError = deepgram.errorMessage ?? "Não foi possível iniciar a gravação."
+                lastError = mic.errorMessage ?? "Não foi possível iniciar a gravação."
             }
         }
     }
 
     func cancelRecording() {
-        Task { @MainActor in await deepgram.stop() }
+        let mic = activeEngine
+        Task { @MainActor in await mic.stop() }
         liveTranscript = ""
         isRecordingOverlayPresented = false
         phase = inputText.isEmpty ? .idle : .ready
@@ -304,11 +344,12 @@ final class GenerateViewModel {
 
     func finishRecording() {
         isRecordingOverlayPresented = false
+        let mic = activeEngine
         Task { @MainActor in
-            await deepgram.stop()
+            await mic.stop()
             // Streaming: o texto JÁ está pronto ao parar (sem espera de transcrição).
             // Usa liveTranscript (final + último parcial) pra não perder o fim da fala.
-            let transcript = deepgram.liveTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
+            let transcript = mic.liveTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
             if !transcript.isEmpty {
                 if inputText.isEmpty {
                     inputText = transcript
@@ -316,7 +357,7 @@ final class GenerateViewModel {
                     let separator = inputText.hasSuffix("\n") ? "" : "\n"
                     inputText += separator + transcript
                 }
-            } else if let err = deepgram.errorMessage {
+            } else if let err = mic.errorMessage {
                 lastError = err
             }
             liveTranscript = ""

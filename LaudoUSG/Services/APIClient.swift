@@ -40,8 +40,27 @@ actor APIClient {
         self.bearerToken = token
     }
 
-    private func makeRequest(path: String, method: String = "GET", body: Data? = nil) -> URLRequest {
-        let url = AppConfig.apiBaseURL.appendingPathComponent(path)
+    /// Monta a URL do endpoint. **Query vai em `queryItems`, nunca no `path`.**
+    ///
+    /// Por quê: `appendingPathComponent` trata o argumento inteiro como UM componente
+    /// de caminho e escapa o "?" para "%3F". Um path "/api/x?a=1" virava o caminho
+    /// literal "/api/x%3Fa=1" e o servidor devolvia **404** — foi exatamente o que
+    /// aconteceu quando o `?category=` entrou no `/api/deepgram/token`.
+    ///
+    /// `URL.appending(queryItems:)` (iOS 16+) faz o encoding correto dos valores
+    /// crus. Não passe valores pré-encodados aqui: eles seriam escapados de novo.
+    private static func makeURL(path: String, queryItems: [URLQueryItem]) -> URL {
+        let base = AppConfig.apiBaseURL.appendingPathComponent(path)
+        return queryItems.isEmpty ? base : base.appending(queryItems: queryItems)
+    }
+
+    private func makeRequest(
+        path: String,
+        method: String = "GET",
+        body: Data? = nil,
+        queryItems: [URLQueryItem] = []
+    ) -> URLRequest {
+        let url = Self.makeURL(path: path, queryItems: queryItems)
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -72,9 +91,13 @@ actor APIClient {
         }
     }
 
-    func postRawJSON(_ path: String, body: Data) async throws -> Data {
+    func postRawJSON(
+        _ path: String,
+        body: Data,
+        queryItems: [URLQueryItem] = []
+    ) async throws -> Data {
         try await performWithRefresh {
-            makeRequest(path: path, method: "POST", body: body)
+            makeRequest(path: path, method: "POST", body: body, queryItems: queryItems)
         }
     }
 
@@ -122,7 +145,7 @@ actor APIClient {
         mimeType: String
     ) throws -> URLRequest {
         let boundary = "----LaudoUSGBoundary\(UUID().uuidString)"
-        let url = AppConfig.apiBaseURL.appendingPathComponent(path)
+        let url = Self.makeURL(path: path, queryItems: [])
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
