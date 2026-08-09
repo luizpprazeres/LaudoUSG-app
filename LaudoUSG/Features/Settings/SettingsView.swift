@@ -58,6 +58,9 @@ struct SettingsView: View {
 
                 PreferencesSection()
 
+                // Só renderiza destravada (7 toques na versão, em Sobre o app).
+                DeveloperSection()
+
                 section(title: "Sala do Auxiliar") {
                     Button {
                         Haptics.tap()

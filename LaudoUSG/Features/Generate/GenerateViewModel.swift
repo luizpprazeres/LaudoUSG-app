@@ -149,6 +149,19 @@ final class GenerateViewModel {
     /// valor pra cá porque o ViewModel não tem acesso ao `AppState`.
     var transcriptionEngine: TranscriptionEngine = .laudousg
 
+    /// Bancada de comparação de modelo (Ajustes → Desenvolvedor, escondido).
+    var experimentalModel = false
+
+    /// O `mode` mandado ao backend.
+    ///
+    /// `experimental` vence `hard` de propósito: quando se está comparando
+    /// provider, misturar o modelo grande da casa invalida a comparação. E é um
+    /// modo de bancada — quem ligou sabe o que ligou.
+    private var generationMode: String {
+        if experimentalModel { return "experimental" }
+        return hardMode ? "hard" : "standard"
+    }
+
     /// Resolve o motor para esta gravação.
     ///
     /// `effective` já rebaixa "nativa" para "LaudoUSG" em iOS < 26, então aqui não
@@ -393,7 +406,7 @@ final class GenerateViewModel {
             rawInput: inputText,
             categoryHint: category,
             writingStyleId: writingStyleId,
-            mode: hardMode ? "hard" : "standard"
+            mode: generationMode
         )
 
         generateTask?.cancel()

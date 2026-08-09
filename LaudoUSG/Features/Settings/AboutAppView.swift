@@ -1,6 +1,11 @@
 import SwiftUI
 
 struct AboutAppView: View {
+    /// Contador do gesto escondido que destrava Ajustes → Desenvolvedor.
+    /// Ver `AppExperiments.developerToolsUnlocked` para o porquê de ser um gesto.
+    @State private var versionTaps = 0
+    @State private var unlockToast: String?
+
     var body: some View {
         ScrollView {
             VStack(spacing: Spacing.lg) {
@@ -19,8 +24,18 @@ struct AboutAppView: View {
 
                 section(title: "Aplicativo") {
                     infoRow("Versão", appVersion)
+                        // Nada indica que isto é tocável — é essa a intenção.
+                        .contentShape(Rectangle())
+                        .onTapGesture { registerVersionTap() }
                     Divider().padding(.leading, Spacing.md)
                     infoRow("Build", buildNumber)
+                }
+
+                if let unlockToast {
+                    Text(unlockToast)
+                        .font(TextStyle.caption)
+                        .foregroundStyle(AppSurface.textSecondary)
+                        .transition(.opacity)
                 }
 
                 section(title: "Documentos legais") {
@@ -43,6 +58,22 @@ struct AboutAppView: View {
         .background(AppSurface.background.ignoresSafeArea())
         .navigationTitle("Sobre o LaudoUSG")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    /// 7 toques na versão alternam a seção Desenvolvedor. Silencioso até o fim:
+    /// quem tocar sem querer não vê nada e o contador é descartado ao sair.
+    private func registerVersionTap() {
+        versionTaps += 1
+        guard versionTaps >= AppExperiments.developerUnlockTapCount else { return }
+        versionTaps = 0
+        let enabling = !AppExperiments.developerToolsUnlocked
+        AppExperiments.setDeveloperToolsUnlocked(enabling)
+        Haptics.tap()
+        withAnimation {
+            unlockToast = enabling
+                ? "Ferramentas de desenvolvedor ativadas."
+                : "Ferramentas de desenvolvedor desativadas."
+        }
     }
 
     private var appVersion: String {

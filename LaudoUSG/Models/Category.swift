@@ -30,10 +30,12 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
     case dopplerFistulaAv = "DOPPLER_FISTULA_AV"
     case dopplerRenal = "DOPPLER_RENAL"
     case ocular = "OCULAR"
-    /// Sandbox de experimentos. No backend usa writer puro; no app, ativa o
-    /// microfone on-device da Apple (ver `GenerateViewModel.engine(for:)`).
-    /// Só aparece no seletor quando `AppExperiments.showTestCategory` é true.
-    case teste = "TESTE"
+    /// Coringa: escreve com as regras gerais da casa, sem template de categoria.
+    ///
+    /// Serve para (a) exames que não têm categoria própria na lista — região
+    /// perineal, por exemplo — e (b) quem não quer parar para escolher categoria.
+    /// No backend é writer puro (`isFreeWriterCategory`), com o modelo normal.
+    case livre = "LIVRE"
 
     var id: String { rawValue }
 
@@ -42,7 +44,9 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         allCases.filter { !$0.isExperimental || AppExperiments.showTestCategory }
     }
 
-    var isExperimental: Bool { self == .teste }
+    /// Nenhuma categoria é experimental hoje. O mecanismo fica de pé porque a
+    /// próxima vai precisar dele — foi assim que a TESTE viveu escondida.
+    var isExperimental: Bool { false }
 
     var label: String {
         switch self {
@@ -75,7 +79,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .dopplerFistulaAv: return "Doppler Fístula AV"
         case .dopplerRenal: return "Doppler Renal"
         case .ocular: return "Ocular"
-        case .teste: return "Teste"
+        case .livre: return "Laudo Livre"
         }
     }
 
@@ -110,7 +114,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .dopplerFistulaAv: return "FAV para hemodiálise"
         case .dopplerRenal: return "Artérias renais"
         case .ocular: return "Globo ocular e órbita"
-        case .teste: return "Sandbox — microfone da Apple, no aparelho"
+        case .livre: return "Qualquer exame, com as regras gerais da casa"
         }
     }
 
@@ -128,7 +132,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .escrotal, .regiaoInguinal, .paredeAbdominal, .partesMoles, .prostataTransretal, .prostataSuprapubica: return "10B981"
         case .transfontanela, .ocular: return "6366F1"
         case .dopplerCarotidas, .dopplerVenosoMmii, .dopplerVenosoMmiiMedidas, .dopplerArterialMmii, .dopplerFistulaAv, .dopplerRenal: return "F59E0B"
-        case .teste: return "64748B"
+        case .livre: return "64748B"
         }
     }
 
@@ -149,7 +153,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .transfontanela: return "brain.head.profile"
         case .ocular: return "eye"
         case .dopplerCarotidas, .dopplerVenosoMmii, .dopplerVenosoMmiiMedidas, .dopplerArterialMmii, .dopplerFistulaAv, .dopplerRenal: return "waveform.path.ecg"
-        case .teste: return "testtube.2"
+        case .livre: return "text.badge.plus"
         }
     }
 

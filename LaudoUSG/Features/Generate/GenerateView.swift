@@ -42,7 +42,11 @@ struct GenerateView: View {
         // que se pré-aquece é o token do Deepgram ou o modelo de voz da Apple.
         .task {
             vm.transcriptionEngine = app.preferences.transcriptionEngine
+            vm.experimentalModel = app.preferences.experimentalModel
             vm.prewarmMic()
+        }
+        .onChange(of: app.preferences.experimentalModel) { _, newValue in
+            vm.experimentalModel = newValue
         }
         // Trocar a preferência com a tela aberta passa a valer na hora, sem
         // precisar sair e voltar.
