@@ -43,8 +43,21 @@ enum AppExperiments {
         #endif
     }
 
+    /// Bloquear NÃO pode deixar experimento ligado por baixo.
+    ///
+    /// Só esconder a seção era um bug: o aviso sumia da tela e o app continuava
+    /// mandando `mode: "experimental"`, gerando com outro modelo sem nada
+    /// indicando isso — e sem forma visível de desligar.
+    ///
+    /// Quem desliga a preferência é o `AppState`, que é dono do
+    /// `PreferencesStore`; aqui só sinalizamos que ela precisa ser zerada.
     static func setDeveloperToolsUnlocked(_ enabled: Bool) {
         UserDefaults.standard.set(enabled, forKey: developerToolsKey)
+    }
+
+    /// `true` quando o bloqueio exige zerar os experimentos ligados.
+    static func shouldResetExperiments(afterUnlockChangeTo enabled: Bool) -> Bool {
+        !enabled
     }
 
     /// Quantos toques na versão destravam. Alto o bastante para não acontecer

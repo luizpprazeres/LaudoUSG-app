@@ -546,6 +546,15 @@ final class GenerateViewModel {
         case .error(let payload):
             lastError = payload.message
             phase = .error(message: payload.message)
+            // DESCARTA o texto parcial já transmitido.
+            //
+            // O backend só emite `error` depois de recusar o laudo — por estar
+            // vazio ou TRUNCADO (finish_reason=length). Mas os tokens até o
+            // ponto do corte já chegaram aqui e ficariam na tela atrás do card
+            // vermelho, parecendo laudo editável. Uma frase interrompida no meio
+            // de uma medida ou de uma lateralidade é pior que nenhuma.
+            streamedOutput = ""
+            displayedOutput = ""
             stopStreamingFeedback()
         }
     }

@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct AboutAppView: View {
+    @Environment(AppState.self) private var app
+
     /// Contador do gesto escondido que destrava Ajustes → Desenvolvedor.
     /// Ver `AppExperiments.developerToolsUnlocked` para o porquê de ser um gesto.
     @State private var versionTaps = 0
@@ -68,6 +70,14 @@ struct AboutAppView: View {
         versionTaps = 0
         let enabling = !AppExperiments.developerToolsUnlocked
         AppExperiments.setDeveloperToolsUnlocked(enabling)
+        // Bloquear tem que DESLIGAR o que estava ligado. Só esconder a seção
+        // deixava o app mandando mode:"experimental" sem aviso na tela e sem
+        // forma visível de reverter.
+        if AppExperiments.shouldResetExperiments(afterUnlockChangeTo: enabling) {
+            var preferences = app.preferences
+            preferences.experimentalModel = false
+            app.updatePreferences(preferences)
+        }
         Haptics.tap()
         withAnimation {
             unlockToast = enabling

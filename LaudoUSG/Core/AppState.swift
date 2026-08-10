@@ -185,6 +185,15 @@ final class AppState {
         reportPreferences = []
         availableVariants = []
         defaultWritingStyleId = GenerateRequest.defaultWritingStyleId
+        // As preferências ficam no APARELHO, não na conta. O modo experimental
+        // é o único que atravessa o logout de forma perigosa: o próximo médico
+        // a entrar neste iPhone geraria com outro modelo, recebendo erro de
+        // autorização, e sem ver o toggle (que está escondido atrás do gesto).
+        // Trava de desenvolvedor cai junto, pelo mesmo motivo.
+        var preferences = preferencesStore.preferences
+        preferences.experimentalModel = false
+        preferencesStore.update(preferences)
+        AppExperiments.setDeveloperToolsUnlocked(false)
         session = .signedOut
         Task { await AuthService.shared.signOut() }
     }
