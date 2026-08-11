@@ -126,6 +126,19 @@ struct ModelVariation: Codable, Hashable, Identifiable {
     let mudancas: [ModelChange]
 }
 
+/// Como o laudo fica em cada cenário, com e sem a personalização.
+struct ReportPreview: Codable, Hashable, Identifiable {
+    let cenario: String
+    let nome: String
+    let patologico: Bool
+    let mudou: Bool
+    let mudancas: [ModelChange]
+    let laudoPadrao: String
+    let laudoPersonalizado: String
+
+    var id: String { cenario }
+}
+
 struct CustomizationState: Codable, Hashable {
     let categoria: String
     let estilo: String
@@ -135,6 +148,10 @@ struct CustomizationState: Codable, Hashable {
     let rascunho: CustomizationVersion?
     let publicado: CustomizationVersion?
     let variacoes: [ModelVariation]?
+    let previa: [ReportPreview]?
+    /// A publicada está mesmo valendo? Depende das flags do servidor, não de
+    /// ter publicado. Ausente em backend anterior a este campo.
+    let personalizacaoAtiva: Bool?
 }
 
 // MARK: - Erros

@@ -28,6 +28,10 @@ struct LibraryView: View {
     @State private var aguardandoServidor = false
     @State private var recusa: [String]?
     @State private var variacaoSelecionada: String?
+    /// Alterna entre editar o modelo e ver o laudo pronto.
+    @State private var aba: Aba = .modelo
+
+    enum Aba: String, CaseIterable { case modelo, laudo }
 
     @State private var slotEmFoco: CatalogSlot?
     @State private var modoEdicao: ModoEdicao?
@@ -141,6 +145,20 @@ struct LibraryView: View {
 
     private var conteudo: some View {
         VStack(spacing: 0) {
+            // Editar × conferir: o médico precisa das duas visões, e elas não
+            // cabem na mesma tela sem uma virar ruído da outra.
+            Picker("", selection: $aba) {
+                Text("Editar o modelo").tag(Aba.modelo)
+                Text("Ver o laudo").tag(Aba.laudo)
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, Spacing.md)
+            .padding(.top, Spacing.xs)
+
+            if aba == .laudo {
+                LaudoPreviewView(previas: estado?.previa ?? [])
+                    .padding(.top, Spacing.sm)
+            } else {
             ScrollView {
                 VStack(alignment: .leading, spacing: Spacing.md) {
                     cabecalho
@@ -163,24 +181,33 @@ struct LibraryView: View {
                 .padding(Spacing.md)
                 .padding(.bottom, Spacing.xxl)
             }
+            }
             if temRascunho || estado?.publicado != nil { rodape }
         }
     }
 
     private var cabecalho: some View {
-        Group {
+        // `nil` = backend antigo, que não informa; nesse caso não desminta.
+        let ativa = estado?.personalizacaoAtiva ?? true
+        return Group {
             if let pub = estado?.publicado {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Em uso nos seus laudos")
+                    Text(ativa ? "Em uso nos seus laudos" : "Publicada, mas ainda não valendo")
                         .font(TextStyle.captionMedium)
-                        .foregroundStyle(BrandColor.primaryDeep)
+                        .foregroundStyle(ativa ? BrandColor.primaryDeep : AppSurface.textSecondary)
                     Text("Versão \(pub.versao) · \(pub.operations.count) alteração(ões)")
                         .font(TextStyle.caption)
                         .foregroundStyle(AppSurface.textSecondary)
+                    if !ativa {
+                        Text("O servidor ainda não está aplicando personalizações nesta categoria. Ela passa a valer sem você precisar publicar de novo.")
+                            .font(TextStyle.caption)
+                            .foregroundStyle(AppSurface.textMuted)
+                            .padding(.top, 2)
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(Spacing.sm)
-                .background(BrandColor.primarySoft, in: RoundedRectangle(cornerRadius: 12))
+                .background(ativa ? BrandColor.primarySoft : AppSurface.muted, in: RoundedRectangle(cornerRadius: 12))
             } else {
                 Text("Este é o modelo padrão do laudo obstétrico. Toque em qualquer frase para mudar a redação, tirá-la do laudo, ou acrescentar outra depois dela.")
                     .font(TextStyle.footnote)
