@@ -149,6 +149,9 @@ struct CustomizationState: Codable, Hashable {
     let publicado: CustomizationVersion?
     let variacoes: [ModelVariation]?
     let previa: [ReportPreview]?
+    /// Todas as versões, da mais nova para a mais velha — incluindo as
+    /// arquivadas. É o que permite voltar atrás sem perder nada.
+    let historico: [CustomizationVersion]?
     /// A publicada está mesmo valendo? Depende das flags do servidor, não de
     /// ter publicado. Ausente em backend anterior a este campo.
     let personalizacaoAtiva: Bool?
@@ -270,6 +273,27 @@ enum ModelCustomizationService {
             try await APIClient.shared.postRawJSON(
                 path(categoria, "/publish"),
                 body: Data("{}".utf8),
+                queryItems: query(estilo)
+            )
+        }
+    }
+
+    private struct RestoreBody: Encodable { let versao: Int }
+
+    /// Traz uma versão do histórico de volta COMO RASCUNHO — nunca publicando
+    /// direto. O catálogo-base pode ter mudado desde então, e uma operação que
+    /// valia antes pode apontar para um slot que já não existe. Assim a
+    /// validação aparece antes de o laudo mudar.
+    static func restore(
+        categoria: String,
+        versao: Int,
+        estilo: String = "CLASSICO_COMPLETO"
+    ) async throws {
+        let body = try JSONEncoder.api.encode(RestoreBody(versao: versao))
+        _ = try await comRecusa {
+            try await APIClient.shared.postRawJSON(
+                path(categoria, "/restore"),
+                body: body,
                 queryItems: query(estilo)
             )
         }

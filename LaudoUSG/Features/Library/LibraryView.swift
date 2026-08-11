@@ -30,6 +30,7 @@ struct LibraryView: View {
     @State private var variacaoSelecionada: String?
     /// Alterna entre editar o modelo e ver o laudo pronto.
     @State private var aba: Aba = .modelo
+    @State private var mostrandoHistorico = false
 
     enum Aba: String, CaseIterable { case modelo, laudo }
 
@@ -116,6 +117,27 @@ struct LibraryView: View {
         }
         .navigationTitle("Biblioteca")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if !(estado?.historico ?? []).isEmpty {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { mostrandoHistorico = true } label: {
+                        Image(systemName: "clock.arrow.circlepath")
+                    }
+                    .accessibilityLabel("Versões anteriores")
+                }
+            }
+        }
+        .sheet(isPresented: $mostrandoHistorico) {
+            HistoricoSheet(
+                historico: estado?.historico ?? [],
+                publicadaVersao: estado?.publicado?.versao,
+                onRestaurar: { v in
+                    mostrandoHistorico = false
+                    Task { await restaurar(v) }
+                }
+            )
+            .presentationDetents([.medium, .large])
+        }
         .task { await carregar() }
         .sheet(item: $slotEmFoco) { slot in
             acoesDaFrase(slot)
@@ -518,10 +540,50 @@ struct LibraryView: View {
         return VStack(alignment: .leading, spacing: Spacing.sm) {
             Text(titulo).font(TextStyle.bodyLargeSemibold)
 
-            if case .trocar = modo, let obrig = slot?.placeholdersObrigatorios, !obrig.isEmpty {
-                Text("Conserve \(obrig.map { "{\($0)}" }.joined(separator: ", ")) — é o dado medido no exame.")
+            // Os dados do exame que a frase pode usar. Tocar insere no ponto
+            // final do texto — o médico não precisa decorar a grafia exata da
+            // chave, que é a parte chata de escrever isto à mão.
+            if case .trocar = modo {
+                let obrig = slot?.placeholdersObrigatorios ?? []
+                let faltando = obrig.filter { !textoEmEdicao.contains("{\($0)}") }
+
+                if !faltando.isEmpty {
+                    // Avisa AQUI, não só ao salvar: o servidor recusaria, mas o
+                    // médico já teria perdido a frase que estava escrevendo.
+                    Label(
+                        "Falta \(faltando.map { "{\($0)}" }.joined(separator: ", ")) — é o dado medido no exame, e sem ele o laudo perderia a medida.",
+                        systemImage: "exclamationmark.triangle.fill"
+                    )
+                    .font(TextStyle.caption)
+                    .foregroundStyle(SemanticColor.warningText)
+                } else if !obrig.isEmpty {
+                    Label(
+                        "Conserve \(obrig.map { "{\($0)}" }.joined(separator: ", ")) — é o dado medido no exame.",
+                        systemImage: "checkmark.circle"
+                    )
                     .font(TextStyle.caption)
                     .foregroundStyle(AppSurface.textSecondary)
+                }
+
+                if !obrig.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 6) {
+                            ForEach(obrig, id: \.self) { campo in
+                                Button {
+                                    textoEmEdicao += "{\(campo)}"
+                                } label: {
+                                    Text(campo.replacingOccurrences(of: "_", with: " "))
+                                        .font(TextStyle.caption)
+                                        .foregroundStyle(BrandColor.primaryDeep)
+                                        .padding(.horizontal, Spacing.xs)
+                                        .padding(.vertical, 4)
+                                        .background(BrandColor.primarySoft, in: Capsule())
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                }
             }
 
             TextEditor(text: $textoEmEdicao)
@@ -555,10 +617,22 @@ struct LibraryView: View {
                     .padding(.vertical, Spacing.sm)
                     .background(BrandColor.primary, in: RoundedRectangle(cornerRadius: 12))
             }
-            .disabled(textoEmEdicao.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            .disabled(!podeGuardar(modo))
             Spacer()
         }
         .padding(Spacing.lg)
+    }
+
+    /// Guardar só quando a frase tem conteúdo E conserva os dados obrigatórios.
+    /// Deixar salvar e o servidor recusar seria tecnicamente correto e
+    /// péssimo: o médico perderia o que escreveu.
+    private func podeGuardar(_ modo: ModoEdicao) -> Bool {
+        let v = textoEmEdicao.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !v.isEmpty else { return false }
+        if case .trocar(let s) = modo {
+            return s.placeholdersObrigatorios.allSatisfy { v.contains("{\($0)}") }
+        }
+        return true
     }
 
     // MARK: - Ações
@@ -617,6 +691,20 @@ struct LibraryView: View {
         recusa = nil
         do {
             try await ModelCustomizationService.publish(categoria: categoria)
+            await carregar()
+        } catch let recusado as CustomizationRefusal {
+            recusa = recusado.reasons.isEmpty ? [recusado.message] : recusado.reasons
+        } catch {
+            erro = error.localizedDescription
+        }
+        salvando = false
+    }
+
+    private func restaurar(_ versao: Int) async {
+        salvando = true
+        recusa = nil
+        do {
+            try await ModelCustomizationService.restore(categoria: categoria, versao: versao)
             await carregar()
         } catch let recusado as CustomizationRefusal {
             recusa = recusado.reasons.isEmpty ? [recusado.message] : recusado.reasons
