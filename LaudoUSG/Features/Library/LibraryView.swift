@@ -22,6 +22,10 @@ struct LibraryView: View {
     @State private var carregando = true
     @State private var salvando = false
     @State private var erro: String?
+    /// A falha foi "o servidor ainda não tem isto"? Não é erro do app, e não
+    /// deve ser pintada de vermelho — o Luiz leu a tela e achou que tinha
+    /// quebrado. É informação: o app está à frente do backend.
+    @State private var aguardandoServidor = false
     @State private var recusa: [String]?
     @State private var variacaoSelecionada: String?
 
@@ -121,9 +125,12 @@ struct LibraryView: View {
 
     private func falhaAoCarregar(_ mensagem: String) -> some View {
         VStack(spacing: Spacing.md) {
+            Image(systemName: aguardandoServidor ? "clock.arrow.circlepath" : "exclamationmark.triangle")
+                .font(.system(size: 28))
+                .foregroundStyle(aguardandoServidor ? AppSurface.textMuted : SemanticColor.errorText)
             Text(mensagem)
                 .font(TextStyle.body)
-                .foregroundStyle(SemanticColor.errorText)
+                .foregroundStyle(aguardandoServidor ? AppSurface.textSecondary : SemanticColor.errorText)
                 .multilineTextAlignment(.center)
             Button("Tentar de novo") { Task { await carregar() } }
                 .font(TextStyle.bodySemibold)
@@ -538,11 +545,15 @@ struct LibraryView: View {
     private func carregar() async {
         carregando = true
         erro = nil
+        aguardandoServidor = false
         do {
             let e = try await ModelCustomizationService.fetch(categoria: categoria)
             estado = e
             // O rascunho do servidor é a verdade, não o que ficou nesta tela.
             operacoes = e.rascunho?.operations ?? []
+        } catch is FeatureNotDeployed {
+            aguardandoServidor = true
+            self.erro = FeatureNotDeployed().errorDescription
         } catch {
             self.erro = error.localizedDescription
         }
