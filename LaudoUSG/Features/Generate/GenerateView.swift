@@ -25,13 +25,7 @@ struct GenerateView: View {
                     case .history: HistoryView()
                     case .reportDetail(let id): ReportDetailView(reportId: id)
                     case .analytics: AnalyticsView()
-                    case .library:
-                        PlaceholderView(
-                            title: "Biblioteca",
-                            icon: "books.vertical.fill",
-                            message: "Frases e protocolos favoritos entram em sprints futuros."
-                        )
-                        .navigationTitle("Biblioteca")
+                    case .library: LibraryView()
                     case .settings: SettingsView()
                     case .about:
                         AboutAppView()

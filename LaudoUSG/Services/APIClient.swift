@@ -72,9 +72,13 @@ actor APIClient {
         return request
     }
 
-    func get<T: Decodable>(_ path: String, as type: T.Type) async throws -> T {
+    func get<T: Decodable>(
+        _ path: String,
+        queryItems: [URLQueryItem] = [],
+        as type: T.Type
+    ) async throws -> T {
         let data = try await performWithRefresh {
-            makeRequest(path: path)
+            makeRequest(path: path, queryItems: queryItems)
         }
         return try decode(data)
     }
@@ -85,9 +89,19 @@ actor APIClient {
         }
     }
 
-    func delete(_ path: String) async throws {
+    func delete(_ path: String, queryItems: [URLQueryItem] = []) async throws {
         _ = try await performWithRefresh {
-            makeRequest(path: path, method: "DELETE")
+            makeRequest(path: path, method: "DELETE", queryItems: queryItems)
+        }
+    }
+
+    func putRawJSON(
+        _ path: String,
+        body: Data,
+        queryItems: [URLQueryItem] = []
+    ) async throws -> Data {
+        try await performWithRefresh {
+            makeRequest(path: path, method: "PUT", body: body, queryItems: queryItems)
         }
     }
 
