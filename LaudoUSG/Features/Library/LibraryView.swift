@@ -22,6 +22,14 @@ struct LibraryView: View {
 
     @State private var categoria: String = "OBSTETRICA"
     @State private var categorias: [ModelCustomizationService.CategoriaDaBiblioteca] = []
+    /// A lista já veio do SERVIDOR? Enquanto for `false`, cada `carregar()`
+    /// tenta de novo.
+    ///
+    /// Sem isto o guard era `categorias.isEmpty` — e como a falha preenchia o
+    /// array com o fallback de uma categoria, a condição nunca mais era
+    /// verdadeira: a primeira tentativa malsucedida congelava o menu escondido
+    /// pelo resto da sessão da tela, e nem "Tentar de novo" recuperava.
+    @State private var categoriasDoServidor = false
     @State private var estado: CustomizationState?
     @State private var operacoes: [ReportOperation] = []
     @State private var carregando = true
@@ -699,12 +707,14 @@ struct LibraryView: View {
         carregando = true
         erro = nil
         aguardandoServidor = false
-        // A lista de categorias vem do servidor uma vez por sessão de tela. Em
-        // falha ela cai no fallback, então nunca fica vazia.
-        if categorias.isEmpty {
-            categoria = categoriaInicial
-            categorias = await ModelCustomizationService.categorias()
-        }
+        // A lista de categorias e o modelo da categoria atual são consultas
+        // INDEPENDENTES — em série, a tela esperava as duas somadas por nada.
+        // `categorias()` nunca lança (cai no fallback), então pode correr solta.
+        let listaPendente: Task<[ModelCustomizationService.CategoriaDaBiblioteca]?, Never>? =
+            categoriasDoServidor
+            ? nil
+            : Task { await ModelCustomizationService.categorias() }
+        if categorias.isEmpty { categoria = categoriaInicial }
         do {
             let e = try await ModelCustomizationService.fetch(categoria: categoria)
             estado = e
@@ -720,6 +730,16 @@ struct LibraryView: View {
             self.erro = FeatureNotDeployed().errorDescription
         } catch {
             self.erro = error.localizedDescription
+        }
+        if let listaPendente {
+            if let vindas = await listaPendente.value {
+                categorias = vindas
+                categoriasDoServidor = true
+            } else if categorias.isEmpty {
+                // Falhou e ainda não há nada na tela: mostra o mínimo, mas
+                // `categoriasDoServidor` fica falso — a próxima carga tenta de novo.
+                categorias = ModelCustomizationService.categoriasFallback
+            }
         }
         carregando = false
     }

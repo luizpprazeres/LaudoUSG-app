@@ -105,11 +105,10 @@ struct ReportCatalog: Codable, Hashable {
     let preambulo: String?
     let slots: [CatalogSlot]
     let ordens: [CatalogOrder]
-
-    private enum CodingKeys: String, CodingKey {
-        case id, categoria, estilo, versao, variaveis, cabecalhos, preambulo, slots, ordens
-        case rotulosVariaveis = "rotulos_variaveis"
-    }
+    // Sem CodingKeys pelo mesmo motivo de CategoriaDaBiblioteca: o decoder já
+    // converte `rotulos_variaveis` → `rotulosVariaveis`. Aqui o campo é
+    // opcional, então o mapeamento errado não lançava — só fazia os rótulos
+    // chegarem sempre nulos, e a tela caía no nome cru da variável.
 }
 
 // MARK: - Versões e diff
@@ -248,10 +247,17 @@ enum ModelCustomizationService {
 
         var id: String { categoria }
 
-        private enum CodingKeys: String, CodingKey {
-            case categoria, rotulo, derivado
-            case personalizacaoAtiva = "personalizacao_ativa"
-        }
+        /**
+         ⚠️ SEM `CodingKeys`, e isto é deliberado.
+
+         `JSONDecoder.api` usa `.convertFromSnakeCase` (APIClient.swift), então
+         `personalizacao_ativa` do JSON JÁ CHEGA como `personalizacaoAtiva`. Um
+         `CodingKeys` mapeando para a forma snake procura uma chave que não
+         existe mais, o decode lança `keyNotFound`, e como esta struct é usada
+         dentro de um `catch` que devolve fallback, o erro some: a tela ficava
+         com uma categoria só e o seletor não aparecia. Foi exatamente isso que
+         aconteceu — e o `catch` silencioso escondeu por dois deploys.
+         */
     }
 
     private struct ListaBody: Decodable { let categorias: [CategoriaDaBiblioteca] }
@@ -263,14 +269,24 @@ enum ModelCustomizationService {
         .init(categoria: "OBSTETRICA", rotulo: "Obstétrica", derivado: false, personalizacaoAtiva: false)
     ]
 
-    /// As categorias da Biblioteca, do servidor. Em falha, o fallback — a tela
-    /// nunca fica vazia por causa de uma lista que não carregou.
-    static func categorias() async -> [CategoriaDaBiblioteca] {
+    /// As categorias da Biblioteca, do servidor. `nil` = a consulta FALHOU.
+    ///
+    /// Devolver `nil` em vez do fallback é o que permite ao chamador distinguir
+    /// "o servidor respondeu isto" de "não consegui perguntar" — e tentar de
+    /// novo depois. Devolvendo o fallback direto, quem chama não tem como saber
+    /// que a lista é provisória, e uma falha na primeira tentativa congela uma
+    /// categoria só pelo resto da sessão (achado do Codex, 16/08).
+    static func categorias() async -> [CategoriaDaBiblioteca]? {
         do {
             let r = try await APIClient.shared.get(base, as: ListaBody.self)
-            return r.categorias.isEmpty ? categoriasFallback : r.categorias
+            return r.categorias.isEmpty ? nil : r.categorias
         } catch {
-            return categoriasFallback
+            // O fallback é certo (a tela não pode ficar vazia), mas engolir o
+            // motivo não é: um erro de DECODE aqui é indistinguível de "o
+            // servidor ainda não tem a rota", e o sintoma é o mesmo — o
+            // seletor some. Foi o que atrasou este diagnóstico.
+            print("[Biblioteca] falha ao listar categorias, usando fallback: \(error)")
+            return nil
         }
     }
 

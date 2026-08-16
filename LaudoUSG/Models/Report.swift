@@ -56,7 +56,13 @@ struct SanityIssue: Identifiable, Codable, Hashable {
     // backend, mas o stream não pode quebrar pra issues sanity.
     private enum CodingKeys: String, CodingKey {
         case code, severity, message, range
-        case type, detail, trechoLaudo = "trecho_laudo"
+        // `trechoLaudo` SEM mapeamento explícito: `JSONDecoder.api` usa
+        // `.convertFromSnakeCase`, então `trecho_laudo` já chega convertido.
+        // Mapear para a forma snake procura uma chave que não existe mais — e,
+        // como o campo é opcional, o decode não lança: o trecho só vinha nulo,
+        // em silêncio. Mesmo defeito que escondeu o seletor da Biblioteca
+        // (achado do Codex, 16/08).
+        case type, detail, trechoLaudo
     }
 
     init(from decoder: Decoder) throws {
