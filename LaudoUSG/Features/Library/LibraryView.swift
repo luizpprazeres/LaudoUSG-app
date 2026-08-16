@@ -624,7 +624,7 @@ struct LibraryView: View {
                                 Button {
                                     textoEmEdicao += "{\(campo)}"
                                 } label: {
-                                    Text(campo.replacingOccurrences(of: "_", with: " "))
+                                    Text(rotuloDoDado(campo))
                                         .font(TextStyle.caption)
                                         .foregroundStyle(BrandColor.primaryDeep)
                                         .padding(.horizontal, Spacing.xs)
@@ -791,18 +791,31 @@ struct LibraryView: View {
 
     // MARK: - Texto
 
-    /// `{ig_semanas}` vira um pedaço destacado: é dado do exame, não texto fixo.
+    /// O nome de um dado, como o médico o lê.
+    ///
+    /// O fallback existente — trocar `_` por espaço no nome da variável —
+    /// produzia "dorso sufixo" e "peso extras". Com dois ou três dados
+    /// adjacentes virava "apresentacaodorso sufixopolo sufixo", que foi o que o
+    /// Luiz leu na tela. O servidor manda os rótulos; o fallback só vale contra
+    /// backend antigo.
+    private func rotuloDoDado(_ campo: String) -> String {
+        estado?.catalogo.rotulosVariaveis?[campo]
+            ?? campo.replacingOccurrences(of: "_", with: " ")
+    }
+
+    /// `{dbp}` vira um pedaço destacado: é dado do exame, não texto fixo.
     private func fraseComDados(_ frase: String, cor: Color) -> Text {
         var resultado = Text("")
         var restante = Substring(frase)
         while let abre = restante.firstIndex(of: "{"),
               let fecha = restante[abre...].firstIndex(of: "}") {
             let antes = String(restante[restante.startIndex..<abre])
-            let campo = String(restante[restante.index(after: abre)..<fecha])
-                .replacingOccurrences(of: "_", with: " ")
+            let campo = rotuloDoDado(String(restante[restante.index(after: abre)..<fecha]))
+            // Os colchetes separam dados ADJACENTES. Sem eles, três seguidos
+            // se fundem numa palavra só e o médico não sabe onde um termina.
             resultado = resultado
                 + Text(antes).foregroundStyle(cor)
-                + Text(campo).foregroundStyle(BrandColor.primary).bold()
+                + Text("[\(campo)]").foregroundStyle(BrandColor.primary).bold()
             restante = restante[restante.index(after: fecha)...]
         }
         resultado = resultado + Text(String(restante)).foregroundStyle(cor)

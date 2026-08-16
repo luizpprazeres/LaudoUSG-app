@@ -94,10 +94,22 @@ struct ReportCatalog: Codable, Hashable {
     let estilo: String
     let versao: Int
     let variaveis: [String]
+    /// Como cada dado se chama PARA O MÉDICO.
+    ///
+    /// Sem isto a tela mostrava o nome da variável, e nome de variável é de
+    /// programador: `{apresentacao}{dorso_sufixo}{polo_sufixo}` aparecia como
+    /// "apresentacaodorso sufixopolo sufixo". Opcional para tolerar um backend
+    /// anterior ao campo.
+    let rotulosVariaveis: [String: String]?
     let cabecalhos: CatalogHeaders
     let preambulo: String?
     let slots: [CatalogSlot]
     let ordens: [CatalogOrder]
+
+    private enum CodingKeys: String, CodingKey {
+        case id, categoria, estilo, versao, variaveis, cabecalhos, preambulo, slots, ordens
+        case rotulosVariaveis = "rotulos_variaveis"
+    }
 }
 
 // MARK: - Versões e diff
