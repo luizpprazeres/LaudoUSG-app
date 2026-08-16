@@ -15,8 +15,13 @@ import SwiftUI
 ///
 /// Nada muda nos laudos até "Passar a usar". Antes disso é rascunho.
 struct LibraryView: View {
-    var categoria: String = "OBSTETRICA"
+    /// A categoria de partida. Deixou de ser a ÚNICA: era `var categoria =
+    /// "OBSTETRICA"` cravado, e por isso o médico só via o modelo obstétrico
+    /// por mais que o backend passasse a servir as outras doze.
+    var categoriaInicial: String = "OBSTETRICA"
 
+    @State private var categoria: String = "OBSTETRICA"
+    @State private var categorias: [ModelCustomizationService.CategoriaDaBiblioteca] = []
     @State private var estado: CustomizationState?
     @State private var operacoes: [ReportOperation] = []
     @State private var carregando = true
@@ -170,8 +175,45 @@ struct LibraryView: View {
         .padding(Spacing.lg)
     }
 
+    /// Qual exame o médico está editando.
+    ///
+    /// Um menu, e não um Picker segmentado: são treze categorias, e um
+    /// segmentado com treze vira uma fileira ilegível.
+    private var seletorDeCategoria: some View {
+        Menu {
+            ForEach(categorias) { c in
+                Button {
+                    guard c.categoria != categoria else { return }
+                    categoria = c.categoria
+                    // Trocar de exame descarta o que estava em edição AQUI —
+                    // as operações são de outra categoria e não fazem sentido
+                    // na nova. O rascunho gravado no servidor não é tocado.
+                    operacoes = []
+                    variacaoSelecionada = nil
+                    Task { await carregar() }
+                } label: {
+                    Label(c.rotulo, systemImage: c.categoria == categoria ? "checkmark" : "")
+                }
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Text(rotuloAtual).font(TextStyle.bodyLargeMedium)
+                Image(systemName: "chevron.down").font(.system(size: 12, weight: .semibold))
+            }
+            .foregroundStyle(BrandColor.primary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, Spacing.xs)
+        }
+    }
+
+    private var rotuloAtual: String {
+        categorias.first(where: { $0.categoria == categoria })?.rotulo ?? categoria
+    }
+
     private var conteudo: some View {
         VStack(spacing: 0) {
+            if categorias.count > 1 { seletorDeCategoria }
             // Editar × conferir: o médico precisa das duas visões, e elas não
             // cabem na mesma tela sem uma virar ruído da outra.
             Picker("", selection: $aba) {
@@ -236,7 +278,7 @@ struct LibraryView: View {
                 .padding(Spacing.sm)
                 .background(ativa ? BrandColor.primarySoft : AppSurface.muted, in: RoundedRectangle(cornerRadius: 12))
             } else {
-                Text("Este é o modelo padrão do laudo obstétrico. Toque em qualquer frase para mudar a redação, tirá-la do laudo, ou acrescentar outra depois dela.")
+                Text("Este é o modelo padrão do laudo de \(rotuloAtual.lowercased()). Toque em qualquer frase para mudar a redação, tirá-la do laudo, ou acrescentar outra depois dela.")
                     .font(TextStyle.footnote)
                     .foregroundStyle(AppSurface.textSecondary)
             }
@@ -657,6 +699,12 @@ struct LibraryView: View {
         carregando = true
         erro = nil
         aguardandoServidor = false
+        // A lista de categorias vem do servidor uma vez por sessão de tela. Em
+        // falha ela cai no fallback, então nunca fica vazia.
+        if categorias.isEmpty {
+            categoria = categoriaInicial
+            categorias = await ModelCustomizationService.categorias()
+        }
         do {
             let e = try await ModelCustomizationService.fetch(categoria: categoria)
             estado = e

@@ -223,9 +223,44 @@ enum ModelCustomizationService {
 
     /// Categorias com catálogo hoje. A lista real é do backend (404 traz
     /// `pares_suportados`), mas a tela precisa de algo antes da 1ª chamada.
-    static let categoriasComModelo: [(code: String, label: String)] = [
-        ("OBSTETRICA", "Obstétrico")
+    /// Uma categoria que a Biblioteca mostra.
+    struct CategoriaDaBiblioteca: Codable, Hashable, Identifiable {
+        let categoria: String
+        let rotulo: String
+        /// O modelo vem do renderer (só normalidade) ou de catálogo escrito
+        /// (com as variantes de achado)? A tela usa para não prometer o que a
+        /// categoria não tem.
+        let derivado: Bool
+        /// Esta categoria já aplica a redação do médico nos laudos?
+        let personalizacaoAtiva: Bool
+
+        var id: String { categoria }
+
+        private enum CodingKeys: String, CodingKey {
+            case categoria, rotulo, derivado
+            case personalizacaoAtiva = "personalizacao_ativa"
+        }
+    }
+
+    private struct ListaBody: Decodable { let categorias: [CategoriaDaBiblioteca] }
+
+    /// Enquanto o servidor não responder, é isto que a tela mostra — e era isto
+    /// que ela tinha CRAVADO, motivo de o médico só ver o modelo obstétrico por
+    /// mais que o backend passasse a servir as outras doze.
+    static let categoriasFallback: [CategoriaDaBiblioteca] = [
+        .init(categoria: "OBSTETRICA", rotulo: "Obstétrica", derivado: false, personalizacaoAtiva: false)
     ]
+
+    /// As categorias da Biblioteca, do servidor. Em falha, o fallback — a tela
+    /// nunca fica vazia por causa de uma lista que não carregou.
+    static func categorias() async -> [CategoriaDaBiblioteca] {
+        do {
+            let r = try await APIClient.shared.get(base, as: ListaBody.self)
+            return r.categorias.isEmpty ? categoriasFallback : r.categorias
+        } catch {
+            return categoriasFallback
+        }
+    }
 
     private static let base = "/api/me/report-customizations"
 
