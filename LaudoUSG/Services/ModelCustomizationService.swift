@@ -56,9 +56,20 @@ struct CatalogVariant: Codable, Hashable {
 struct CatalogSlot: Codable, Hashable, Identifiable {
     let id: String
     let obrigatorio: Bool
+    /// Pode sair do modelo?
+    ///
+    /// NÃO é `!obrigatorio`: os slots de achado são condicionais — só aparecem
+    /// quando o médico dita o achado — e mesmo assim não podem ser removidos,
+    /// porque removê-los apagaria a patologia do laudo. O servidor recusa a
+    /// operação; sem este campo a tela oferecia o botão e o erro só chegava
+    /// depois. Opcional para tolerar um backend anterior ao campo.
+    let removivel: Bool?
     let placeholdersObrigatorios: [String]
     let condicional: Bool
     let variantes: [CatalogVariant]
+
+    /// Só é removível quando o servidor não disse o contrário.
+    var podeSerRemovido: Bool { !obrigatorio && removivel != false }
 
     /// A variante que vale quando nenhum achado alterado casa.
     var variantePadrao: CatalogVariant? {

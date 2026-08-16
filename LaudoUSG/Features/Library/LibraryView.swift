@@ -510,6 +510,11 @@ struct LibraryView: View {
                     Text("Esta frase é obrigatória e não pode sair do laudo.")
                         .font(TextStyle.footnote)
                         .foregroundStyle(AppSurface.textMuted)
+                } else if !slot.podeSerRemovido {
+                    // Slot de achado alterado: condicional, mas não removível.
+                    Text("Esta frase descreve um achado alterado. Ela só aparece quando você dita o achado — e por isso não pode ser tirada do modelo.")
+                        .font(TextStyle.footnote)
+                        .foregroundStyle(AppSurface.textMuted)
                 } else {
                     Button("Tirar do laudo", role: .destructive) {
                         let novas = operacoes.filter {
