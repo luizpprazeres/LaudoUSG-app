@@ -100,7 +100,12 @@ struct LibraryView: View {
     private var itensDeConclusao: [ReportOperation] {
         operacoes.filter { $0.op == "append_conclusion_item" }
     }
-    private var temRascunho: Bool { !operacoes.isEmpty }
+    /// "Existe rascunho" é o que o SERVIDOR diz — não `!operacoes.isEmpty`.
+    ///
+    /// Desde que `operacoes` passou a cair no publicado quando não há rascunho,
+    /// contar operações diria "tem rascunho" para quem só tem personalização
+    /// publicada, e o rodapé ofereceria "Publicar" em vez de "Voltar ao padrão".
+    private var temRascunho: Bool { estado?.rascunho != nil }
 
     // MARK: - Body
 
@@ -650,8 +655,13 @@ struct LibraryView: View {
         do {
             let e = try await ModelCustomizationService.fetch(categoria: categoria)
             estado = e
-            // O rascunho do servidor é a verdade, não o que ficou nesta tela.
-            operacoes = e.rascunho?.operations ?? []
+            // O que o médico está editando: o rascunho se houver, SENÃO o publicado.
+            //
+            // Ler só o rascunho era perda de dados: publicar zera o rascunho e move
+            // as operações para `publicado`, então a tela voltava ao modelo padrão
+            // ("não salvou") e a próxima edição partia de lista vazia — publicar de
+            // novo apagava em silêncio tudo o que já estava publicado.
+            operacoes = e.rascunho?.operations ?? e.publicado?.operations ?? []
         } catch is FeatureNotDeployed {
             aguardandoServidor = true
             self.erro = FeatureNotDeployed().errorDescription
@@ -679,7 +689,8 @@ struct LibraryView: View {
             // A recusa é informação, não falha: o backend explica por que aquela
             // alteração não pode valer. O rascunho local volta ao que era.
             recusa = recusado.reasons.isEmpty ? [recusado.message] : recusado.reasons
-            operacoes = estado?.rascunho?.operations ?? []
+            // Mesma regra do carregamento: volta ao rascunho, ou ao publicado.
+            operacoes = estado?.rascunho?.operations ?? estado?.publicado?.operations ?? []
         } catch {
             erro = error.localizedDescription
         }
