@@ -30,6 +30,20 @@ struct LibraryView: View {
     /// verdadeira: a primeira tentativa malsucedida congelava o menu escondido
     /// pelo resto da sessão da tela, e nem "Tentar de novo" recuperava.
     @State private var categoriasDoServidor = false
+    /// Qual cenário do modelo está aberto (gestação padrão / inicial / gemelar,
+    /// 1º / 2º / 3º trimestre…). Índice em `estado.catalogo.modelos`.
+    @State private var cenario = 0
+    /// A linha do modelo aberta para edição.
+    @State private var slotDoModelo: LinhaDoModelo?
+    /// A variante de achado aberta para edição.
+    @State private var varianteDeAchado: AchadoEmFoco?
+
+    struct AchadoEmFoco: Identifiable {
+        let slot: String
+        let variante: CatalogVariant
+        let texto: String
+        var id: String { "\(slot)|\(variante.id)" }
+    }
     @State private var estado: CustomizationState?
     @State private var operacoes: [ReportOperation] = []
     @State private var carregando = true
@@ -66,9 +80,27 @@ struct LibraryView: View {
 
     // MARK: - Derivados
 
-    /// Slots na ordem do laudo, com a frase padrão. Gemelar repete o mesmo
-    /// slot; aqui ele aparece uma vez só.
-    private var linhas: [(slot: CatalogSlot, frase: String, variante: CatalogVariant)] {
+    /// Os cenários do modelo — "Gestação padrão", "Segundo trimestre"…
+    private var modelos: [ModeloProjetado] { estado?.catalogo.modelos ?? [] }
+
+    /// As linhas do cenário aberto, na ordem e na seção em que saem no laudo.
+    ///
+    /// Vêm do SERVIDOR. A tela montava isto sozinha — pegava a "variante
+    /// padrão" de cada slot da ordem do corpo — e três defeitos vinham daí: a
+    /// conclusão não aparecia (a ordem do corpo não a contém), COMENTÁRIOS
+    /// também não, e slots CONDICIONAIS de achado vazavam para o modelo de
+    /// rotina, fazendo um descolamento placentário aparecer como linha de
+    /// exame normal.
+    private var linhasDoModelo: [LinhaDoModelo] {
+        guard !modelos.isEmpty else { return [] }
+        return modelos[min(cenario, modelos.count - 1)].linhas
+    }
+
+    /// Os achados condicionais — fora do modelo, mas editáveis.
+    private var achados: [AchadoProjetado] { estado?.catalogo.achados ?? [] }
+
+    /// Fallback para backend anterior a `modelos`: monta como antes.
+    private var linhasLegado: [(slot: CatalogSlot, frase: String, variante: CatalogVariant)] {
         guard let catalogo = estado?.catalogo else { return [] }
         let porId = Dictionary(uniqueKeysWithValues: catalogo.slots.map { ($0.id, $0) })
         var vistos = Set<String>()
@@ -165,6 +197,14 @@ struct LibraryView: View {
             editorDeTexto(modo)
                 .presentationDetents([.medium])
         }
+        .sheet(item: $slotDoModelo) { linha in
+            editorDeLinha(linha)
+                .presentationDetents([.medium, .large])
+        }
+        .sheet(item: $varianteDeAchado) { foco in
+            editorDeAchado(foco)
+                .presentationDetents([.medium, .large])
+        }
     }
 
     private func falhaAoCarregar(_ mensagem: String) -> some View {
@@ -215,6 +255,125 @@ struct LibraryView: View {
         }
     }
 
+    /// Qual VARIANTE DE EXAME está aberta — gestação padrão/inicial/gemelar,
+    /// 1º/2º/3º trimestre. É um segundo nível abaixo da categoria, e existe
+    /// porque uma categoria não tem um modelo só: o morfológico são três
+    /// exames sob o mesmo nome, e dois estavam invisíveis.
+    private var seletorDeCenario: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                ForEach(Array(modelos.enumerated()), id: \.element.id) { i, m in
+                    Button {
+                        cenario = i
+                    } label: {
+                        Text(m.nome)
+                            .font(TextStyle.caption)
+                            .foregroundStyle(i == cenario ? .white : AppSurface.textSecondary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(
+                                i == cenario ? BrandColor.primary : AppSurface.muted,
+                                in: Capsule()
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, Spacing.md)
+            .padding(.top, Spacing.xs)
+        }
+    }
+
+    /// Editor de uma linha do modelo.
+    private func editorDeLinha(_ linha: LinhaDoModelo) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            Text("Como você escreve esta frase")
+                .font(TextStyle.bodyLargeSemibold)
+            fraseComChips(linha, cor: AppSurface.textSecondary)
+
+            if !linha.dados.isEmpty {
+                // Os dados obrigatórios precisam sobreviver à redação nova — é
+                // o que impede uma frase reescrita de apagar uma medida.
+                Text("Toque para inserir o dado do exame na sua frase:")
+                    .font(TextStyle.caption)
+                    .foregroundStyle(AppSurface.textMuted)
+                HStack {
+                    ForEach(Array(linha.dados.enumerated()), id: \.offset) { _, d in
+                        Button {
+                            textoEmEdicao += d.marcador
+                        } label: {
+                            Text(d.obrigatorio ? "\(d.rotulo) *" : d.rotulo)
+                                .font(TextStyle.caption)
+                                .foregroundStyle(BrandColor.primaryDeep)
+                                .padding(.horizontal, Spacing.xs)
+                                .padding(.vertical, 4)
+                                .background(BrandColor.primarySoft, in: Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                if linha.dados.contains(where: { $0.obrigatorio }) {
+                    Text("* precisa aparecer na sua frase — é o dado que o exame mediu.")
+                        .font(TextStyle.caption)
+                        .foregroundStyle(AppSurface.textMuted)
+                }
+            }
+
+            TextEditor(text: $textoEmEdicao)
+                .font(TextStyle.bodyLarge)
+                .frame(minHeight: 110)
+                .padding(Spacing.xs)
+                .background(AppSurface.muted, in: RoundedRectangle(cornerRadius: 10))
+
+            HStack {
+                SecondaryButton(title: "Cancelar") { slotDoModelo = nil }
+                PrimaryButton(title: "Guardar") {
+                    let novas = operacoes.filter { $0.alvo != linha.slot }
+                        + [.replacePhrase(slot: linha.slot, value: textoEmEdicao)]
+                    slotDoModelo = nil
+                    Task { await aplicar(novas) }
+                }
+            }
+            Spacer()
+        }
+        .padding(Spacing.lg)
+        .onAppear { textoEmEdicao = linha.frase }
+    }
+
+    /// Editor de uma variante de ACHADO.
+    private func editorDeAchado(_ foco: AchadoEmFoco) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            Text("Como você descreve este achado")
+                .font(TextStyle.bodyLargeSemibold)
+            Text(foco.texto.trimmingCharacters(in: .whitespacesAndNewlines))
+                .font(TextStyle.body)
+                .foregroundStyle(AppSurface.textSecondary)
+            Text("Esta frase só entra no laudo quando você dita o achado. Ela não pode sair do modelo, e o dado do exame precisa continuar nela.")
+                .font(TextStyle.caption)
+                .foregroundStyle(AppSurface.textMuted)
+
+            TextEditor(text: $textoEmEdicao)
+                .font(TextStyle.bodyLarge)
+                .frame(minHeight: 110)
+                .padding(Spacing.xs)
+                .background(AppSurface.muted, in: RoundedRectangle(cornerRadius: 10))
+
+            HStack {
+                SecondaryButton(title: "Cancelar") { varianteDeAchado = nil }
+                PrimaryButton(title: "Guardar") {
+                    let novas = operacoes.filter { !($0.slot == foco.slot && $0.variant == foco.variante.id) }
+                        + [ReportOperation(op: "replace_phrase", slot: foco.slot,
+                                           variant: foco.variante.id, value: textoEmEdicao)]
+                    varianteDeAchado = nil
+                    Task { await aplicar(novas) }
+                }
+            }
+            Spacer()
+        }
+        .padding(Spacing.lg)
+        .onAppear { textoEmEdicao = foco.variante.frase ?? foco.texto }
+    }
+
     private var rotuloAtual: String {
         categorias.first(where: { $0.categoria == categoria })?.rotulo ?? categoria
     }
@@ -222,6 +381,7 @@ struct LibraryView: View {
     private var conteudo: some View {
         VStack(spacing: 0) {
             if categorias.count > 1 { seletorDeCategoria }
+            if modelos.count > 1 { seletorDeCenario }
             // Editar × conferir: o médico precisa das duas visões, e elas não
             // cabem na mesma tela sem uma virar ruído da outra.
             Picker("", selection: $aba) {
@@ -352,16 +512,136 @@ struct LibraryView: View {
         .buttonStyle(.plain)
     }
 
+    /// O cabeçalho de uma seção, como sai no laudo.
+    private func cabecalhoDaSecao(_ secao: String) -> String {
+        switch secao {
+        case "tecnica": return "COMENTÁRIOS:"
+        case "conclusao": return estado?.catalogo.cabecalhos.conclusao ?? "CONCLUSÃO:"
+        default: return estado?.catalogo.cabecalhos.corpo ?? "OS SEGUINTES ASPECTOS FORAM OBSERVADOS:"
+        }
+    }
+
     private var modeloEmTextoCorrido: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(estado?.catalogo.cabecalhos.corpo ?? "")
+            if modelos.isEmpty {
+                // Backend anterior a `modelos` — monta como antes.
+                Text(estado?.catalogo.cabecalhos.corpo ?? "")
+                    .font(TextStyle.caption).tracking(1)
+                    .foregroundStyle(AppSurface.textMuted)
+                    .padding(.bottom, Spacing.xs)
+                ForEach(linhasLegado, id: \.slot.id) { frase($0) }
+            } else {
+                // O cabeçalho entra a cada MUDANÇA de seção — é o que faz o
+                // modelo se parecer com o laudo. Sem isto o corpo emendava na
+                // conclusão sem o termo "CONCLUSÃO", que foi o que o Luiz viu
+                // na tireoide e na mamária.
+                ForEach(Array(linhasDoModelo.enumerated()), id: \.element.id) { i, linha in
+                    if i == 0 || linhasDoModelo[i - 1].secao != linha.secao {
+                        Text(cabecalhoDaSecao(linha.secao))
+                            .font(TextStyle.caption).tracking(1)
+                            .foregroundStyle(AppSurface.textMuted)
+                            .padding(.top, i == 0 ? 0 : Spacing.md)
+                            .padding(.bottom, Spacing.xs)
+                    }
+                    linhaDoModelo(linha)
+                }
+                if !achados.isEmpty { secaoDeAchados }
+            }
+        }
+    }
+
+    /// Uma frase do modelo — a redação, com os dados como chips.
+    @ViewBuilder
+    private func linhaDoModelo(_ linha: LinhaDoModelo) -> some View {
+        let op = operacao(de: linha.slot)
+        let removida = op?.op == "remove_slot"
+        let trocadaPor = op?.op == "replace_phrase" ? op?.value : nil
+
+        VStack(alignment: .leading, spacing: 3) {
+            Button {
+                guard linha.editavel else { return }
+                slotDoModelo = linha
+            } label: {
+                VStack(alignment: .leading, spacing: 3) {
+                    if removida || trocadaPor != nil {
+                        fraseComChips(linha, cor: AppSurface.textMuted)
+                            .strikethrough()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        fraseComChips(linha, cor: AppSurface.textPrimary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    if let trocadaPor {
+                        Text(trocadaPor.trimmingCharacters(in: .whitespacesAndNewlines))
+                            .font(TextStyle.bodyLarge)
+                            .foregroundStyle(BrandColor.primaryDeep)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    if !linha.editavel, let motivo = linha.motivo {
+                        Text(motivo)
+                            .font(TextStyle.caption)
+                            .foregroundStyle(AppSurface.textMuted)
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+            .disabled(!linha.editavel)
+        }
+        .padding(.vertical, 2)
+    }
+
+    /// A frase com cada dado do exame desenhado como chip.
+    ///
+    /// O médico não vê `{dbp}` nem `____`: vê `[DBP]`. É o servidor que unifica
+    /// as duas formas — a nomeada do catálogo escrito e a posicional do modelo
+    /// derivado — em `dados`.
+    private func fraseComChips(_ linha: LinhaDoModelo, cor: Color) -> Text {
+        var resultado = Text("")
+        var restante = Substring(linha.frase)
+        var i = 0
+        while i < linha.dados.count, let r = restante.range(of: linha.dados[i].marcador) {
+            resultado = resultado
+                + Text(String(restante[restante.startIndex..<r.lowerBound])).foregroundStyle(cor)
+                + Text("[\(linha.dados[i].rotulo)]").foregroundStyle(BrandColor.primary).bold()
+            restante = restante[r.upperBound...]
+            i += 1
+        }
+        return (resultado + Text(String(restante)).foregroundStyle(cor)).font(TextStyle.bodyLarge)
+    }
+
+    /// Os achados — fora do modelo, em âmbar, editáveis.
+    ///
+    /// Âmbar porque não são o laudo de rotina: são o que o sistema escreve
+    /// QUANDO o achado é ditado. Misturá-los com o modelo é o defeito que fazia
+    /// um descolamento placentário aparecer como linha de exame normal.
+    private var secaoDeAchados: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            Text("QUANDO HÁ ACHADO")
+                .font(TextStyle.caption).tracking(1)
+                .foregroundStyle(SemanticColor.warningText)
+                .padding(.top, Spacing.lg)
+            Text("Estas frases só entram no laudo quando você dita o achado. Você pode mudar a redação; o dado do exame e a frase em si não podem sair.")
                 .font(TextStyle.caption)
-                .tracking(1)
                 .foregroundStyle(AppSurface.textMuted)
                 .padding(.bottom, Spacing.xs)
 
-            ForEach(linhas, id: \.slot.id) { linha in
-                frase(linha)
+            ForEach(achados) { achado in
+                ForEach(achado.variantes, id: \.id) { v in
+                    if let texto = v.frase ?? v.corpoExemplo {
+                        Button {
+                            guard v.editavel else { return }
+                            varianteDeAchado = AchadoEmFoco(slot: achado.slot, variante: v, texto: texto)
+                        } label: {
+                            Text(texto.trimmingCharacters(in: .whitespacesAndNewlines))
+                                .font(TextStyle.body)
+                                .foregroundStyle(v.editavel ? AppSurface.textPrimary : AppSurface.textMuted)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.vertical, 3)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(!v.editavel)
+                    }
+                }
             }
         }
     }
@@ -523,7 +803,9 @@ struct LibraryView: View {
     // MARK: - Sheets
 
     private func acoesDaFrase(_ slot: CatalogSlot) -> some View {
-        let linha = linhas.first(where: { $0.slot.id == slot.id })
+        // Caminho LEGADO (backend anterior a `modelos`) — as linhas montadas
+        // pela própria tela. O caminho novo abre `slotDoModelo`.
+        let linha = linhasLegado.first(where: { $0.slot.id == slot.id })
         let editavel = linha?.variante.editavel ?? false
         return VStack(alignment: .leading, spacing: Spacing.sm) {
             if !editavel {

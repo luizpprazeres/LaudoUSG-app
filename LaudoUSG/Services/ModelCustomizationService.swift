@@ -51,6 +51,10 @@ struct CatalogVariant: Codable, Hashable {
     let editavel: Bool
     /// Por que não é editável. Texto pronto para mostrar ao médico.
     let motivo: String?
+    /// Como esta variante SAI no laudo, renderizada de um achado de exemplo.
+    /// É o que dá texto às que o motor monta — sem isto elas apareciam vazias.
+    let corpoExemplo: String?
+    let conclusaoExemplo: String?
 }
 
 struct CatalogSlot: Codable, Hashable, Identifiable {
@@ -88,6 +92,62 @@ struct CatalogOrder: Codable, Hashable {
     let slots: [String]
 }
 
+// MARK: - O modelo como LINHAS
+
+/// Um dado do exame dentro de uma frase.
+///
+/// O servidor unifica as duas formas que existem por baixo — `{dbp}` no
+/// catálogo escrito, `____` no modelo derivado — e manda as duas como isto. A
+/// tela desenha um chip com `rotulo`; o médico nunca vê a forma crua.
+struct DadoDaFrase: Codable, Hashable {
+    /// O que inserir na redação para trazer o dado de volta.
+    let marcador: String
+    let rotulo: String
+    /// A redação precisa conservá-lo? Sem este campo o app deixaria apagar
+    /// uma medida e só descobriria no 422 do servidor.
+    let obrigatorio: Bool
+}
+
+/// Uma linha do modelo, na ordem e na seção em que sai no laudo.
+///
+/// Substitui o que a tela montava sozinha a partir de `slots` + `ordens` — que
+/// não carregava seção nem condicionalidade, e por isso a Biblioteca aparecia
+/// sem COMENTÁRIOS, sem CONCLUSÃO, e com um descolamento placentário no meio
+/// do exame normal.
+struct LinhaDoModelo: Codable, Hashable, Identifiable {
+    /// "tecnica" | "corpo" | "conclusao"
+    let secao: String
+    let slot: String
+    let variante: String
+    let frase: String
+    let editavel: Bool
+    let motivo: String?
+    let obrigatorio: Bool
+    let removivel: Bool
+    let placeholdersObrigatorios: [String]
+    let dados: [DadoDaFrase]
+
+    var id: String { "\(secao)|\(slot)|\(variante)" }
+}
+
+/// Um cenário do modelo — "Gestação padrão", "Segundo trimestre"…
+struct ModeloProjetado: Codable, Hashable, Identifiable {
+    let nome: String
+    let linhas: [LinhaDoModelo]
+    var id: String { nome }
+}
+
+/// Um achado CONDICIONAL — só sai no laudo quando ditado.
+///
+/// Vem à parte do modelo de propósito: no exame de rotina ele não está, mas o
+/// médico precisa vê-lo e poder reescrevê-lo.
+struct AchadoProjetado: Codable, Hashable, Identifiable {
+    let slot: String
+    let removivel: Bool
+    let variantes: [CatalogVariant]
+    var id: String { slot }
+}
+
 struct ReportCatalog: Codable, Hashable {
     let id: String
     let categoria: String
@@ -105,6 +165,11 @@ struct ReportCatalog: Codable, Hashable {
     let preambulo: String?
     let slots: [CatalogSlot]
     let ordens: [CatalogOrder]
+    /// O modelo como LINHAS, por cenário. É o que a tela deve desenhar;
+    /// `slots`/`ordens` ficam por compatibilidade com backend antigo.
+    let modelos: [ModeloProjetado]?
+    /// Os achados condicionais, fora do modelo de rotina.
+    let achados: [AchadoProjetado]?
     // Sem CodingKeys pelo mesmo motivo de CategoriaDaBiblioteca: o decoder já
     // converte `rotulos_variaveis` → `rotulosVariaveis`. Aqui o campo é
     // opcional, então o mapeamento errado não lançava — só fazia os rótulos
