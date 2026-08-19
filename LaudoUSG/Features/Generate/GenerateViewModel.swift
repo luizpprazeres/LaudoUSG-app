@@ -519,8 +519,28 @@ final class GenerateViewModel {
             }
             streamedOutput += payload.delta
             displayedOutput = streamedOutput
-        case .sanity:
-            break
+        case .sanity(let payload):
+            /**
+             * As issues do SERVIDOR entram no mesmo card das locais.
+             *
+             * O card "N pontos a revisar" era alimentado só pelo
+             * `SanityChecker` local, e por isso avisos que só o backend conhece
+             * — o principal deles: "a sua personalização não pôde ser aplicada,
+             * este laudo saiu com a redação padrão" — não chegavam ao médico.
+             *
+             * O evento `sanity` chega DEPOIS do `done`, que já preencheu as
+             * locais; daí o append. Dedupe por mensagem para o caso de as duas
+             * fontes apontarem a mesma coisa.
+             */
+            let jaTem = Set(sanityIssues.map(\.message))
+            sanityIssues.append(contentsOf: payload.result.issues
+                .filter { !jaTem.contains($0.message) }
+                .map { LocalSanityIssue(
+                    code: $0.code ?? "servidor",
+                    severity: $0.severity ?? "warning",
+                    message: $0.message,
+                    range: $0.range
+                ) })
         case .done(let payload):
             // #10: se o `done` vier vazio/truncado, preserva o texto já
             // transmitido por tokens em vez de zerar o laudo do usuário.
