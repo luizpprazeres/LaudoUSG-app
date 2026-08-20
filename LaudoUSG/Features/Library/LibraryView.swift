@@ -44,8 +44,8 @@ struct LibraryView: View {
     @State private var slotDoModelo: LinhaDoModelo?
     /// A seção que vai receber uma frase NOVA — "corpo" ou "conclusao".
     @State private var secaoRecebendoFrase: SecaoEmFoco?
-    /// A frase acrescentada que está sendo reposicionada.
-    @State private var acrescentadaEmMovimento: ReportOperation?
+    /// A linha sob o dedo durante o arrasto — desenha onde a frase vai cair.
+    @State private var linhaSobArrasto: String?
     /// A variante de achado aberta para edição.
     @State private var varianteDeAchado: AchadoEmFoco?
 
@@ -564,20 +564,28 @@ struct LibraryView: View {
     }
 
     /// Uma frase que o médico acrescentou. Aparece onde vai entrar no laudo.
+    ///
+    /// ARRASTÁVEL: segurar e puxar solta-a sobre outra linha, e ela passa a
+    /// entrar depois daquela. Reposicionar é trocar a ÂNCORA — o servidor já
+    /// entendia isso, então nada mudou do lado de lá.
+    ///
+    /// As cores vêm de `AppSurface`, não de `BrandColor`: o verde-claro do
+    /// `BrandColor.primarySoft` é hex fixo, e no modo escuro recebia texto
+    /// branco por cima. Branco sobre verde-claro não se lê.
     private func fraseAcrescentada(_ op: ReportOperation) -> some View {
         HStack(alignment: .top, spacing: Spacing.xs) {
-            Image(systemName: "plus.circle.fill")
-                .font(.system(size: 13))
-                .foregroundStyle(BrandColor.primary)
-                .padding(.top, 3)
-            VStack(alignment: .leading, spacing: 2) {
+            Image(systemName: "line.3.horizontal")
+                .font(.system(size: 12))
+                .foregroundStyle(AppSurface.onPrimarySoft.opacity(0.6))
+                .padding(.top, 4)
+            VStack(alignment: .leading, spacing: 3) {
                 Text(op.value ?? "")
                     .font(TextStyle.bodyLarge)
-                    .foregroundStyle(AppSurface.textPrimary)
-                HStack(spacing: Spacing.sm) {
-                    Button("Mover") { acrescentadaEmMovimento = op }
+                    .foregroundStyle(AppSurface.onPrimarySoft)
+                HStack(spacing: Spacing.md) {
+                    Text("segure e arraste para mover")
                         .font(TextStyle.caption)
-                        .foregroundStyle(BrandColor.primaryDeep)
+                        .foregroundStyle(AppSurface.onPrimarySoft.opacity(0.7))
                     Button("Tirar", role: .destructive) {
                         Task { await aplicar(operacoes.filter { $0.id != op.id }) }
                     }
@@ -588,8 +596,16 @@ struct LibraryView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Spacing.xs)
-        .background(BrandColor.primarySoft, in: RoundedRectangle(cornerRadius: 8))
+        .background(AppSurface.primarySoft, in: RoundedRectangle(cornerRadius: 8))
         .padding(.vertical, 2)
+        .draggable(op.id) {
+            // A prévia que acompanha o dedo.
+            Text(op.value ?? "")
+                .font(TextStyle.caption)
+                .foregroundStyle(AppSurface.onPrimarySoft)
+                .padding(Spacing.xs)
+                .background(AppSurface.primarySoft, in: RoundedRectangle(cornerRadius: 8))
+        }
     }
 
     /// "+ Acrescentar frase" no fim de uma seção.
@@ -613,30 +629,18 @@ struct LibraryView: View {
         .padding(.bottom, Spacing.xs)
     }
 
-    /// Alvo de reposicionamento: "a frase nova entra depois desta".
+    /// Recebe uma frase arrastada: ela passa a entrar DEPOIS desta linha.
     ///
-    /// Reposicionar é trocar a ÂNCORA — o servidor já entende isso, e por isso
-    /// não precisou de operação nova. Arrastar seria mais bonito, mas a lista é
-    /// um `VStack` e não um `List`: `.onMove` exigiria refazer a tela inteira.
-    private func destinoDeInsercao(_ linha: LinhaDoModelo) -> some View {
-        Button {
-            guard let op = acrescentadaEmMovimento else { return }
-            let novas = operacoes.filter { $0.id != op.id }
-                + [.insertPhraseAfter(anchor: linha.slot, value: op.value ?? "")]
-            acrescentadaEmMovimento = nil
-            Task { await aplicar(novas) }
-        } label: {
-            HStack(spacing: 6) {
-                Image(systemName: "arrow.turn.down.right").font(.system(size: 11))
-                Text("entra aqui").font(TextStyle.caption)
-                Spacer()
-            }
-            .foregroundStyle(BrandColor.primaryDeep)
-            .padding(.vertical, 5)
-            .padding(.horizontal, Spacing.xs)
-            .background(BrandColor.primarySoft, in: RoundedRectangle(cornerRadius: 6))
-        }
-        .buttonStyle(.plain)
+    /// `op.id` é o que viaja no arrasto — de lá se acha a operação inteira, o
+    /// texto vem junto e nada precisa ser reescrito.
+    private func receberArrasto(_ ids: [String], depoisDe slot: String) -> Bool {
+        guard let id = ids.first,
+              let op = operacoes.first(where: { $0.id == id }),
+              op.anchor != slot else { return false }
+        let novas = operacoes.filter { $0.id != id }
+            + [.insertPhraseAfter(anchor: slot, value: op.value ?? "")]
+        Task { await aplicar(novas) }
+        return true
     }
 
     /// O editor da frase NOVA — campo em branco, porque é frase nova.
@@ -716,9 +720,20 @@ struct LibraryView: View {
                             .padding(.top, i == 0 ? 0 : Spacing.md)
                             .padding(.bottom, Spacing.xs)
                     }
-                    // Movendo uma frase nova: cada linha vira um destino.
-                    if acrescentadaEmMovimento != nil { destinoDeInsercao(linha) }
                     linhaDoModelo(linha)
+                        .dropDestination(for: String.self) { ids, _ in
+                            receberArrasto(ids, depoisDe: linha.slot)
+                        } isTargeted: { dentro in
+                            linhaSobArrasto = dentro ? linha.slot : nil
+                        }
+                        .overlay(alignment: .bottom) {
+                            // Onde ela vai cair, enquanto o dedo está em cima.
+                            if linhaSobArrasto == linha.slot {
+                                Rectangle()
+                                    .fill(BrandColor.primary)
+                                    .frame(height: 2)
+                            }
+                        }
                     // As frases NOVAS aparecem onde vão entrar no laudo, não
                     // numa lista à parte — é o ponto de mostrar o modelo como
                     // ele sai.

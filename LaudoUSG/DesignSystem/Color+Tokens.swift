@@ -102,6 +102,20 @@ enum AppSurface {
         light: NeutralColor.gray200,
         dark: Color(hex: "2C2C2E")
     )
+    /// Fundo de destaque suave da marca — o verde-claro que funciona nos DOIS temas.
+    ///
+    /// `BrandColor.primarySoft` é um hex fixo (#D1FAE5). Usado como fundo no
+    /// modo escuro, ele recebia texto branco por cima e ficava ilegível — foi o
+    /// que apareceu nas frases acrescentadas da Biblioteca, 20/08.
+    static let primarySoft = Color.dynamic(
+        light: BrandColor.primarySoft,
+        dark: Color(hex: "0B3B2E")
+    )
+    /// Texto sobre `primarySoft`, legível nos dois temas.
+    static let onPrimarySoft = Color.dynamic(
+        light: BrandColor.primaryDeep,
+        dark: Color(hex: "6EE7B7")
+    )
     static let textPrimary = Color.dynamic(
         light: NeutralColor.gray900,
         dark: .white
