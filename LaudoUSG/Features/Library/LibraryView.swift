@@ -14,6 +14,13 @@ import SwiftUI
 ///   âmbar  → o que o SISTEMA escreve quando há um achado (ele não escolhe)
 ///
 /// Nada muda nos laudos até "Passar a usar". Antes disso é rascunho.
+/// Qual seção está recebendo uma frase nova. Um tipo, e não `String?`, porque
+/// `sheet(item:)` pede `Identifiable` — e nomear a intenção custa menos que a
+/// gambiarra de embrulhar a string.
+private struct SecaoEmFoco: Identifiable, Hashable {
+    let id: String
+}
+
 struct LibraryView: View {
     /// A categoria de partida. Deixou de ser a ÚNICA: era `var categoria =
     /// "OBSTETRICA"` cravado, e por isso o médico só via o modelo obstétrico
@@ -35,6 +42,10 @@ struct LibraryView: View {
     @State private var cenario = 0
     /// A linha do modelo aberta para edição.
     @State private var slotDoModelo: LinhaDoModelo?
+    /// A seção que vai receber uma frase NOVA — "corpo" ou "conclusao".
+    @State private var secaoRecebendoFrase: SecaoEmFoco?
+    /// A frase acrescentada que está sendo reposicionada.
+    @State private var acrescentadaEmMovimento: ReportOperation?
     /// A variante de achado aberta para edição.
     @State private var varianteDeAchado: AchadoEmFoco?
 
@@ -205,6 +216,10 @@ struct LibraryView: View {
             editorDeAchado(foco)
                 .presentationDetents([.medium, .large])
         }
+        .sheet(item: $secaoRecebendoFrase) { secao in
+            editorDeFraseNova(secao)
+                .presentationDetents([.medium])
+        }
     }
 
     private func falhaAoCarregar(_ mensagem: String) -> some View {
@@ -340,30 +355,14 @@ struct LibraryView: View {
             Divider()
 
             /**
-             Acrescentar e tirar linha.
+             Aqui só o que age SOBRE ESTA FRASE.
 
-             A tela só oferecia "Guardar", que é `replace_phrase`. Quem quisesse
-             uma linha nova colava-a dentro da frase que estava alterando — foi
-             o que aconteceu no piloto de 20/08. As três operações existem no
-             servidor desde sempre; faltava a tela pedi-las.
+             "Acrescentar" saiu daqui: dividia o mesmo campo de texto com o
+             "Guardar", que abre pré-preenchido com a frase da casa — para
+             escrever uma frase nova era preciso apagar a original primeiro, e o
+             botão ficava travado até o texto diferir. Frase nova agora nasce no
+             fim da seção, onde o médico a enxerga no lugar em que vai entrar.
              */
-            Button {
-                let texto = textoEmEdicao.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !texto.isEmpty, texto != linha.frase else { return }
-                let novas = operacoes + [.insertPhraseAfter(anchor: linha.slot, value: texto)]
-                slotDoModelo = nil
-                Task { await aplicar(novas) }
-            } label: {
-                Label("Acrescentar como frase NOVA, depois desta", systemImage: "text.insert")
-                    .font(TextStyle.bodyLargeMedium)
-            }
-            .disabled(textoEmEdicao.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                      || textoEmEdicao == linha.frase)
-
-            Text("Escreva a frase nova acima e toque aqui: ela entra logo depois desta, sem substituí-la.")
-                .font(TextStyle.caption)
-                .foregroundStyle(AppSurface.textMuted)
-
             if linha.removivel {
                 Button(role: .destructive) {
                     let novas = operacoes.filter { $0.alvo != linha.slot } + [.removeSlot(linha.slot)]
@@ -552,6 +551,128 @@ struct LibraryView: View {
         }
     }
 
+    // MARK: - Frases acrescentadas
+
+    /// As frases novas ancoradas DEPOIS desta linha, na ordem em que ele escreveu.
+    private func acrescentadasDepoisDe(_ slot: String) -> [ReportOperation] {
+        operacoes.filter { $0.op == "insert_phrase_after" && $0.anchor == slot }
+    }
+
+    /// A última linha de uma seção — âncora de quem entra no fim dela.
+    private func ultimaLinhaDa(_ secao: String) -> String? {
+        linhasDoModelo.last(where: { $0.secao == secao })?.slot
+    }
+
+    /// Uma frase que o médico acrescentou. Aparece onde vai entrar no laudo.
+    private func fraseAcrescentada(_ op: ReportOperation) -> some View {
+        HStack(alignment: .top, spacing: Spacing.xs) {
+            Image(systemName: "plus.circle.fill")
+                .font(.system(size: 13))
+                .foregroundStyle(BrandColor.primary)
+                .padding(.top, 3)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(op.value ?? "")
+                    .font(TextStyle.bodyLarge)
+                    .foregroundStyle(AppSurface.textPrimary)
+                HStack(spacing: Spacing.sm) {
+                    Button("Mover") { acrescentadaEmMovimento = op }
+                        .font(TextStyle.caption)
+                        .foregroundStyle(BrandColor.primaryDeep)
+                    Button("Tirar", role: .destructive) {
+                        Task { await aplicar(operacoes.filter { $0.id != op.id }) }
+                    }
+                    .font(TextStyle.caption)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Spacing.xs)
+        .background(BrandColor.primarySoft, in: RoundedRectangle(cornerRadius: 8))
+        .padding(.vertical, 2)
+    }
+
+    /// "+ Acrescentar frase" no fim de uma seção.
+    ///
+    /// É onde o médico pediu: como o item da conclusão, mas para qualquer
+    /// seção — e ancorado na última linha dela, que é o que faz a frase nova
+    /// sair no fim daquela parte do laudo.
+    private func botaoAcrescentar(secao: String) -> some View {
+        Button {
+            textoEmEdicao = ""
+            secaoRecebendoFrase = SecaoEmFoco(id: secao)
+        } label: {
+            Label(
+                secao == "conclusao" ? "Acrescentar item à conclusão" : "Acrescentar frase aqui",
+                systemImage: "plus.circle",
+            )
+            .font(TextStyle.bodyMedium)
+        }
+        .foregroundStyle(BrandColor.primary)
+        .padding(.top, Spacing.xs)
+        .padding(.bottom, Spacing.xs)
+    }
+
+    /// Alvo de reposicionamento: "a frase nova entra depois desta".
+    ///
+    /// Reposicionar é trocar a ÂNCORA — o servidor já entende isso, e por isso
+    /// não precisou de operação nova. Arrastar seria mais bonito, mas a lista é
+    /// um `VStack` e não um `List`: `.onMove` exigiria refazer a tela inteira.
+    private func destinoDeInsercao(_ linha: LinhaDoModelo) -> some View {
+        Button {
+            guard let op = acrescentadaEmMovimento else { return }
+            let novas = operacoes.filter { $0.id != op.id }
+                + [.insertPhraseAfter(anchor: linha.slot, value: op.value ?? "")]
+            acrescentadaEmMovimento = nil
+            Task { await aplicar(novas) }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "arrow.turn.down.right").font(.system(size: 11))
+                Text("entra aqui").font(TextStyle.caption)
+                Spacer()
+            }
+            .foregroundStyle(BrandColor.primaryDeep)
+            .padding(.vertical, 5)
+            .padding(.horizontal, Spacing.xs)
+            .background(BrandColor.primarySoft, in: RoundedRectangle(cornerRadius: 6))
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// O editor da frase NOVA — campo em branco, porque é frase nova.
+    private func editorDeFraseNova(_ foco: SecaoEmFoco) -> some View {
+        let secao = foco.id
+        return VStack(alignment: .leading, spacing: Spacing.md) {
+            Text(secao == "conclusao" ? "Novo item da conclusão" : "Nova frase do laudo")
+                .font(TextStyle.bodyLargeSemibold)
+            Text("Ela entra no fim desta parte do laudo. Depois de guardar, você pode movê-la para outro lugar.")
+                .font(TextStyle.caption)
+                .foregroundStyle(AppSurface.textMuted)
+
+            TextEditor(text: $textoEmEdicao)
+                .font(TextStyle.bodyLarge)
+                .frame(minHeight: 110)
+                .padding(Spacing.xs)
+                .background(AppSurface.muted, in: RoundedRectangle(cornerRadius: 10))
+
+            HStack {
+                SecondaryButton(title: "Cancelar") { secaoRecebendoFrase = nil }
+                PrimaryButton(title: "Guardar") {
+                    let texto = textoEmEdicao.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !texto.isEmpty, let ancora = ultimaLinhaDa(secao) else {
+                        secaoRecebendoFrase = nil
+                        return
+                    }
+                    let novas = operacoes + [.insertPhraseAfter(anchor: ancora, value: texto)]
+                    secaoRecebendoFrase = nil
+                    Task { await aplicar(novas) }
+                }
+            }
+            Spacer()
+        }
+        .padding(Spacing.lg)
+    }
+
     private func chip(_ titulo: String, ativo: Bool, cor: Color, acao: @escaping () -> Void) -> some View {
         Button(action: acao) {
             Text(titulo)
@@ -595,7 +716,19 @@ struct LibraryView: View {
                             .padding(.top, i == 0 ? 0 : Spacing.md)
                             .padding(.bottom, Spacing.xs)
                     }
+                    // Movendo uma frase nova: cada linha vira um destino.
+                    if acrescentadaEmMovimento != nil { destinoDeInsercao(linha) }
                     linhaDoModelo(linha)
+                    // As frases NOVAS aparecem onde vão entrar no laudo, não
+                    // numa lista à parte — é o ponto de mostrar o modelo como
+                    // ele sai.
+                    ForEach(acrescentadasDepoisDe(linha.slot), id: \.id) { op in
+                        fraseAcrescentada(op)
+                    }
+                    // Fim da seção: o lugar de acrescentar.
+                    if i == linhasDoModelo.count - 1 || linhasDoModelo[i + 1].secao != linha.secao {
+                        botaoAcrescentar(secao: linha.secao)
+                    }
                 }
                 if !achados.isEmpty { secaoDeAchados }
             }
