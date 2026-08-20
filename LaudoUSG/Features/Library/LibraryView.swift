@@ -328,12 +328,64 @@ struct LibraryView: View {
             HStack {
                 SecondaryButton(title: "Cancelar") { slotDoModelo = nil }
                 PrimaryButton(title: "Guardar") {
-                    let novas = operacoes.filter { $0.alvo != linha.slot }
+                    // Só a redação desta linha muda; o que foi ACRESCENTADO
+                    // depois dela é outra operação e sobrevive.
+                    let novas = operacoes.filter { !($0.op != "insert_phrase_after" && $0.alvo == linha.slot) }
                         + [.replacePhrase(slot: linha.slot, value: textoEmEdicao)]
                     slotDoModelo = nil
                     Task { await aplicar(novas) }
                 }
             }
+
+            Divider()
+
+            /**
+             Acrescentar e tirar linha.
+
+             A tela só oferecia "Guardar", que é `replace_phrase`. Quem quisesse
+             uma linha nova colava-a dentro da frase que estava alterando — foi
+             o que aconteceu no piloto de 20/08. As três operações existem no
+             servidor desde sempre; faltava a tela pedi-las.
+             */
+            Button {
+                let texto = textoEmEdicao.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !texto.isEmpty, texto != linha.frase else { return }
+                let novas = operacoes + [.insertPhraseAfter(anchor: linha.slot, value: texto)]
+                slotDoModelo = nil
+                Task { await aplicar(novas) }
+            } label: {
+                Label("Acrescentar como frase NOVA, depois desta", systemImage: "text.insert")
+                    .font(TextStyle.bodyLargeMedium)
+            }
+            .disabled(textoEmEdicao.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                      || textoEmEdicao == linha.frase)
+
+            Text("Escreva a frase nova acima e toque aqui: ela entra logo depois desta, sem substituí-la.")
+                .font(TextStyle.caption)
+                .foregroundStyle(AppSurface.textMuted)
+
+            if linha.removivel {
+                Button(role: .destructive) {
+                    let novas = operacoes.filter { $0.alvo != linha.slot } + [.removeSlot(linha.slot)]
+                    slotDoModelo = nil
+                    Task { await aplicar(novas) }
+                } label: {
+                    Label("Tirar esta frase do meu modelo", systemImage: "minus.circle")
+                        .font(TextStyle.bodyLargeMedium)
+                }
+            }
+
+            if operacoes.contains(where: { $0.alvo == linha.slot }) {
+                Button(role: .destructive) {
+                    let novas = operacoes.filter { $0.alvo != linha.slot }
+                    slotDoModelo = nil
+                    Task { await aplicar(novas) }
+                } label: {
+                    Label("Desfazer tudo nesta frase", systemImage: "arrow.uturn.backward")
+                        .font(TextStyle.bodyLargeMedium)
+                }
+            }
+
             Spacer()
         }
         .padding(Spacing.lg)
