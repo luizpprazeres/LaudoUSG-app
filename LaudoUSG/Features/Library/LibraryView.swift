@@ -455,16 +455,10 @@ struct LibraryView: View {
                         seletorDeAchados(variacoes)
                     }
                     modeloEmTextoCorrido
+                    // O "Acrescentar item à conclusão" agora nasce NO FIM da
+                    // conclusão, dentro da lista — ver `botaoAcrescentar`. Este
+                    // aqui, solto no rodapé, virava um segundo botão idêntico.
                     if !itensDeConclusao.isEmpty { conclusaoAcrescentada }
-                    Button {
-                        textoEmEdicao = ""
-                        modoEdicao = .conclusao
-                    } label: {
-                        Label("Acrescentar item à conclusão", systemImage: "plus.circle")
-                            .font(TextStyle.bodyMedium)
-                    }
-                    .foregroundStyle(BrandColor.primary)
-                    .padding(.top, Spacing.xs)
                 }
                 .padding(Spacing.md)
                 .padding(.bottom, Spacing.xxl)
@@ -629,6 +623,22 @@ struct LibraryView: View {
         .padding(.bottom, Spacing.xs)
     }
 
+    /// Alvo invisível no TOPO de uma seção.
+    ///
+    /// Só aparece quando há algo sendo arrastado — fora isso é espaço morto. É
+    /// como se chega ao começo de uma seção com uma operação que só sabe dizer
+    /// "depois de".
+    private func alvoDeTopo(anterior: String, secao: String) -> some View {
+        Rectangle()
+            .fill(linhaSobArrasto == "topo:\(secao)" ? BrandColor.primary : Color.clear)
+            .frame(height: linhaSobArrasto == "topo:\(secao)" ? 2 : 10)
+            .dropDestination(for: String.self) { ids, _ in
+                receberArrasto(ids, depoisDe: anterior)
+            } isTargeted: { dentro in
+                linhaSobArrasto = dentro ? "topo:\(secao)" : nil
+            }
+    }
+
     /// Recebe uma frase arrastada: ela passa a entrar DEPOIS desta linha.
     ///
     /// `op.id` é o que viaja no arrasto — de lá se acha a operação inteira, o
@@ -720,6 +730,13 @@ struct LibraryView: View {
                             .padding(.top, i == 0 ? 0 : Spacing.md)
                             .padding(.bottom, Spacing.xs)
                     }
+                    // ANTES da primeira frase da seção: a única posição que a
+                    // âncora "depois de" não alcança sozinha. Resolve-se
+                    // ancorando na ÚLTIMA linha da seção anterior — que é onde
+                    // esta posição fica, no texto corrido do laudo.
+                    if i > 0, linhasDoModelo[i - 1].secao != linha.secao {
+                        alvoDeTopo(anterior: linhasDoModelo[i - 1].slot, secao: linha.secao)
+                    }
                     linhaDoModelo(linha)
                         .dropDestination(for: String.self) { ids, _ in
                             receberArrasto(ids, depoisDe: linha.slot)
@@ -740,8 +757,10 @@ struct LibraryView: View {
                     ForEach(acrescentadasDepoisDe(linha.slot), id: \.id) { op in
                         fraseAcrescentada(op)
                     }
-                    // Fim da seção: o lugar de acrescentar.
-                    if i == linhasDoModelo.count - 1 || linhasDoModelo[i + 1].secao != linha.secao {
+                    // Fim da seção: o lugar de acrescentar. A TÉCNICA fica de
+                    // fora — é o texto fixo do serviço, não achado do exame.
+                    if linha.secao != "tecnica",
+                       i == linhasDoModelo.count - 1 || linhasDoModelo[i + 1].secao != linha.secao {
                         botaoAcrescentar(secao: linha.secao)
                     }
                 }

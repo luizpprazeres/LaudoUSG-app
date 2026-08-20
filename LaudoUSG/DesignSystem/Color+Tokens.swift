@@ -68,19 +68,59 @@ enum NeutralColor {
     static let gray900 = Color(hex: "111827")
 }
 
+/**
+ As cores de estado — erro, aviso, sucesso.
+
+ Todas eram HEX FIXO, desenhadas para o tema claro, num app que roda no escuro.
+ O fundo saía quase branco e o texto por cima vinha de `AppSurface.textPrimary`,
+ que no escuro é branco: **o aviso ficava invisível**. Foi assim que o card
+ "1 ponto a revisar" apareceu vazio no iPhone do Luiz em 20/08, na primeira vez
+ que o aviso de personalização desatualizada rodou em produção.
+
+ Agora os fundos e as bordas acompanham o tema, e os textos escurecem no claro e
+ clareiam no escuro. Um fundo de estado com hex fixo é a armadilha: funciona no
+ tema em que foi desenhado e some no outro.
+ */
 enum SemanticColor {
-    static let errorBg = Color(hex: "FEF2F2")
-    static let errorBorder = Color(hex: "FECACA")
-    static let errorText = Color(hex: "B91C1C")
+    static let errorBg = Color.dynamic(
+        light: Color(hex: "FEF2F2"),
+        dark: Color(hex: "3A1113")
+    )
+    static let errorBorder = Color.dynamic(
+        light: Color(hex: "FECACA"),
+        dark: Color(hex: "7F1D1D")
+    )
+    static let errorText = Color.dynamic(
+        light: Color(hex: "B91C1C"),
+        dark: Color(hex: "FCA5A5")
+    )
     static let errorAccent = Color(hex: "FF3B30")
 
-    static let warningBg = Color(hex: "FFFBEB")
-    static let warningBorder = Color(hex: "FDE68A")
-    static let warningText = Color(hex: "B45309")
+    static let warningBg = Color.dynamic(
+        light: Color(hex: "FFFBEB"),
+        dark: Color(hex: "3A2A08")
+    )
+    static let warningBorder = Color.dynamic(
+        light: Color(hex: "FDE68A"),
+        dark: Color(hex: "78350F")
+    )
+    static let warningText = Color.dynamic(
+        light: Color(hex: "B45309"),
+        dark: Color(hex: "FCD34D")
+    )
 
-    static let successBg = Color(hex: "F0FDF4")
-    static let successBorder = Color(hex: "BBF7D0")
-    static let successText = Color(hex: "15803D")
+    static let successBg = Color.dynamic(
+        light: Color(hex: "F0FDF4"),
+        dark: Color(hex: "0B3B2E")
+    )
+    static let successBorder = Color.dynamic(
+        light: Color(hex: "BBF7D0"),
+        dark: Color(hex: "14532D")
+    )
+    static let successText = Color.dynamic(
+        light: Color(hex: "15803D"),
+        dark: Color(hex: "6EE7B7")
+    )
 
     static let info = Color(hex: "2563EB")
 }
