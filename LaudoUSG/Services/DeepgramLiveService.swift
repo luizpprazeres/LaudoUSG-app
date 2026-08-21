@@ -97,14 +97,32 @@ final class DeepgramLiveService {
     // MARK: - Pré-aquecimento
 
     /// Busca o token ANTES do toque no mic (ex.: ao abrir a tela de gerar) e
-    /// cacheia, pra o início ficar instantâneo. A key direta não expira (modo
-    /// protótipo); quando virar token temporário, re-busca se expirar.
+    /// cacheia, pra o início ficar instantâneo.
+    ///
+    /// A chave direta não expira. O token temporário do `/v1/auth/grant`
+    /// expira — hoje em 60 s — e é aí que o pré-aquecimento vira armadilha: ele
+    /// é buscado quando a TELA ABRE e usado quando o médico TOCA O MIC, que
+    /// pode ser minutos depois. Sem esta verificação, o ditado falharia de
+    /// forma intermitente: funciona se ele tocar rápido, quebra se demorar.
+    ///
+    /// O comentário que estava aqui dizia "quando virar token temporário,
+    /// re-busca se expirar" — a re-busca nunca foi escrita, e era justamente o
+    /// que impedia desligar a entrega da chave crua ao aparelho.
     func prewarm() async {
         guard prewarmedToken == nil, !isStreaming else { return }
         if let t = try? await fetchToken() {
             prewarmedToken = t
+            prewarmedAt = Date()
             log.info("deepgram: token pré-aquecido")
         }
+    }
+
+    /// O token pré-aquecido ainda vale? Sem `expires_in` é a chave direta, que
+    /// não expira.
+    private func prewarmAindaVale() -> Bool {
+        guard let t = prewarmedToken else { return false }
+        guard let ttl = t.expires_in, let quando = prewarmedAt else { return true }
+        return Date().timeIntervalSince(quando) < Double(ttl) - Self.margemDeSeguranca
     }
 
     // MARK: - Start / Stop
@@ -126,9 +144,12 @@ final class DeepgramLiveService {
 
         status = "Obtendo token…"
         let token: TokenInfo
-        if let pre = prewarmedToken {
-            token = pre; prewarmedToken = nil   // usa o pré-aquecido
+        if let pre = prewarmedToken, prewarmAindaVale() {
+            token = pre; prewarmedToken = nil; prewarmedAt = nil   // usa o pré-aquecido
         } else {
+            // Vencido (ou inexistente): descarta e busca de novo. Perde-se o
+            // início instantâneo, não o ditado.
+            prewarmedToken = nil; prewarmedAt = nil
             do { token = try await fetchToken() }
             catch {
                 errorMessage = "Falha ao obter token Deepgram: \(error.localizedDescription)"
@@ -187,7 +208,16 @@ final class DeepgramLiveService {
         let model: String
         let language: String
         let keyterms: [String]?   // boost de vocabulário (controlado pelo backend)
+        /// Segundos de validade. Ausente na chave direta, que não expira.
+        let expires_in: Int?
     }
+
+    /// Quando o token pré-aquecido foi obtido — para saber se ainda vale.
+    private var prewarmedAt: Date?
+
+    /// Margem antes do vencimento. Um token que expira durante o handshake é
+    /// tão inútil quanto um já vencido, e o erro chega ao médico igual.
+    private static let margemDeSeguranca: TimeInterval = 10
 
     /// Categoria do exame em curso. O backend usa pra ENXUGAR os keyterms:
     /// mandar o glossário inteiro faz os termos obstétricos competirem com os
