@@ -8,6 +8,8 @@ final class CompanionViewModel {
     var isBusy = false
     var error: String?
     var sent = false
+    var dictated = false
+    let speech = SpeechService()
 
     func connect() async {
         await run { self.connection = try await CompanionService.connect(code: self.code) }
@@ -22,10 +24,44 @@ final class CompanionViewModel {
     func send() async {
         guard let connection else { return }
         await run {
-            try await CompanionService.sendText(self.message, connection: connection)
+            if self.dictated {
+                try await CompanionService.sendTranscript(self.message, connection: connection)
+            } else {
+                try await CompanionService.sendText(self.message, connection: connection)
+            }
             self.message = ""
+            self.dictated = false
             self.sent = true
         }
+    }
+
+    func toggleDictation() async {
+        error = nil
+        sent = false
+        if speech.isRecording {
+            let transcript = await speech.stop()
+            if transcript.isEmpty {
+                error = speech.lastError?.localizedDescription ?? "Não consegui transcrever o ditado."
+            } else {
+                message = transcript
+                dictated = true
+            }
+            return
+        }
+
+        do {
+            guard await speech.requestPermissions() else {
+                error = speech.lastError?.localizedDescription
+                return
+            }
+            try await speech.start()
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    func cancelRecording() {
+        if speech.isRecording || speech.isTranscribing { speech.cancel() }
     }
 
     private func run(_ operation: @escaping () async throws -> Void) async {
@@ -58,6 +94,7 @@ struct CompanionSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Fechar", action: onDismiss) } }
             .task { await vm.restore() }
+            .onDisappear { vm.cancelRecording() }
         }
     }
 
@@ -86,8 +123,28 @@ struct CompanionSheet: View {
                 .background(RoundedRectangle(cornerRadius: Radius.xl).fill(AppSurface.card))
                 .overlay(RoundedRectangle(cornerRadius: Radius.xl).stroke(AppSurface.border))
                 .onChange(of: vm.message) { _, _ in vm.sent = false }
+            Button { Task { await vm.toggleDictation() } } label: {
+                Group {
+                    if vm.speech.isTranscribing {
+                        HStack { ProgressView(); Text("Transcrevendo…") }
+                    } else {
+                        Label(vm.speech.isRecording ? "Parar ditado" : "Ditar para a web",
+                              systemImage: vm.speech.isRecording ? "stop.fill" : "mic.fill")
+                    }
+                }
+                .font(TextStyle.bodyLargeSemibold).frame(maxWidth: .infinity, minHeight: 48)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(vm.speech.isRecording ? SemanticColor.errorAccent : BrandColor.primary)
+            .background(Capsule().stroke(vm.speech.isRecording ? SemanticColor.errorAccent : BrandColor.primary))
+            .disabled(vm.isBusy || vm.speech.isTranscribing)
+            if vm.speech.isTranscribing {
+                Text("O áudio será descartado após a transcrição.")
+                    .font(TextStyle.caption).foregroundStyle(AppSurface.textSecondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
             primaryButton("Enviar para a web") { await vm.send() }
-                .disabled(vm.message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .disabled(vm.speech.isRecording || vm.speech.isTranscribing || vm.message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             if vm.sent { Text("Mensagem enviada.").font(TextStyle.captionMedium).foregroundStyle(BrandColor.primary) }
         }
     }

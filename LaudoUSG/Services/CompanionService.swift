@@ -10,7 +10,7 @@ enum CompanionService {
     private struct EventBody: Encodable {
         let sessionId: String
         let userId: String
-        let kind = "text"
+        let kind: String
         let payload: Payload
     }
 
@@ -42,6 +42,14 @@ enum CompanionService {
     }
 
     static func sendText(_ rawText: String, connection: CompanionConnection) async throws {
+        try await send(rawText, kind: "text", connection: connection)
+    }
+
+    static func sendTranscript(_ rawText: String, connection: CompanionConnection) async throws {
+        try await send(rawText, kind: "transcript", connection: connection)
+    }
+
+    private static func send(_ rawText: String, kind: String, connection: CompanionConnection) async throws {
         let text = rawText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { throw CompanionError.emptyText }
         guard text.count <= 2_000 else { throw CompanionError.textTooLong }
@@ -50,7 +58,7 @@ enum CompanionService {
         try await SupabaseRESTClient.shared.postRaw(
             "/rest/v1/companion_events",
             query: [:],
-            body: JSONEncoder.api.encode(EventBody(sessionId: connection.sessionId, userId: userId, payload: Payload(text: text)))
+            body: JSONEncoder.api.encode(EventBody(sessionId: connection.sessionId, userId: userId, kind: kind, payload: Payload(text: text)))
         )
     }
 
