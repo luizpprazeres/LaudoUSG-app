@@ -33,13 +33,21 @@ enum ImageAnalysisService {
         }
     }
 
-    static func analyze(images: [Data], category: ReportCategory) async throws -> [BiometricData] {
+    static func analyze(
+        images: [Data],
+        category: ReportCategory,
+        includeDoppler: Bool = false
+    ) async throws -> [BiometricData] {
         guard canAnalyze(category: category) else { throw ImageAnalysisError.unsupportedCategory }
         guard !images.isEmpty else { throw ImageAnalysisError.emptyImage }
 
         var results: [BiometricData] = []
         for image in images.prefix(3) {
-            let result = try await analyze(image: image, category: category)
+            let result = try await analyze(
+                image: image,
+                category: category,
+                includeDoppler: includeDoppler
+            )
             results.append(result)
         }
         return results
@@ -61,15 +69,20 @@ enum ImageAnalysisService {
             ("IG pela DUM", merged.gestAgeLMP),
             ("IG pela biometria", merged.gestAgeBiometry)
         ])
-        if !biometria.isEmpty {
+        if category != .dopplerObstetrico && !biometria.isEmpty {
             sections.append("Biometria fetal:\n" + biometria.joined(separator: "\n"))
         }
 
         let doppler = rows([
+            ("IR uterina direita", merged.irRightUterine),
             ("IP uterina direita", merged.ipRightUterine),
+            ("IR uterina esquerda", merged.irLeftUterine),
             ("IP uterina esquerda", merged.ipLeftUterine),
+            ("IR artéria umbilical", merged.irUmbilical),
             ("IP artéria umbilical", merged.ipUmbilical),
+            ("IR artéria cerebral média", merged.irMCA),
             ("IP artéria cerebral média", merged.ipMCA),
+            ("IR ducto venoso", merged.irDuctusVenosus),
             ("IP ducto venoso", merged.ipDuctusVenosus)
         ])
         if !doppler.isEmpty {
@@ -97,14 +110,21 @@ enum ImageAnalysisService {
         return sections.joined(separator: "\n\n")
     }
 
-    private static func analyze(image: Data, category: ReportCategory) async throws -> BiometricData {
+    private static func analyze(
+        image: Data,
+        category: ReportCategory,
+        includeDoppler: Bool
+    ) async throws -> BiometricData {
         guard !image.isEmpty else { throw ImageAnalysisError.emptyImage }
         logger.info("Uploading compressed image: \(image.count, privacy: .public) bytes")
 
         let request = AnalyzeImageRequest(
             imageBase64: image.base64EncodedString(),
             category: category.rawValue,
-            gemelar: false
+            gemelar: false,
+            modules: includeDoppler && category != .dopplerObstetrico
+                ? [ReportCategory.dopplerObstetrico.rawValue]
+                : []
         )
         let encoder = JSONEncoder()
         let body = try encoder.encode(request)
@@ -146,10 +166,15 @@ enum ImageAnalysisService {
                 gestAge: partial.gestAge ?? next.gestAge,
                 gestAgeLMP: partial.gestAgeLMP ?? next.gestAgeLMP,
                 gestAgeBiometry: partial.gestAgeBiometry ?? next.gestAgeBiometry,
+                irRightUterine: partial.irRightUterine ?? next.irRightUterine,
                 ipRightUterine: partial.ipRightUterine ?? next.ipRightUterine,
+                irLeftUterine: partial.irLeftUterine ?? next.irLeftUterine,
                 ipLeftUterine: partial.ipLeftUterine ?? next.ipLeftUterine,
+                irUmbilical: partial.irUmbilical ?? next.irUmbilical,
                 ipUmbilical: partial.ipUmbilical ?? next.ipUmbilical,
+                irMCA: partial.irMCA ?? next.irMCA,
                 ipMCA: partial.ipMCA ?? next.ipMCA,
+                irDuctusVenosus: partial.irDuctusVenosus ?? next.irDuctusVenosus,
                 ipDuctusVenosus: partial.ipDuctusVenosus ?? next.ipDuctusVenosus,
                 tibia: partial.tibia ?? next.tibia,
                 fibula: partial.fibula ?? next.fibula,

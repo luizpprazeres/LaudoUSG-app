@@ -8,7 +8,18 @@
 
 /* Begin PBXFileReference section */
 		000AB0EB2FB92549009E0889 /* LaudoUSG.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LaudoUSG.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1E000000000000000000001 /* LaudoUSGTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LaudoUSGTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXContainerItemProxy section */
+		A1E000000000000000000007 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 000AB0E32FB92548009E0889 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 000AB0EA2FB92548009E0889;
+			remoteInfo = LaudoUSG;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		000AB0ED2FB92549009E0889 /* LaudoUSG */ = {
@@ -16,10 +27,22 @@
 			path = LaudoUSG;
 			sourceTree = "<group>";
 		};
+		A1E000000000000000000002 /* LaudoUSGTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = LaudoUSGTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		000AB0E82FB92548009E0889 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A1E000000000000000000003 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +56,7 @@
 			isa = PBXGroup;
 			children = (
 				000AB0ED2FB92549009E0889 /* LaudoUSG */,
+				A1E000000000000000000002 /* LaudoUSGTests */,
 				000AB0EC2FB92549009E0889 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				000AB0EB2FB92549009E0889 /* LaudoUSG.app */,
+				A1E000000000000000000001 /* LaudoUSGTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +95,29 @@
 			productReference = 000AB0EB2FB92549009E0889 /* LaudoUSG.app */;
 			productType = "com.apple.product-type.application";
 		};
+		A1E000000000000000000006 /* LaudoUSGTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1E00000000000000000000B /* Build configuration list for PBXNativeTarget "LaudoUSGTests" */;
+			buildPhases = (
+				A1E000000000000000000005 /* Sources */,
+				A1E000000000000000000003 /* Frameworks */,
+				A1E000000000000000000004 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A1E000000000000000000008 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				A1E000000000000000000002 /* LaudoUSGTests */,
+			);
+			name = LaudoUSGTests;
+			packageProductDependencies = (
+			);
+			productName = LaudoUSGTests;
+			productReference = A1E000000000000000000001 /* LaudoUSGTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -82,6 +130,10 @@
 				TargetAttributes = {
 					000AB0EA2FB92548009E0889 = {
 						CreatedOnToolsVersion = 26.4;
+					};
+					A1E000000000000000000006 = {
+						CreatedOnToolsVersion = 26.4;
+						TestTargetID = 000AB0EA2FB92548009E0889;
 					};
 				};
 			};
@@ -100,12 +152,20 @@
 			projectRoot = "";
 			targets = (
 				000AB0EA2FB92548009E0889 /* LaudoUSG */,
+				A1E000000000000000000006 /* LaudoUSGTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		000AB0E92FB92548009E0889 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A1E000000000000000000004 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +182,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A1E000000000000000000005 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A1E000000000000000000008 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 000AB0EA2FB92548009E0889 /* LaudoUSG */;
+			targetProxy = A1E000000000000000000007 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		000AB0F42FB9254C009E0889 /* Debug */ = {
@@ -246,7 +321,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 147;
+				CURRENT_PROJECT_VERSION = 148;
 				DEVELOPMENT_TEAM = W772N4FGJ6;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
@@ -294,7 +369,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 147;
+				CURRENT_PROJECT_VERSION = 148;
 				DEVELOPMENT_TEAM = W772N4FGJ6;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
@@ -335,6 +410,56 @@
 			};
 			name = Release;
 		};
+		A1E000000000000000000009 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = W772N4FGJ6;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.laudousg.LaudoUSGTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LaudoUSG.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LaudoUSG";
+				TEST_TARGET_NAME = LaudoUSG;
+			};
+			name = Debug;
+		};
+		A1E00000000000000000000A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = W772N4FGJ6;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.laudousg.LaudoUSGTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LaudoUSG.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LaudoUSG";
+				TEST_TARGET_NAME = LaudoUSG;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -352,6 +477,15 @@
 			buildConfigurations = (
 				000AB0F72FB9254C009E0889 /* Debug */,
 				000AB0F82FB9254C009E0889 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1E00000000000000000000B /* Build configuration list for PBXNativeTarget "LaudoUSGTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1E000000000000000000009 /* Debug */,
+				A1E00000000000000000000A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -12,10 +12,15 @@ struct BiometricData: Codable, Equatable {
     var gestAgeLMP: String?
     var gestAgeBiometry: String?
 
+    var irRightUterine: String?
     var ipRightUterine: String?
+    var irLeftUterine: String?
     var ipLeftUterine: String?
+    var irUmbilical: String?
     var ipUmbilical: String?
+    var irMCA: String?
     var ipMCA: String?
+    var irDuctusVenosus: String?
     var ipDuctusVenosus: String?
 
     var tibia: String?
@@ -43,4 +48,5 @@ struct AnalyzeImageRequest: Encodable {
     let imageBase64: String
     let category: String
     let gemelar: Bool?
+    let modules: [String]?
 }

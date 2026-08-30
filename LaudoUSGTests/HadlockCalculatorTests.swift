@@ -102,7 +102,7 @@ final class HadlockCalculatorTests: XCTestCase {
         }
     }
 
-    private func calculate(input: BiometryInput, source: PercentileSource) -> BiometryResult? {
+    private func calculate(_ input: BiometryInput, source: PercentileSource) -> BiometryResult? {
         HadlockCalculator.calculate(
             input,
             weightFormula: .hadlock4_1985,

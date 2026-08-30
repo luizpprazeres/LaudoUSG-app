@@ -223,6 +223,12 @@ public enum DopplerParser {
             return decimalValue(from: String(match.1))
         }
 
+        if let match = text.firstMatch(
+            of: /(?i)\buterinas?\s*[:\-]?\s*d(?:ir(?:eita)?)?\s*[:=]?\s*\d+(?:[.,]\d+)?\s*(?:\/|;|,)\s*e(?:sq(?:uerda)?)?\s*[:=]?\s*(\d+(?:[.,]\d+)?)/
+        ) {
+            return decimalValue(from: String(match.1))
+        }
+
         guard let match = text.firstMatch(
             of: /(?i)\buterinas?\s*[:\-]?\s*e(?:sq(?:uerda)?)?\s*[:=]?\s*(\d+(?:[.,]\d+)?)/
         ) else {
