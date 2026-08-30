@@ -8,10 +8,12 @@ struct MenuSheet: View {
     let onTapBiblioteca: () -> Void
     let onTapPreferencias: () -> Void
     let onTapSobre: () -> Void
+    let onTapCompanion: () -> Void
     let onLogout: () -> Void
 
     private var items: [MenuSheetItem] {
         [
+            MenuSheetItem(label: "Conectar à web", systemImage: "iphone.and.arrow.forward", tint: BrandColor.primary, action: onTapCompanion),
             MenuSheetItem(label: "Histórico", systemImage: "clock", action: onTapHistorico),
             MenuSheetItem(label: "Analytics", systemImage: "chart.bar", action: onTapAnalytics),
             MenuSheetItem(label: "Biblioteca", systemImage: "books.vertical", action: onTapBiblioteca),
@@ -133,6 +135,7 @@ private struct MenuSheetItem: Identifiable {
         onTapBiblioteca: {},
         onTapPreferencias: {},
             onTapSobre: {},
+            onTapCompanion: {},
             onLogout: {}
         )
         .environment(AppState())

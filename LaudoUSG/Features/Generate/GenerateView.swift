@@ -148,6 +148,10 @@ struct GenerateView: View {
                 onTapBiblioteca: { navigate(to: .library) },
                 onTapPreferencias: { navigate(to: .settings) },
                 onTapSobre: { navigate(to: .about) },
+                onTapCompanion: {
+                    vm.isMenuSheetPresented = false
+                    vm.isCompanionSheetPresented = true
+                },
                 onLogout: {
                     vm.isMenuSheetPresented = false
                     app.signOut()
@@ -250,6 +254,9 @@ struct GenerateView: View {
         }
         .sheet(isPresented: Binding(get: { vm.isSalaSheetPresented }, set: { vm.isSalaSheetPresented = $0 })) {
             SalaPairingSheet(onDismiss: { vm.isSalaSheetPresented = false })
+        }
+        .sheet(isPresented: Binding(get: { vm.isCompanionSheetPresented }, set: { vm.isCompanionSheetPresented = $0 })) {
+            CompanionSheet(onDismiss: { vm.isCompanionSheetPresented = false })
         }
         .overlay {
             if vm.isRecordingOverlayPresented {

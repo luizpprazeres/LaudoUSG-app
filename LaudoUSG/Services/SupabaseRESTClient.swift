@@ -98,6 +98,42 @@ actor SupabaseRESTClient {
         }
     }
 
+    func postReturning<B: Encodable, T: Decodable>(
+        _ path: String,
+        query: [String: String] = [:],
+        body: B,
+        as type: T.Type
+    ) async throws -> T {
+        let encoded = try JSONEncoder.api.encode(body)
+        let data = try await performWithRefresh {
+            var request = try makeRequest(path: path, method: "POST", query: query)
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue("return=representation", forHTTPHeaderField: "Prefer")
+            request.httpBody = encoded
+            return request
+        }
+        do { return try JSONDecoder.api.decode(T.self, from: data) }
+        catch { throw SupabaseError.decoding(error) }
+    }
+
+    func patchReturning<B: Encodable, T: Decodable>(
+        _ path: String,
+        query: [String: String],
+        body: B,
+        as type: T.Type
+    ) async throws -> T {
+        let encoded = try JSONEncoder.api.encode(body)
+        let data = try await performWithRefresh {
+            var request = try makeRequest(path: path, method: "PATCH", query: query)
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue("return=representation", forHTTPHeaderField: "Prefer")
+            request.httpBody = encoded
+            return request
+        }
+        do { return try JSONDecoder.api.decode(T.self, from: data) }
+        catch { throw SupabaseError.decoding(error) }
+    }
+
     func delete(
         _ path: String,
         query: [String: String]

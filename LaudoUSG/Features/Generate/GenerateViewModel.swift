@@ -112,6 +112,7 @@ final class GenerateViewModel {
     var isMenuSheetPresented = false
     var isPlusSheetPresented = false
     var isSalaSheetPresented = false
+    var isCompanionSheetPresented = false
     var isIGCalculatorPresented = false
     var isHadlockCalculatorPresented = false
     var isDopplerCalculatorPresented = false
