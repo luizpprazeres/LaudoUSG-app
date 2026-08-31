@@ -75,4 +75,24 @@ final class ImageAnalysisServiceTests: XCTestCase {
         XCTAssertTrue(text.contains("2. Cisto simples — mama direita: 0.6 x 0.5 x 0.4 cm"))
         XCTAssertFalse(text.contains("BI-RADS"))
     }
+
+    func testCarotidImagesMergeVesselsAndPlaquesWithoutClassifyingStenosis() {
+        let first = BiometricData(carotidMeasurements: [
+            ExtractedCarotidMeasurement(side: "direita", vessel: "interna", psv: "82", vdf: "24", ir: "0.71")
+        ])
+        let second = BiometricData(
+            carotidMeasurements: [ExtractedCarotidMeasurement(side: "esquerda", vessel: "vertebral", psv: "41", flowDirection: "anterogrado")],
+            carotidPlaques: [ExtractedCarotidPlaque(side: "direita", location: "bulbo carotídeo", thickness: "2.1")]
+        )
+
+        let merged = ImageAnalysisService.merge([first, second])
+        let text = ImageAnalysisService.format([merged], category: .dopplerCarotidas)
+
+        XCTAssertEqual(merged.carotidMeasurements?.count, 2)
+        XCTAssertEqual(merged.carotidPlaques?.count, 1)
+        XCTAssertTrue(text.contains("carótida interna direita: PSV 82 · VDF 24 · IR 0.71"))
+        XCTAssertTrue(text.contains("vertebral esquerda: PSV 41 · Fluxo anterogrado"))
+        XCTAssertTrue(text.contains("Placa 1 direita: bulbo carotídeo · 2.1 mm"))
+        XCTAssertFalse(text.lowercased().contains("estenose grave"))
+    }
 }

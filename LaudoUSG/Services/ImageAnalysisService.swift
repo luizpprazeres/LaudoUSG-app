@@ -26,7 +26,7 @@ enum ImageAnalysisService {
 
     static func canAnalyze(category: ReportCategory) -> Bool {
         switch category {
-        case .obstetrica, .dopplerObstetrico, .morfologico, .tireoide, .mamaria:
+        case .obstetrica, .dopplerObstetrico, .morfologico, .tireoide, .mamaria, .dopplerCarotidas:
             return true
         default:
             return false
@@ -87,6 +87,29 @@ enum ImageAnalysisService {
                 let detail = [axes.isEmpty ? "" : "\(axes) cm", finding.location ?? "", finding.hour ?? ""].filter { !$0.isEmpty }.joined(separator: " · ")
                 return "\(index + 1). \(type) — mama \(finding.side)\(detail.isEmpty ? "" : ": \(detail)")"
             }.joined(separator: "\n")
+        }
+
+        if category == .dopplerCarotidas {
+            let measurements = (merged.carotidMeasurements ?? []).map { item in
+                let vessel: String
+                switch item.vessel {
+                case "comum": vessel = "carótida comum"
+                case "interna": vessel = "carótida interna"
+                case "externa": vessel = "carótida externa"
+                default: vessel = "vertebral"
+                }
+                let values = [
+                    item.psv.map { "PSV \($0)" }, item.vdf.map { "VDF \($0)" },
+                    item.ir.map { "IR \($0)" }, item.emi.map { "EMI \($0)" },
+                    item.flowDirection.map { "Fluxo \($0)" }
+                ].compactMap { $0 }
+                return "\(vessel) \(item.side): \(values.joined(separator: " · "))"
+            }
+            let plaques = (merged.carotidPlaques ?? []).enumerated().map { index, item in
+                let details = [item.location ?? "", item.thickness.map { "\($0) mm" } ?? "", item.stenosisPercent.map { "\($0)% informado" } ?? ""].filter { !$0.isEmpty }
+                return "Placa \(index + 1) \(item.side): \(details.joined(separator: " · "))"
+            }
+            return (measurements + plaques).joined(separator: "\n")
         }
 
         let biometria = rows([
@@ -222,7 +245,9 @@ enum ImageAnalysisService {
                 thyroidLeftLobe: partial.thyroidLeftLobe ?? next.thyroidLeftLobe,
                 thyroidIsthmus: partial.thyroidIsthmus ?? next.thyroidIsthmus,
                 thyroidNodules: mergeNodules(partial.thyroidNodules, next.thyroidNodules),
-                breastFindings: mergeBreastFindings(partial.breastFindings, next.breastFindings)
+                breastFindings: mergeBreastFindings(partial.breastFindings, next.breastFindings),
+                carotidMeasurements: mergeCarotidMeasurements(partial.carotidMeasurements, next.carotidMeasurements),
+                carotidPlaques: mergeCarotidPlaques(partial.carotidPlaques, next.carotidPlaques)
             )
         }
     }
@@ -261,8 +286,30 @@ enum ImageAnalysisService {
         return result.isEmpty ? nil : result
     }
 
+    private static func mergeCarotidMeasurements(_ first: [ExtractedCarotidMeasurement]?, _ second: [ExtractedCarotidMeasurement]?) -> [ExtractedCarotidMeasurement]? {
+        var result = first ?? []
+        var keys = Set(result.map { "\($0.side)|\($0.vessel)|\($0.psv ?? "")|\($0.vdf ?? "")|\($0.ir ?? "")|\($0.emi ?? "")|\($0.flowDirection ?? "")" })
+        for item in second ?? [] {
+            let key = "\(item.side)|\(item.vessel)|\(item.psv ?? "")|\(item.vdf ?? "")|\(item.ir ?? "")|\(item.emi ?? "")|\(item.flowDirection ?? "")"
+            if keys.insert(key).inserted { result.append(item) }
+        }
+        return result.isEmpty ? nil : result
+    }
+
+    private static func mergeCarotidPlaques(_ first: [ExtractedCarotidPlaque]?, _ second: [ExtractedCarotidPlaque]?) -> [ExtractedCarotidPlaque]? {
+        var result = first ?? []
+        var keys = Set(result.map { "\($0.side)|\($0.location ?? "")|\($0.thickness ?? "")|\($0.stenosisPercent ?? "")" })
+        for item in second ?? [] {
+            let key = "\(item.side)|\(item.location ?? "")|\(item.thickness ?? "")|\(item.stenosisPercent ?? "")"
+            if keys.insert(key).inserted { result.append(item) }
+        }
+        return result.isEmpty ? nil : result
+    }
+
     private static func isEmpty(_ data: BiometricData) -> Bool {
-        let category: ReportCategory = !(data.breastFindings ?? []).isEmpty
+        let category: ReportCategory = !(data.carotidMeasurements ?? []).isEmpty || !(data.carotidPlaques ?? []).isEmpty
+            ? .dopplerCarotidas
+            : !(data.breastFindings ?? []).isEmpty
             ? .mamaria
             : data.thyroidRightLobe != nil || data.thyroidLeftLobe != nil || data.thyroidIsthmus != nil || !(data.thyroidNodules ?? []).isEmpty
                 ? .tireoide : .morfologico
