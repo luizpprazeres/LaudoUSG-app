@@ -10,7 +10,7 @@ enum ImageAnalysisError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .unsupportedCategory:
-            return "Análise de imagem disponível apenas para obstétrica, Doppler obstétrico e morfológico."
+            return "Análise de imagem indisponível para esta categoria."
         case .emptyImage:
             return "Não consegui ler a imagem selecionada."
         case .emptyResult(let message):
@@ -26,7 +26,7 @@ enum ImageAnalysisService {
 
     static func canAnalyze(category: ReportCategory) -> Bool {
         switch category {
-        case .obstetrica, .dopplerObstetrico, .morfologico:
+        case .obstetrica, .dopplerObstetrico, .morfologico, .tireoide:
             return true
         default:
             return false
@@ -56,6 +56,23 @@ enum ImageAnalysisService {
     static func format(_ results: [BiometricData], category: ReportCategory) -> String {
         let merged = merge(results)
         var sections: [String] = []
+
+        if category == .tireoide {
+            let gland = rows([
+                ("Lobo direito", dimensions(merged.thyroidRightLobe)),
+                ("Lobo esquerdo", dimensions(merged.thyroidLeftLobe)),
+                ("Istmo", dimensions(merged.thyroidIsthmus))
+            ])
+            if !gland.isEmpty { sections.append("Medidas da tireoide:\n" + gland.joined(separator: "\n")) }
+            let nodules = (merged.thyroidNodules ?? []).enumerated().map { index, nodule in
+                let axes = [nodule.c1, nodule.c2, nodule.c3].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " x ")
+                let location = nodule.location?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                let detail = [axes.isEmpty ? "" : "\(axes) cm", location].filter { !$0.isEmpty }.joined(separator: " · ")
+                return "Nódulo \(index + 1) (\(lobeLabel(nodule.lobe))): \(detail)"
+            }
+            if !nodules.isEmpty { sections.append("Nódulos:\n" + nodules.joined(separator: "\n")) }
+            return sections.joined(separator: "\n\n")
+        }
 
         let biometria = rows([
             ("DBP", merged.dbp),
@@ -185,12 +202,42 @@ enum ImageAnalysisService {
                 cisternaMagna: partial.cisternaMagna ?? next.cisternaMagna,
                 binocularDistance: partial.binocularDistance ?? next.binocularDistance,
                 ila: partial.ila ?? next.ila,
-                gender: partial.gender ?? next.gender
+                gender: partial.gender ?? next.gender,
+                thyroidRightLobe: partial.thyroidRightLobe ?? next.thyroidRightLobe,
+                thyroidLeftLobe: partial.thyroidLeftLobe ?? next.thyroidLeftLobe,
+                thyroidIsthmus: partial.thyroidIsthmus ?? next.thyroidIsthmus,
+                thyroidNodules: mergeNodules(partial.thyroidNodules, next.thyroidNodules)
             )
         }
     }
 
+    private static func dimensions(_ value: ThyroidMeasurements?) -> String? {
+        guard let value else { return nil }
+        let axes = [value.a, value.b, value.c].compactMap { $0 }.filter { !$0.isEmpty }
+        return axes.isEmpty ? nil : axes.joined(separator: " x ") + " cm"
+    }
+
+    private static func lobeLabel(_ value: String) -> String {
+        switch value {
+        case "lobo_direito": return "lobo direito"
+        case "lobo_esquerdo": return "lobo esquerdo"
+        default: return "istmo"
+        }
+    }
+
+    private static func mergeNodules(_ first: [ThyroidNodule]?, _ second: [ThyroidNodule]?) -> [ThyroidNodule]? {
+        var result = first ?? []
+        var keys = Set(result.map { "\($0.lobe)|\($0.c1 ?? "")|\($0.c2 ?? "")|\($0.c3 ?? "")|\($0.location ?? "")" })
+        for nodule in second ?? [] {
+            let key = "\(nodule.lobe)|\(nodule.c1 ?? "")|\(nodule.c2 ?? "")|\(nodule.c3 ?? "")|\(nodule.location ?? "")"
+            if keys.insert(key).inserted { result.append(nodule) }
+        }
+        return result.isEmpty ? nil : result
+    }
+
     private static func isEmpty(_ data: BiometricData) -> Bool {
-        format([data], category: .morfologico).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let category: ReportCategory = data.thyroidRightLobe != nil || data.thyroidLeftLobe != nil || data.thyroidIsthmus != nil || !(data.thyroidNodules ?? []).isEmpty
+            ? .tireoide : .morfologico
+        return format([data], category: category).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }

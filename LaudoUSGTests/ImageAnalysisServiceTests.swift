@@ -39,4 +39,23 @@ final class ImageAnalysisServiceTests: XCTestCase {
         XCTAssertTrue(text.contains("IR artéria cerebral média: 0,81"))
         XCTAssertTrue(text.contains("IP ducto venoso: 1,89"))
     }
+
+    func testThyroidImagesMergeLobesAndMultipleNodules() {
+        let right = BiometricData(
+            thyroidRightLobe: ThyroidMeasurements(a: "4.2", b: "1.6", c: "1.8"),
+            thyroidNodules: [ThyroidNodule(lobe: "lobo_direito", c1: "1.2", c2: "0.9", c3: "0.8", echogenicity: "hipoecoica", margin: "regular")]
+        )
+        let left = BiometricData(
+            thyroidLeftLobe: ThyroidMeasurements(a: "4.0", b: "1.4", c: "1.7"),
+            thyroidNodules: [ThyroidNodule(lobe: "lobo_esquerdo", c1: "0.7", c2: "0.5")]
+        )
+
+        let merged = ImageAnalysisService.merge([right, left])
+        let text = ImageAnalysisService.format([merged], category: .tireoide)
+
+        XCTAssertEqual(merged.thyroidNodules?.count, 2)
+        XCTAssertTrue(text.contains("Lobo direito: 4.2 x 1.6 x 1.8 cm"))
+        XCTAssertTrue(text.contains("Lobo esquerdo: 4.0 x 1.4 x 1.7 cm"))
+        XCTAssertTrue(text.contains("Nódulo 2 (lobo esquerdo): 0.7 x 0.5 cm"))
+    }
 }
