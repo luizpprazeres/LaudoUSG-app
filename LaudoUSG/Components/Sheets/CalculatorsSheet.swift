@@ -29,6 +29,13 @@ struct CalculatorsSheet: View {
                         destination: .doppler
                     )
 
+                    calculatorLink(
+                        title: "Crescimento fetal",
+                        subtitle: "PIG, RCF e estágios de Gratacós",
+                        icon: "chart.line.uptrend.xyaxis",
+                        destination: .fetalGrowth
+                    )
+
                     disabledRow(
                         title: "Anemia",
                         subtitle: "Em breve",
@@ -46,6 +53,8 @@ struct CalculatorsSheet: View {
                     IGCalculatorSheet(onInsert: handleInsert, onDismiss: onDismiss)
                 case .doppler:
                     DopplerCalculatorSheet(onInsert: handleInsert, onDismiss: onDismiss)
+                case .fetalGrowth:
+                    FetalGrowthCalculatorSheet(onInsert: handleInsert, onDismiss: onDismiss)
                 }
             }
         }
@@ -136,6 +145,7 @@ struct CalculatorsSheet: View {
 private enum CalculatorDestination: Hashable {
     case ig
     case doppler
+    case fetalGrowth
 }
 
 #Preview {

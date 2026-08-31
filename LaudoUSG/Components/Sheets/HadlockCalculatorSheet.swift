@@ -117,7 +117,7 @@ struct HadlockCalculatorSheet: View {
                 .font(TextStyle.caption)
                 .foregroundStyle(AppSurface.textMuted)
             if r.isSGA {
-                Text("⚠️ Peso abaixo do esperado (PIG) — considerar Doppler obstétrico em 1-2 semanas.")
+                Text("⚠️ Peso abaixo do percentil 10 — classificar como PIG ou RCF somente após a avaliação Doppler.")
                     .font(TextStyle.caption)
                     .foregroundStyle(SemanticColor.warningText)
             } else if r.isLGA {

@@ -50,13 +50,11 @@ enum DopplerCalculator {
             ipUA: input.ipUmbilical
         )
 
-        return aplicarCorrecoesClinicas(
-            DopplerResult(
-                arteriaUmbilical: arteriaUmbilical,
-                arteriaCerebralMedia: arteriaCerebralMedia,
-                arteriasUterinas: arteriasUterinas,
-                ratioCerebroplacentario: ratioCerebroplacentario
-            )
+        return DopplerResult(
+            arteriaUmbilical: arteriaUmbilical,
+            arteriaCerebralMedia: arteriaCerebralMedia,
+            arteriasUterinas: arteriasUterinas,
+            ratioCerebroplacentario: ratioCerebroplacentario
         )
     }
 
@@ -154,26 +152,6 @@ enum DopplerCalculator {
         let sd = -0.9664 + 0.09027 * ga - 0.0014 * ga * ga
         let zscore = (ratio - mean) / sd
         return VesselResult(ip: ratio, zscore: zscore, percentile: zToPercentile(zscore), pathological: zscore < -1.645)
-    }
-
-    private static func aplicarCorrecoesClinicas(_ result: DopplerResult) -> DopplerResult {
-        let uaAlterada = result.arteriaUmbilical.pathological
-        let auCorrigida = result.arteriaUmbilical.percentile < 10
-            ? VesselResult(ip: result.arteriaUmbilical.ip, zscore: result.arteriaUmbilical.zscore, percentile: 5, pathological: false)
-            : result.arteriaUmbilical
-        let acmCorrigida = !uaAlterada && result.arteriaCerebralMedia.pathological
-            ? VesselResult(ip: result.arteriaCerebralMedia.ip, zscore: result.arteriaCerebralMedia.zscore, percentile: 5, pathological: false)
-            : result.arteriaCerebralMedia
-        let rcpCorrigido = !uaAlterada && result.ratioCerebroplacentario.pathological
-            ? VesselResult(ip: result.ratioCerebroplacentario.ip, zscore: result.ratioCerebroplacentario.zscore, percentile: 5, pathological: false)
-            : result.ratioCerebroplacentario
-
-        return DopplerResult(
-            arteriaUmbilical: auCorrigida,
-            arteriaCerebralMedia: acmCorrigida,
-            arteriasUterinas: result.arteriasUterinas,
-            ratioCerebroplacentario: rcpCorrigido
-        )
     }
 
     static func fmt(_ value: Double, decimals: Int = 2) -> String {

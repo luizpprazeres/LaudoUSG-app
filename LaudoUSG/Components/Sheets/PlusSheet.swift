@@ -21,6 +21,7 @@ struct PlusSheet: View {
         case gestationalAge
         case dopplerObstetrico
         case hadlock
+        case fetalGrowth
         case ila4q
         case anemiaMCAPSV
         case afc
@@ -73,6 +74,11 @@ struct PlusSheet: View {
                     )
                 case .hadlock:
                     HadlockCalculatorSheet(
+                        onInsert: { insert($0) },
+                        onDismiss: onDismiss
+                    )
+                case .fetalGrowth:
+                    FetalGrowthCalculatorSheet(
                         onInsert: { insert($0) },
                         onDismiss: onDismiss
                     )
@@ -185,6 +191,13 @@ struct PlusSheet: View {
                         icon: "scalemass",
                         tint: Color(hex: "0EA5E9"),
                         destination: .hadlock
+                    )
+                    calculatorRow(
+                        title: "Crescimento fetal",
+                        subtitle: "PIG, RCF e estágios de Gratacós (Barcelona 2024)",
+                        icon: "chart.line.uptrend.xyaxis",
+                        tint: Color(hex: "7C3AED"),
+                        destination: .fetalGrowth
                     )
                     calculatorRow(
                         title: "ILA 4 quadrantes",
