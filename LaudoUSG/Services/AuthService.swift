@@ -1,5 +1,14 @@
 import Foundation
 
+func authRedirectURL(base: URL, path: String, redirectTo: String) -> URL? {
+    let endpoint = base.appendingPathComponent(path)
+    guard var components = URLComponents(url: endpoint, resolvingAgainstBaseURL: false) else {
+        return nil
+    }
+    components.queryItems = [URLQueryItem(name: "redirect_to", value: redirectTo)]
+    return components.url
+}
+
 enum AuthError: Error, LocalizedError {
     case invalidCredentials
     case network(Error)
@@ -104,7 +113,6 @@ private struct SignUpPayload: Encodable {
     let email: String
     let password: String
     let data: SignUpMetadata
-    let options: SignUpOptions
 }
 
 private struct SignUpMetadata: Encodable {
@@ -121,21 +129,8 @@ private struct SignUpMetadata: Encodable {
     }
 }
 
-private struct SignUpOptions: Encodable {
-    let emailRedirectTo: String
-}
-
 private struct PasswordResetPayload: Encodable {
     let email: String
-    let options: PasswordResetOptions
-}
-
-private struct PasswordResetOptions: Encodable {
-    let redirectTo: String
-
-    enum CodingKeys: String, CodingKey {
-        case redirectTo = "redirect_to"
-    }
 }
 
 private struct UpdatePasswordPayload: Encodable {
@@ -218,7 +213,11 @@ actor AuthService {
     }
 
     func signUp(draft: SignUpDraft) async throws -> SignUpResult {
-        let url = AppConfig.supabaseURL.appendingPathComponent("/auth/v1/signup")
+        guard let url = authRedirectURL(
+            base: AppConfig.supabaseURL,
+            path: "/auth/v1/signup",
+            redirectTo: "laudousg://auth/callback"
+        ) else { throw SignUpError.unknown("Não foi possível preparar o cadastro.") }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -233,8 +232,7 @@ actor AuthService {
                 crm: draft.crm.trimmingCharacters(in: .whitespacesAndNewlines),
                 uf: draft.uf.trimmingCharacters(in: .whitespacesAndNewlines).uppercased(),
                 termsAcceptedAt: formatter.string(from: Date())
-            ),
-            options: SignUpOptions(emailRedirectTo: "laudousg://auth/callback")
+            )
         )
         request.httpBody = try JSONEncoder().encode(payload)
 
@@ -265,7 +263,11 @@ actor AuthService {
     }
 
     func resendConfirmation(email: String) async throws {
-        let url = AppConfig.supabaseURL.appendingPathComponent("/auth/v1/resend")
+        guard let url = authRedirectURL(
+            base: AppConfig.supabaseURL,
+            path: "/auth/v1/resend",
+            redirectTo: "laudousg://auth/callback"
+        ) else { throw SignUpError.unknown("Não foi possível preparar o reenvio.") }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -317,15 +319,18 @@ actor AuthService {
     }
 
     func requestPasswordReset(email: String) async throws {
-        let url = AppConfig.supabaseURL.appendingPathComponent("/auth/v1/recover")
+        guard let url = authRedirectURL(
+            base: AppConfig.supabaseURL,
+            path: "/auth/v1/recover",
+            redirectTo: "laudousg://auth/reset-password"
+        ) else { throw AuthError.invalidResponse }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(AppConfig.supabaseAnonKey, forHTTPHeaderField: "apikey")
         request.httpBody = try JSONEncoder().encode(
             PasswordResetPayload(
-                email: email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
-                options: PasswordResetOptions(redirectTo: "laudousg://auth/reset-password")
+                email: email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
             )
         )
 
