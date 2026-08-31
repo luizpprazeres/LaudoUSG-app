@@ -20,6 +20,24 @@ struct ThyroidNodule: Codable, Equatable {
     var vascularization: String?
 }
 
+struct ExtractedBreastFinding: Codable, Equatable {
+    var side: String
+    var type: String
+    var c1: String?
+    var c2: String?
+    var c3: String?
+    var location: String?
+    var hour: String?
+    var distanceSkin: String?
+    var distanceNipple: String?
+    var echogenicity: String?
+    var shape: String?
+    var margin: String?
+    var orientation: String?
+    var posterior: String?
+    var calcifications: String?
+}
+
 struct BiometricData: Codable, Equatable {
     var dbp: String?
     var cc: String?
@@ -58,6 +76,7 @@ struct BiometricData: Codable, Equatable {
     var thyroidLeftLobe: ThyroidMeasurements?
     var thyroidIsthmus: ThyroidMeasurements?
     var thyroidNodules: [ThyroidNodule]?
+    var breastFindings: [ExtractedBreastFinding]?
 }
 
 struct AnalyzeImageResponse: Decodable {

@@ -26,7 +26,7 @@ enum ImageAnalysisService {
 
     static func canAnalyze(category: ReportCategory) -> Bool {
         switch category {
-        case .obstetrica, .dopplerObstetrico, .morfologico, .tireoide:
+        case .obstetrica, .dopplerObstetrico, .morfologico, .tireoide, .mamaria:
             return true
         default:
             return false
@@ -72,6 +72,21 @@ enum ImageAnalysisService {
             }
             if !nodules.isEmpty { sections.append("Nódulos:\n" + nodules.joined(separator: "\n")) }
             return sections.joined(separator: "\n\n")
+        }
+
+        if category == .mamaria {
+            return (merged.breastFindings ?? []).enumerated().map { index, finding in
+                let axes = [finding.c1, finding.c2, finding.c3].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " x ")
+                let type: String
+                switch finding.type {
+                case "nodulo": type = "Nódulo"
+                case "cisto_simples": type = "Cisto simples"
+                case "multiplos_cistos": type = "Cistos múltiplos"
+                default: type = "Calcificações"
+                }
+                let detail = [axes.isEmpty ? "" : "\(axes) cm", finding.location ?? "", finding.hour ?? ""].filter { !$0.isEmpty }.joined(separator: " · ")
+                return "\(index + 1). \(type) — mama \(finding.side)\(detail.isEmpty ? "" : ": \(detail)")"
+            }.joined(separator: "\n")
         }
 
         let biometria = rows([
@@ -206,7 +221,8 @@ enum ImageAnalysisService {
                 thyroidRightLobe: partial.thyroidRightLobe ?? next.thyroidRightLobe,
                 thyroidLeftLobe: partial.thyroidLeftLobe ?? next.thyroidLeftLobe,
                 thyroidIsthmus: partial.thyroidIsthmus ?? next.thyroidIsthmus,
-                thyroidNodules: mergeNodules(partial.thyroidNodules, next.thyroidNodules)
+                thyroidNodules: mergeNodules(partial.thyroidNodules, next.thyroidNodules),
+                breastFindings: mergeBreastFindings(partial.breastFindings, next.breastFindings)
             )
         }
     }
@@ -235,9 +251,21 @@ enum ImageAnalysisService {
         return result.isEmpty ? nil : result
     }
 
+    private static func mergeBreastFindings(_ first: [ExtractedBreastFinding]?, _ second: [ExtractedBreastFinding]?) -> [ExtractedBreastFinding]? {
+        var result = first ?? []
+        var keys = Set(result.map { "\($0.side)|\($0.type)|\($0.c1 ?? "")|\($0.c2 ?? "")|\($0.c3 ?? "")|\($0.location ?? "")|\($0.hour ?? "")" })
+        for finding in second ?? [] {
+            let key = "\(finding.side)|\(finding.type)|\(finding.c1 ?? "")|\(finding.c2 ?? "")|\(finding.c3 ?? "")|\(finding.location ?? "")|\(finding.hour ?? "")"
+            if keys.insert(key).inserted { result.append(finding) }
+        }
+        return result.isEmpty ? nil : result
+    }
+
     private static func isEmpty(_ data: BiometricData) -> Bool {
-        let category: ReportCategory = data.thyroidRightLobe != nil || data.thyroidLeftLobe != nil || data.thyroidIsthmus != nil || !(data.thyroidNodules ?? []).isEmpty
-            ? .tireoide : .morfologico
+        let category: ReportCategory = !(data.breastFindings ?? []).isEmpty
+            ? .mamaria
+            : data.thyroidRightLobe != nil || data.thyroidLeftLobe != nil || data.thyroidIsthmus != nil || !(data.thyroidNodules ?? []).isEmpty
+                ? .tireoide : .morfologico
         return format([data], category: category).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }

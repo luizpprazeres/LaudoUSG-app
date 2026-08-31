@@ -58,4 +58,21 @@ final class ImageAnalysisServiceTests: XCTestCase {
         XCTAssertTrue(text.contains("Lobo esquerdo: 4.0 x 1.4 x 1.7 cm"))
         XCTAssertTrue(text.contains("Nódulo 2 (lobo esquerdo): 0.7 x 0.5 cm"))
     }
+
+    func testBreastImagesMergeMultipleFindingsOnSameSide() {
+        let first = BiometricData(breastFindings: [
+            ExtractedBreastFinding(side: "direita", type: "nodulo", c1: "1.2", c2: "0.9", c3: "0.8", margin: "circunscrita")
+        ])
+        let second = BiometricData(breastFindings: [
+            ExtractedBreastFinding(side: "direita", type: "cisto_simples", c1: "0.6", c2: "0.5", c3: "0.4")
+        ])
+
+        let merged = ImageAnalysisService.merge([first, second])
+        let text = ImageAnalysisService.format([merged], category: .mamaria)
+
+        XCTAssertEqual(merged.breastFindings?.count, 2)
+        XCTAssertTrue(text.contains("1. Nódulo — mama direita: 1.2 x 0.9 x 0.8 cm"))
+        XCTAssertTrue(text.contains("2. Cisto simples — mama direita: 0.6 x 0.5 x 0.4 cm"))
+        XCTAssertFalse(text.contains("BI-RADS"))
+    }
 }
