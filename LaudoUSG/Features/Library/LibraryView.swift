@@ -28,6 +28,7 @@ struct LibraryView: View {
     var categoriaInicial: String = "OBSTETRICA"
 
     @State private var categoria: String = "OBSTETRICA"
+    @State private var estilo: EstiloDaBiblioteca = .classico
     @State private var categorias: [ModelCustomizationService.CategoriaDaBiblioteca] = []
     /// A lista já veio do SERVIDOR? Enquanto for `false`, cada `carregar()`
     /// tenta de novo.
@@ -71,6 +72,14 @@ struct LibraryView: View {
     @State private var mostrandoHistorico = false
 
     enum Aba: String, CaseIterable { case modelo, laudo }
+
+    enum EstiloDaBiblioteca: String, CaseIterable, Identifiable {
+        case classico = "CLASSICO_COMPLETO"
+        case objetivo = "OBJETIVO"
+
+        var id: String { rawValue }
+        var rotulo: String { self == .classico ? "Clássico" : "Objetivo" }
+    }
 
     @State private var slotEmFoco: CatalogSlot?
     @State private var modoEdicao: ModoEdicao?
@@ -432,6 +441,20 @@ struct LibraryView: View {
     private var conteudo: some View {
         VStack(spacing: 0) {
             if categorias.count > 1 { seletorDeCategoria }
+            Picker("Estilo", selection: $estilo) {
+                ForEach(EstiloDaBiblioteca.allCases) { item in
+                    Text(item.rotulo).tag(item)
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, Spacing.md)
+            .padding(.top, Spacing.xs)
+            .onChange(of: estilo) { _, _ in
+                operacoes = []
+                variacaoSelecionada = nil
+                slotEmFoco = nil
+                Task { await carregar() }
+            }
             if modelos.count > 1 { seletorDeCenario }
             // Editar × conferir: o médico precisa das duas visões, e elas não
             // cabem na mesma tela sem uma virar ruído da outra.
@@ -1217,7 +1240,10 @@ struct LibraryView: View {
             : Task { await ModelCustomizationService.categorias() }
         if categorias.isEmpty { categoria = categoriaInicial }
         do {
-            let e = try await ModelCustomizationService.fetch(categoria: categoria)
+            let e = try await ModelCustomizationService.fetch(
+                categoria: categoria,
+                estilo: estilo.rawValue
+            )
             estado = e
             // O que o médico está editando: o rascunho se houver, SENÃO o publicado.
             //
@@ -1250,11 +1276,16 @@ struct LibraryView: View {
         recusa = nil
         do {
             if novas.isEmpty {
-                try await ModelCustomizationService.discardDraft(categoria: categoria)
+                try await ModelCustomizationService.discardDraft(
+                    categoria: categoria,
+                    estilo: estilo.rawValue
+                )
                 operacoes = []
             } else {
                 let r = try await ModelCustomizationService.saveDraft(
-                    categoria: categoria, operations: novas
+                    categoria: categoria,
+                    operations: novas,
+                    estilo: estilo.rawValue
                 )
                 operacoes = r.operations
             }
@@ -1275,7 +1306,10 @@ struct LibraryView: View {
         salvando = true
         recusa = nil
         do {
-            try await ModelCustomizationService.publish(categoria: categoria)
+            try await ModelCustomizationService.publish(
+                categoria: categoria,
+                estilo: estilo.rawValue
+            )
             await carregar()
         } catch let recusado as CustomizationRefusal {
             recusa = recusado.reasons.isEmpty ? [recusado.message] : recusado.reasons
@@ -1289,7 +1323,11 @@ struct LibraryView: View {
         salvando = true
         recusa = nil
         do {
-            try await ModelCustomizationService.restore(categoria: categoria, versao: versao)
+            try await ModelCustomizationService.restore(
+                categoria: categoria,
+                versao: versao,
+                estilo: estilo.rawValue
+            )
             await carregar()
         } catch let recusado as CustomizationRefusal {
             recusa = recusado.reasons.isEmpty ? [recusado.message] : recusado.reasons
@@ -1302,7 +1340,10 @@ struct LibraryView: View {
     private func desligar() async {
         salvando = true
         do {
-            try await ModelCustomizationService.turnOff(categoria: categoria)
+            try await ModelCustomizationService.turnOff(
+                categoria: categoria,
+                estilo: estilo.rawValue
+            )
             await carregar()
         } catch {
             erro = error.localizedDescription
