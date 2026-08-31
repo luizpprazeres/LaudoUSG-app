@@ -16,6 +16,19 @@ enum CompanionService {
 
     private struct Payload: Encodable { let text: String }
 
+    private struct StructuredEventBody: Encodable {
+        let sessionId: String
+        let userId: String
+        let kind = "structured_findings"
+        let payload: StructuredPayload
+    }
+
+    private struct StructuredPayload: Encodable {
+        let category: String
+        let data: BiometricData
+        let summary: String
+    }
+
     static func connect(code rawCode: String) async throws -> CompanionConnection {
         let code = rawCode
             .uppercased()
@@ -47,6 +60,27 @@ enum CompanionService {
 
     static func sendTranscript(_ rawText: String, connection: CompanionConnection) async throws {
         try await send(rawText, kind: "transcript", connection: connection)
+    }
+
+    static func sendStructuredFindings(
+        _ data: BiometricData,
+        summary: String,
+        category: ReportCategory,
+        connection: CompanionConnection
+    ) async throws {
+        guard connection.expiresAt > Date() else { throw CompanionError.expired }
+        guard let userId = await AuthService.shared.currentUserId() else { throw SupabaseError.unauthorized }
+        try await SupabaseRESTClient.shared.postRaw(
+            "/rest/v1/companion_events",
+            query: [:],
+            body: JSONEncoder.api.encode(
+                StructuredEventBody(
+                    sessionId: connection.sessionId,
+                    userId: userId,
+                    payload: StructuredPayload(category: category.rawValue, data: data, summary: summary)
+                )
+            )
+        )
     }
 
     private static func send(_ rawText: String, kind: String, connection: CompanionConnection) async throws {

@@ -9,6 +9,7 @@ struct ImageAnalysisSheet: View {
     let category: ReportCategory
     let onInsert: (String) -> Void
     let onDismiss: () -> Void
+    var onExtract: (([BiometricData], String) -> Void)? = nil
 
     @State private var selectedItems: [PhotosPickerItem] = []
     @State private var images: [AnalysisImage] = []
@@ -280,7 +281,11 @@ struct ImageAnalysisSheet: View {
                     throw ImageAnalysisError.emptyResult(nil)
                 }
                 Haptics.success()
-                onInsert(text)
+                if let onExtract {
+                    onExtract(result, text)
+                } else {
+                    onInsert(text)
+                }
                 onDismiss()
             } catch {
                 Haptics.error()

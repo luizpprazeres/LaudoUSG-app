@@ -256,7 +256,7 @@ struct GenerateView: View {
             SalaPairingSheet(onDismiss: { vm.isSalaSheetPresented = false })
         }
         .sheet(isPresented: Binding(get: { vm.isCompanionSheetPresented }, set: { vm.isCompanionSheetPresented = $0 })) {
-            CompanionSheet(onDismiss: { vm.isCompanionSheetPresented = false })
+            CompanionSheet(category: vm.category, onDismiss: { vm.isCompanionSheetPresented = false })
         }
         .overlay {
             if vm.isRecordingOverlayPresented {

@@ -153,7 +153,7 @@ enum ImageAnalysisService {
         }
     }
 
-    private static func merge(_ results: [BiometricData]) -> BiometricData {
+    static func merge(_ results: [BiometricData]) -> BiometricData {
         results.reduce(BiometricData()) { partial, next in
             BiometricData(
                 dbp: partial.dbp ?? next.dbp,

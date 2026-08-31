@@ -9,6 +9,8 @@ final class CompanionViewModel {
     var error: String?
     var sent = false
     var dictated = false
+    var imageData: BiometricData?
+    var imageSummary = ""
     let speech = SpeechService()
 
     func connect() async {
@@ -64,6 +66,27 @@ final class CompanionViewModel {
         if speech.isRecording || speech.isTranscribing { speech.cancel() }
     }
 
+    func receiveImageFindings(_ results: [BiometricData], summary: String) {
+        imageData = ImageAnalysisService.merge(results)
+        imageSummary = summary
+        sent = false
+    }
+
+    func sendImageFindings(category: ReportCategory) async {
+        guard let connection, let imageData else { return }
+        await run {
+            try await CompanionService.sendStructuredFindings(
+                imageData,
+                summary: self.imageSummary,
+                category: category,
+                connection: connection
+            )
+            self.imageData = nil
+            self.imageSummary = ""
+            self.sent = true
+        }
+    }
+
     private func run(_ operation: @escaping () async throws -> Void) async {
         isBusy = true; error = nil
         do { try await operation() }
@@ -73,8 +96,10 @@ final class CompanionViewModel {
 }
 
 struct CompanionSheet: View {
+    let category: ReportCategory
     let onDismiss: () -> Void
     @State private var vm = CompanionViewModel()
+    @State private var imageAnalysisOpen = false
 
     var body: some View {
         NavigationStack {
@@ -95,6 +120,18 @@ struct CompanionSheet: View {
             .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Fechar", action: onDismiss) } }
             .task { await vm.restore() }
             .onDisappear { vm.cancelRecording() }
+            .sheet(isPresented: $imageAnalysisOpen) {
+                NavigationStack {
+                    ImageAnalysisSheet(
+                        category: category,
+                        onInsert: { _ in },
+                        onDismiss: { imageAnalysisOpen = false },
+                        onExtract: { results, summary in
+                            vm.receiveImageFindings(results, summary: summary)
+                        }
+                    )
+                }
+            }
         }
     }
 
@@ -123,6 +160,31 @@ struct CompanionSheet: View {
                 .background(RoundedRectangle(cornerRadius: Radius.xl).fill(AppSurface.card))
                 .overlay(RoundedRectangle(cornerRadius: Radius.xl).stroke(AppSurface.border))
                 .onChange(of: vm.message) { _, _ in vm.sent = false }
+            if ImageAnalysisService.canAnalyze(category: category) {
+                Button {
+                    Haptics.tap()
+                    imageAnalysisOpen = true
+                } label: {
+                    Label("Foto com biometria/Doppler", systemImage: "camera.viewfinder")
+                        .font(TextStyle.bodyLargeSemibold).frame(maxWidth: .infinity, minHeight: 48)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(BrandColor.primary)
+                .background(Capsule().stroke(BrandColor.primary))
+                .disabled(vm.isBusy || vm.speech.isRecording || vm.speech.isTranscribing)
+            }
+            if vm.imageData != nil {
+                VStack(alignment: .leading, spacing: Spacing.sm) {
+                    Text("Medidas encontradas — revise antes de enviar")
+                        .font(TextStyle.captionMedium).foregroundStyle(BrandColor.primary)
+                    Text(vm.imageSummary)
+                        .font(TextStyle.caption).foregroundStyle(AppSurface.textSecondary)
+                    primaryButton("Enviar medidas para a web") { await vm.sendImageFindings(category: category) }
+                }
+                .padding(Spacing.md)
+                .background(RoundedRectangle(cornerRadius: Radius.xl).fill(AppSurface.card))
+                .overlay(RoundedRectangle(cornerRadius: Radius.xl).stroke(AppSurface.border))
+            }
             Button { Task { await vm.toggleDictation() } } label: {
                 Group {
                     if vm.speech.isTranscribing {
