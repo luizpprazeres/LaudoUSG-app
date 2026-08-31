@@ -13,7 +13,18 @@ final class CompanionViewModel {
     var imageSummary = ""
     let speech = SpeechService()
 
+    var normalizedCode: String {
+        String(code.uppercased().filter { $0.isLetter || $0.isNumber }.prefix(6))
+    }
+
+    var canConnect: Bool { normalizedCode.count == 6 && !isBusy }
+
     func connect() async {
+        guard canConnect else {
+            error = "Digite os 6 caracteres mostrados na web."
+            return
+        }
+        code = normalizedCode
         await run { self.connection = try await CompanionService.connect(code: self.code) }
     }
 
@@ -100,6 +111,7 @@ struct CompanionSheet: View {
     let onDismiss: () -> Void
     @State private var vm = CompanionViewModel()
     @State private var imageAnalysisOpen = false
+    @FocusState private var codeFieldFocused: Bool
 
     var body: some View {
         NavigationStack {
@@ -142,11 +154,34 @@ struct CompanionSheet: View {
                 .font(TextStyle.body).foregroundStyle(AppSurface.textSecondary)
             TextField("ABC 234", text: $vm.code)
                 .textInputAutocapitalization(.characters).autocorrectionDisabled()
+                .keyboardType(.asciiCapable)
+                .textContentType(.oneTimeCode)
+                .submitLabel(.go)
+                .focused($codeFieldFocused)
+                .onSubmit { connectFromPairingForm() }
+                .onChange(of: vm.code) { _, value in
+                    let normalized = String(value.uppercased().filter { $0.isLetter || $0.isNumber }.prefix(6))
+                    if value != normalized { vm.code = normalized }
+                    vm.error = nil
+                }
                 .font(.system(size: 28, weight: .bold, design: .monospaced)).multilineTextAlignment(.center)
                 .padding().background(RoundedRectangle(cornerRadius: Radius.xl).fill(AppSurface.card))
                 .overlay(RoundedRectangle(cornerRadius: Radius.xl).stroke(AppSurface.border))
             primaryButton("Conectar") { await vm.connect() }
+                .disabled(!vm.canConnect)
+                .opacity(vm.canConnect ? 1 : 0.55)
+            Text(vm.normalizedCode.count == 6 ? "Pronto para conectar" : "\(vm.normalizedCode.count) de 6 caracteres")
+                .font(TextStyle.caption)
+                .foregroundStyle(vm.normalizedCode.count == 6 ? BrandColor.primary : AppSurface.textSecondary)
+                .frame(maxWidth: .infinity, alignment: .center)
         }
+    }
+
+    private func connectFromPairingForm() {
+        guard vm.canConnect else { return }
+        codeFieldFocused = false
+        Haptics.tap()
+        Task { await vm.connect() }
     }
 
     private var connectedContent: some View {
@@ -212,10 +247,17 @@ struct CompanionSheet: View {
     }
 
     private func primaryButton(_ title: String, action: @escaping () async -> Void) -> some View {
-        Button { Task { await action() } } label: {
+        Button {
+            Haptics.tap()
+            Task { await action() }
+        } label: {
             Group { if vm.isBusy { ProgressView().tint(.white) } else { Text(title) } }
                 .font(TextStyle.bodyLargeSemibold).frame(maxWidth: .infinity, minHeight: 50)
+                .foregroundStyle(.white)
+                .background(Capsule().fill(BrandColor.primary))
+                .contentShape(Capsule())
         }
-        .buttonStyle(.plain).foregroundStyle(.white).background(Capsule().fill(BrandColor.primary)).disabled(vm.isBusy)
+        .buttonStyle(.plain)
+        .disabled(vm.isBusy)
     }
 }

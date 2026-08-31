@@ -36,12 +36,13 @@ enum CompanionService {
         guard code.range(of: "^[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}$", options: .regularExpression) != nil else {
             throw CompanionError.invalidCode
         }
-        guard await AuthService.shared.currentUserId() != nil else { throw SupabaseError.unauthorized }
+        guard let userId = await AuthService.shared.currentUserId() else { throw SupabaseError.unauthorized }
         let now = Date()
         let rows = try await SupabaseRESTClient.shared.patchReturning(
             "/rest/v1/companion_sessions",
             query: [
                 "pairing_code": "eq.\(code)",
+                "user_id": "eq.\(userId)",
                 "pairing_expires_at": "gt.\(ISO8601DateFormatter.api.string(from: now))",
                 "connected_at": "is.null",
                 "revoked_at": "is.null",
