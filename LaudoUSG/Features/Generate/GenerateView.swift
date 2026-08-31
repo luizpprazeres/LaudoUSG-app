@@ -38,6 +38,7 @@ struct GenerateView: View {
             vm.transcriptionEngine = app.preferences.transcriptionEngine
             vm.experimentalModel = app.preferences.experimentalModel
             vm.prewarmMic()
+            await vm.restoreCompanionConnection()
         }
         .onChange(of: app.preferences.experimentalModel) { _, newValue in
             vm.experimentalModel = newValue
@@ -176,7 +177,10 @@ struct GenerateView: View {
                 } : nil,
                 reportText: vm.displayedOutput.isEmpty ? nil : vm.displayedOutput,
                 venousScheme: vm.latestVenousScheme,
-                reportId: vm.lastReportId
+                reportId: vm.lastReportId,
+                onImageExtract: vm.isCompanionConnected ? { results, summary, text in
+                    vm.receiveCompanionImageFindings(results, summary: summary, insertedText: text)
+                } : nil
             )
         }
         .sheet(isPresented: Binding(get: { vm.isConsultorSheetPresented }, set: { vm.isConsultorSheetPresented = $0 })) {
@@ -256,7 +260,11 @@ struct GenerateView: View {
             SalaPairingSheet(onDismiss: { vm.isSalaSheetPresented = false })
         }
         .sheet(isPresented: Binding(get: { vm.isCompanionSheetPresented }, set: { vm.isCompanionSheetPresented = $0 })) {
-            CompanionSheet(category: vm.category, onDismiss: { vm.isCompanionSheetPresented = false })
+            CompanionSheet(
+                category: vm.category,
+                onDismiss: { vm.isCompanionSheetPresented = false },
+                onConnectionChanged: { vm.companionConnection = $0 }
+            )
         }
         .overlay {
             if vm.isRecordingOverlayPresented {
@@ -1056,14 +1064,14 @@ struct GenerateView: View {
             .accessibilityLabel("Adicionar ao laudo (calculadoras e frases)")
 
             PrimaryButton(
-                title: vm.phaseLabel,
+                title: vm.primaryActionLabel,
                 icon: nil,
                 isLoading: vm.phase.isBusy,
-                isDisabled: !vm.canGenerate,
-                fillColor: vm.hardMode ? BrandColor.advanced : BrandColor.primary
+                isDisabled: !vm.canPerformPrimaryAction,
+                fillColor: vm.isCompanionConnected ? Color(hex: "F59E0B") : (vm.hardMode ? BrandColor.advanced : BrandColor.primary)
             ) {
                 Haptics.press()
-                vm.generate(writingStyleId: app.defaultWritingStyleId)
+                vm.performPrimaryAction(writingStyleId: app.defaultWritingStyleId)
             }
 
             Button {

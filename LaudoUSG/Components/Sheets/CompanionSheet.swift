@@ -109,6 +109,7 @@ final class CompanionViewModel {
 struct CompanionSheet: View {
     let category: ReportCategory
     let onDismiss: () -> Void
+    var onConnectionChanged: ((CompanionConnection?) -> Void)? = nil
     @State private var vm = CompanionViewModel()
     @State private var imageAnalysisOpen = false
     @FocusState private var codeFieldFocused: Bool
@@ -128,6 +129,10 @@ struct CompanionSheet: View {
             }
             .background(AppSurface.background)
             .navigationTitle("Conectar à web")
+            .onChange(of: vm.connection) { _, connection in
+                onConnectionChanged?(connection)
+                if connection != nil { onDismiss() }
+            }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Fechar", action: onDismiss) } }
             .task { await vm.restore() }

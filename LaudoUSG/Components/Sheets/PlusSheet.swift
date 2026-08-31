@@ -11,6 +11,7 @@ struct PlusSheet: View {
     var reportText: String? = nil
     var venousScheme: VenousSchemePayload? = nil
     var reportId: String? = nil
+    var onImageExtract: (([BiometricData], String, String) -> Void)? = nil
 
     @State private var path: [PlusDestination] = []
     @State private var phrases: [UserPhrase] = []
@@ -163,7 +164,10 @@ struct PlusSheet: View {
                     ImageAnalysisSheet(
                         category: category,
                         onInsert: { insert($0) },
-                        onDismiss: onDismiss
+                        onDismiss: onDismiss,
+                        onExtract: onImageExtract.map { callback in
+                            { results, text in callback(results, text, text) }
+                        }
                     )
                 }
             }

@@ -121,6 +121,10 @@ final class GenerateViewModel {
     var isPaywallPresented = false
     var isMiomaEditorPresented = false
     var isVenousSchemaPresented = false
+    var companionConnection: CompanionConnection?
+    var pendingCompanionImageData: BiometricData?
+    var pendingCompanionImageSummary = ""
+    var pendingCompanionImageText = ""
 
     var canOpenConsultor: Bool {
         if case .done = phase {
@@ -185,6 +189,73 @@ final class GenerateViewModel {
     var canGenerate: Bool {
         !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && !phase.isBusy
+    }
+
+    var isCompanionConnected: Bool {
+        guard let companionConnection else { return false }
+        return companionConnection.expiresAt > Date()
+    }
+
+    var canPerformPrimaryAction: Bool { canGenerate }
+
+    var primaryActionLabel: String {
+        if isCompanionConnected { return phase.isBusy ? "Enviando…" : "Enviar para a web" }
+        return phaseLabel
+    }
+
+    func restoreCompanionConnection() async {
+        do { companionConnection = try await CompanionService.restoreConnection() }
+        catch { companionConnection = nil }
+    }
+
+    func receiveCompanionImageFindings(_ results: [BiometricData], summary: String, insertedText: String) {
+        pendingCompanionImageData = ImageAnalysisService.merge(results)
+        pendingCompanionImageSummary = summary
+        pendingCompanionImageText = insertedText
+        insertSnippet(insertedText)
+    }
+
+    func performPrimaryAction(writingStyleId: String) {
+        guard isCompanionConnected else {
+            generate(writingStyleId: writingStyleId)
+            return
+        }
+        Task { await sendCurrentFindingsToWeb() }
+    }
+
+    private func sendCurrentFindingsToWeb() async {
+        guard let connection = companionConnection else { return }
+        let fullText = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !fullText.isEmpty else { return }
+        phase = .generating
+        lastError = nil
+        do {
+            if let data = pendingCompanionImageData {
+                try await CompanionService.sendStructuredFindings(
+                    data,
+                    summary: pendingCompanionImageSummary,
+                    category: category,
+                    connection: connection
+                )
+            }
+            let imageText = pendingCompanionImageText.trimmingCharacters(in: .whitespacesAndNewlines)
+            let remainingText = imageText.isEmpty
+                ? fullText
+                : fullText.replacingOccurrences(of: imageText, with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+            if !remainingText.isEmpty {
+                try await CompanionService.sendText(remainingText, connection: connection)
+            }
+            inputText = ""
+            pendingCompanionImageData = nil
+            pendingCompanionImageSummary = ""
+            pendingCompanionImageText = ""
+            lastWarning = "Enviado para a web."
+            phase = .idle
+        } catch {
+            phase = .idle
+            lastError = error.localizedDescription
+            if connection.expiresAt <= Date() { companionConnection = nil }
+        }
     }
 
     var hasLaudoOutput: Bool {
