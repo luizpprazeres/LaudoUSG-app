@@ -19,60 +19,46 @@ enum UserPhrasesService {
     }
 
     static func fetch(categoryCode: String? = nil) async throws -> [UserPhrase] {
-        var query: [String: String] = [
-            "select": "id,user_id,title,body,category_code,position,created_at,updated_at",
-            "order": "position.asc"
-        ]
-        if let categoryCode {
-            query["or"] = "(category_code.is.null,category_code.eq.\(categoryCode))"
-        }
-        return try await SupabaseRESTClient.shared.get(
-            "/rest/v1/user_phrases",
-            query: query,
-            as: [UserPhrase].self
+        let response = try await APIClient.shared.get(
+            "/api/me/user-phrases",
+            as: UserPhrasesResponse.self
         )
+        guard let categoryCode else { return response.phrases }
+        return response.phrases.filter { $0.categoryCode == nil || $0.categoryCode == categoryCode }
     }
 
     static func create(_ draft: UserPhraseDraft) async throws {
-        guard let userId = await AuthService.shared.currentUserId() else {
-            throw SupabaseError.unauthorized
-        }
-        let body = try JSONEncoder.api.encode(UserPhraseCreatePayload(userId: userId, draft: draft))
-        try await SupabaseRESTClient.shared.postRaw(
-            "/rest/v1/user_phrases",
-            query: [:],
-            body: body
-        )
+        let body = try JSONEncoder.api.encode(draft)
+        _ = try await APIClient.shared.postRawJSON("/api/me/user-phrases", body: body)
     }
 
     static func update(id: String, draft: UserPhraseDraft) async throws {
-        try await SupabaseRESTClient.shared.patch(
-            "/rest/v1/user_phrases",
-            query: ["id": "eq.\(id)"],
-            body: draft
-        )
+        let body = try JSONEncoder.api.encode(UserPhraseUpdatePayload(id: id, draft: draft))
+        _ = try await APIClient.shared.patchRaw("/api/me/user-phrases", body: body)
     }
 
     static func delete(id: String) async throws {
-        try await SupabaseRESTClient.shared.delete(
-            "/rest/v1/user_phrases",
-            query: ["id": "eq.\(id)"]
+        try await APIClient.shared.delete(
+            "/api/me/user-phrases",
+            queryItems: [URLQueryItem(name: "id", value: id)]
         )
     }
 }
 
-private struct UserPhraseCreatePayload: Encodable {
-    let userId: String
+private struct UserPhrasesResponse: Decodable {
+    let phrases: [UserPhrase]
+}
+
+private struct UserPhraseUpdatePayload: Encodable {
+    let id: String
     let title: String
     let body: String
     let categoryCode: String?
-    let position: Int
 
-    init(userId: String, draft: UserPhraseDraft) {
-        self.userId = userId
+    init(id: String, draft: UserPhraseDraft) {
+        self.id = id
         self.title = draft.title
         self.body = draft.body
         self.categoryCode = draft.categoryCode
-        self.position = draft.position
     }
 }
