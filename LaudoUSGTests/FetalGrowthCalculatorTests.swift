@@ -22,8 +22,16 @@ final class FetalGrowthCalculatorTests: XCTestCase {
 
         var stage2Input = FetalGrowthCalculator.Input(efwPercentile: 5, efwPercentileSource: source)
         stage2Input.umbilicalArteryEndDiastolicFlow = .absent
+        stage2Input.umbilicalFlowAbnormalInMajorityBothArteries = true
         stage2Input.umbilicalFlowConfirmedInRequiredInterval = true
         XCTAssertEqual(FetalGrowthCalculator.calculate(stage2Input)?.stage, 2)
+
+        var stage2WithoutBothArteries = FetalGrowthCalculator.Input(efwPercentile: 5, efwPercentileSource: source)
+        stage2WithoutBothArteries.umbilicalArteryEndDiastolicFlow = .absent
+        stage2WithoutBothArteries.umbilicalFlowConfirmedInRequiredInterval = true
+        let pendingStage2 = try XCTUnwrap(FetalGrowthCalculator.calculate(stage2WithoutBothArteries))
+        XCTAssertNil(pendingStage2.stage)
+        XCTAssertTrue(pendingStage2.pendingCriteria.first?.confirmationRequirement?.contains("50%") == true)
 
         var stage3Input = FetalGrowthCalculator.Input(efwPercentile: 4, efwPercentileSource: source)
         stage3Input.ductusVenosus.piAboveP95 = true
@@ -33,7 +41,10 @@ final class FetalGrowthCalculatorTests: XCTestCase {
         var stage4Input = FetalGrowthCalculator.Input(efwPercentile: 9, efwPercentileSource: source)
         stage4Input.pathologicalCtg = true
         XCTAssertEqual(FetalGrowthCalculator.calculate(stage4Input)?.stage, 4)
-        XCTAssertTrue(FetalGrowthCalculator.insertBlock(from: try XCTUnwrap(FetalGrowthCalculator.calculate(stage4Input))).contains("Fetal Medicine Barcelona"))
+        let insertBlock = FetalGrowthCalculator.insertBlock(from: try XCTUnwrap(FetalGrowthCalculator.calculate(stage4Input)))
+        XCTAssertTrue(insertBlock.contains("Fetal Medicine Barcelona"))
+        XCTAssertTrue(insertBlock.contains("percentil 9 pela curva Intergrowth-21st"))
+        XCTAssertTrue(insertBlock.contains("Critério confirmado: traçado cardiotocográfico patológico"))
     }
 
     func testDopplerDoesNotBecomeFGRWhenWeightIsAtOrAboveP10() throws {
@@ -43,4 +54,5 @@ final class FetalGrowthCalculatorTests: XCTestCase {
         XCTAssertNil(result.stage)
         XCTAssertTrue(result.warnings.joined().contains("não preenche a definição de RCF"))
     }
+
 }

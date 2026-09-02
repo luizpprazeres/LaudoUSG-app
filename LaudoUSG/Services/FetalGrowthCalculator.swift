@@ -45,6 +45,7 @@ enum FetalGrowthCalculator {
         var mcaPiBelowP5 = RepeatedCriterion(present: false, confirmed: false)
         var meanUterinePiAboveP95 = false
         var umbilicalArteryEndDiastolicFlow: EndDiastolicFlow = .present
+        var umbilicalFlowAbnormalInMajorityBothArteries = false
         var umbilicalFlowConfirmedInRequiredInterval = false
         var ductusVenosus = DuctusVenosusCriteria()
         var pathologicalCtg = false
@@ -81,9 +82,14 @@ enum FetalGrowthCalculator {
         let conclusion: String
         let reportReference: String
         let protocolVersion: String
+        let efwPercentile: Double
         let efwPercentileSource: String
     }
 
+    private static let uaAbsentConfirmation =
+        "Documentar em mais de 50% dos ciclos nas duas artérias e confirmar em duas determinações com intervalo superior a 12 horas."
+    private static let uaReversedConfirmation =
+        "Documentar em mais de 50% dos ciclos nas duas artérias e confirmar em duas determinações com intervalo superior a 6–12 horas."
     private static let twoAfter12Hours =
         "Confirmar em duas determinações com intervalo superior a 12 horas."
     private static let twoAfter6To12Hours =
@@ -136,10 +142,16 @@ enum FetalGrowthCalculator {
                 append(item(stage: 1, code: .meanUterinePiAboveP95, label: "IP médio das artérias uterinas acima do percentil 95", confirmed: true))
             }
             if input.umbilicalArteryEndDiastolicFlow == .absent {
-                append(item(stage: 2, code: .umbilicalAbsentEndDiastolicFlow, label: "fluxo diastólico ausente na artéria umbilical", confirmed: input.umbilicalFlowConfirmedInRequiredInterval, requirement: twoAfter12Hours))
+                let label = input.umbilicalFlowAbnormalInMajorityBothArteries
+                    ? "fluxo diastólico ausente em mais de 50% dos ciclos nas duas artérias umbilicais"
+                    : "fluxo diastólico ausente na artéria umbilical"
+                append(item(stage: 2, code: .umbilicalAbsentEndDiastolicFlow, label: label, confirmed: input.umbilicalFlowConfirmedInRequiredInterval && input.umbilicalFlowAbnormalInMajorityBothArteries, requirement: uaAbsentConfirmation))
             }
             if input.umbilicalArteryEndDiastolicFlow == .reversed {
-                append(item(stage: 3, code: .umbilicalReversedEndDiastolicFlow, label: "fluxo diastólico reverso na artéria umbilical", confirmed: input.umbilicalFlowConfirmedInRequiredInterval, requirement: twoAfter6To12Hours))
+                let label = input.umbilicalFlowAbnormalInMajorityBothArteries
+                    ? "fluxo diastólico reverso em mais de 50% dos ciclos nas duas artérias umbilicais"
+                    : "fluxo diastólico reverso na artéria umbilical"
+                append(item(stage: 3, code: .umbilicalReversedEndDiastolicFlow, label: label, confirmed: input.umbilicalFlowConfirmedInRequiredInterval && input.umbilicalFlowAbnormalInMajorityBothArteries, requirement: uaReversedConfirmation))
             }
             if input.ductusVenosus.piAboveP95 {
                 append(item(stage: 3, code: .ductusVenosusPiAboveP95, label: "IP do ducto venoso acima do percentil 95", confirmed: input.ductusVenosus.confirmedAfter6To12Hours, requirement: twoAfter6To12Hours))
@@ -204,17 +216,23 @@ enum FetalGrowthCalculator {
             conclusion: conclusion,
             reportReference: protocolReference,
             protocolVersion: protocolVersion,
+            efwPercentile: input.efwPercentile,
             efwPercentileSource: input.efwPercentileSource
         )
     }
 
     static func insertBlock(from result: Result) -> String {
-        (["CRESCIMENTO FETAL:", result.conclusion]
+        ([
+            "CRESCIMENTO FETAL:",
+            "Peso fetal estimado no percentil \(formatPercentile(result.efwPercentile)) pela curva \(result.efwPercentileSource).",
+            result.conclusion,
+        ]
+         + result.confirmedCriteria.map { "Critério confirmado: \($0.label)." }
          + result.pendingCriteria.map { item in
              "\(item.label): achado no exame atual; \(item.confirmationRequirement ?? "confirmação pendente")"
          }
          + result.warnings
-         + [result.reportReference, "Curva informada para o percentil do peso: \(result.efwPercentileSource)."])
+         + [result.reportReference])
             .joined(separator: "\n")
     }
 
@@ -239,5 +257,10 @@ enum FetalGrowthCalculator {
 
     private static func roman(_ stage: Int) -> String {
         [1: "I", 2: "II", 3: "III", 4: "IV"][stage] ?? "I"
+    }
+
+    private static func formatPercentile(_ value: Double) -> String {
+        if value.rounded() == value { return String(Int(value)) }
+        return String(format: "%.1f", value).replacingOccurrences(of: ".", with: ",")
     }
 }

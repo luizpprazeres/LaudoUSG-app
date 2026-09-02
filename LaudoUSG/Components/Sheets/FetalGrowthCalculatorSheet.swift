@@ -16,6 +16,7 @@ struct FetalGrowthCalculatorSheet: View {
     @State private var mcaConfirmed = false
     @State private var uterinesAboveP95 = false
     @State private var uaFlow: FetalGrowthCalculator.EndDiastolicFlow = .present
+    @State private var uaMajorityBothArteries = false
     @State private var uaConfirmed = false
     @State private var dvState: DvState = .normal
     @State private var dvConfirmed = false
@@ -45,6 +46,7 @@ struct FetalGrowthCalculatorSheet: View {
         input.mcaPiBelowP5 = .init(present: mcaBelowP5, confirmed: mcaConfirmed)
         input.meanUterinePiAboveP95 = uterinesAboveP95
         input.umbilicalArteryEndDiastolicFlow = uaFlow
+        input.umbilicalFlowAbnormalInMajorityBothArteries = uaMajorityBothArteries
         input.umbilicalFlowConfirmedInRequiredInterval = uaConfirmed
         input.ductusVenosus = .init(
             piAboveP95: dvState == .piAboveP95,
@@ -94,12 +96,17 @@ struct FetalGrowthCalculatorSheet: View {
                     Text("Ausente").tag(FetalGrowthCalculator.EndDiastolicFlow.absent)
                     Text("Reverso").tag(FetalGrowthCalculator.EndDiastolicFlow.reversed)
                 }
-                if uaFlow != .present { confirmation("Confirmado no intervalo exigido", isOn: $uaConfirmed) }
+                if uaFlow == .absent || uaFlow == .reversed {
+                    confirmation(">50% dos ciclos, nas duas artérias", isOn: $uaMajorityBothArteries)
+                    confirmation("Confirmado no intervalo exigido", isOn: $uaConfirmed)
+                }
 
                 pickerRow("Ducto venoso", selection: $dvState) {
                     ForEach(DvState.allCases) { state in Text(state.rawValue).tag(state) }
                 }
-                if dvState != .normal { confirmation("Confirmado em duas medidas >6–12 h", isOn: $dvConfirmed) }
+                if dvState != .normal {
+                    confirmation("Confirmado em duas medidas >6–12 h", isOn: $dvConfirmed)
+                }
                 toggle("CTG patológico", isOn: $pathologicalCtg)
 
                 if let result {
