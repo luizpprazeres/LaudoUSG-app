@@ -1,21 +1,26 @@
 import Foundation
 
 /// Z-score do índice de pulsatilidade (IP) do ducto venoso fetal — marcador de
-/// função cardíaca direita / oxigenação fetal. Baseado em Hecher 2001.
-///
-/// Mediana decresce com IG: ~1.00 (20 sem) → ~0.55 (40 sem)
-/// SD ~ 0.16
+/// função cardíaca direita / oxigenação fetal. Usa literalmente a equação da
+/// Calculadora v2021 da Fetal Medicine Barcelona.
 ///
 /// Classificação:
-/// - Z < 1.5: normal
-/// - 1.5 ≤ Z < 2.0: limítrofe — vigilância
-/// - Z ≥ 2.0: alterado (sugere comprometimento)
+/// - Z ≤ 1,645 (até p95): dentro do esperado
+/// - Z > 1,645 (p96 ou superior): alterado
 /// - Onda A reversa/ausente: padrão patológico independente do Z
 enum DuctoVenosoCalculator {
     struct DVInput: Sendable, Hashable {
         let igWeeks: Int
+        let igDays: Int
         let pi: Double
         let ondaA: OndaA
+
+        init(igWeeks: Int, igDays: Int = 0, pi: Double, ondaA: OndaA) {
+            self.igWeeks = igWeeks
+            self.igDays = igDays
+            self.pi = pi
+            self.ondaA = ondaA
+        }
     }
 
     enum OndaA: String, Sendable {
@@ -34,15 +39,13 @@ enum DuctoVenosoCalculator {
 
     enum Classification: String, Sendable {
         case normal
-        case limitrofe
         case alterado
         case ondaPatologica
 
         var label: String {
             switch self {
             case .normal: return "Doppler do ducto venoso dentro da normalidade"
-            case .limitrofe: return "Doppler do ducto venoso limítrofe — recomenda-se vigilância"
-            case .alterado: return "Doppler do ducto venoso alterado — sugere comprometimento hemodinâmico fetal"
+            case .alterado: return "Índice de pulsatilidade do ducto venoso acima do percentil 95 para a idade gestacional"
             case .ondaPatologica: return "Padrão patológico ao Doppler do ducto venoso — sugere descompensação cardíaca direita"
             }
         }
@@ -57,28 +60,29 @@ enum DuctoVenosoCalculator {
         let insertBloco: String
     }
 
-    /// Mediana de PI do ducto venoso por IG (Hecher 2001, simplificada por regressão linear).
-    private static func medianFor(igWeeks: Int) -> Double {
-        // Linear approximation: 0.92 - 0.014 * IG (cm/s decresce com idade)
-        max(0.40, 0.92 - 0.014 * Double(igWeeks))
+    /// Equação literal do calc.js Barcelona: média = 0,903 − 0,0116 × IG.
+    private static func medianFor(igWeeks: Int, igDays: Int) -> Double {
+        0.903 - 0.0116 * (Double(igWeeks) + Double(igDays) / 7.0)
     }
 
-    private static let sd = 0.16
+    private static let sd = 0.1483
 
     static func calculate(_ input: DVInput) -> DVResult? {
-        guard input.igWeeks >= 20, input.igWeeks <= 40, input.pi > 0 else { return nil }
+        guard input.igWeeks >= 20,
+              input.igWeeks <= 44,
+              (0...6).contains(input.igDays),
+              input.pi > 0
+        else { return nil }
 
-        let median = medianFor(igWeeks: input.igWeeks)
+        let median = medianFor(igWeeks: input.igWeeks, igDays: input.igDays)
         let z = (input.pi - median) / sd
-        let percentile = Int(DopplerCalculator.zToPercentile(z).rounded())
+        let percentile = Int(DopplerCalculator.barcelonaDopplerPercentile(z).value.rounded())
 
         let cls: Classification
         if input.ondaA != .positiva {
             cls = .ondaPatologica
-        } else if z < 1.5 {
+        } else if z <= 1.645 {
             cls = .normal
-        } else if z < 2.0 {
-            cls = .limitrofe
         } else {
             cls = .alterado
         }
@@ -89,11 +93,12 @@ enum DuctoVenosoCalculator {
 
         let bloco = """
         Doppler do ducto venoso:
-        - IP: \(piFmt) (mediana esperada para \(input.igWeeks) sem: \(medFmt)).
-        - Z-score: \(zFmt) (percentil \(percentile)).
+        - IP: \(piFmt) (mediana esperada para \(input.igWeeks) sem e \(input.igDays) dias: \(medFmt)).
+        - Z-score: \(zFmt) (percentil \(DopplerCalculator.pct(Double(percentile)))).
         - \(input.ondaA.label).
 
         Conclusão: \(cls.label).
+        Referência: Calculadora v2021 da Fetal Medicine Barcelona.
         """
 
         return DVResult(

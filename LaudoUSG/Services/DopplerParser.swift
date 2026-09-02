@@ -7,6 +7,7 @@ public struct DopplerFindings: Sendable, Equatable {
     public var uterinasMediaIP: Double?
     public var umbilicalIP: Double?
     public var cerebralMediaIP: Double?
+    public var ductoVenosoIP: Double?
     public var ductoVenoso: DuctoVenosoFlow?
 
     public init(
@@ -16,6 +17,7 @@ public struct DopplerFindings: Sendable, Equatable {
         uterinasMediaIP: Double? = nil,
         umbilicalIP: Double? = nil,
         cerebralMediaIP: Double? = nil,
+        ductoVenosoIP: Double? = nil,
         ductoVenoso: DuctoVenosoFlow? = nil
     ) {
         self.ig = ig
@@ -24,6 +26,7 @@ public struct DopplerFindings: Sendable, Equatable {
         self.uterinasMediaIP = uterinasMediaIP
         self.umbilicalIP = umbilicalIP
         self.cerebralMediaIP = cerebralMediaIP
+        self.ductoVenosoIP = ductoVenosoIP
         self.ductoVenoso = ductoVenoso
     }
 }
@@ -62,6 +65,7 @@ public enum DopplerParser {
             uterinasMediaIP: parseUterinasMediaIP(in: achados),
             umbilicalIP: parseUmbilicalIP(in: achados),
             cerebralMediaIP: parseCerebralMediaIP(in: achados),
+            ductoVenosoIP: parseDuctoVenosoIP(in: achados),
             ductoVenoso: parseDuctoVenoso(in: achados)
         )
     }
@@ -265,6 +269,15 @@ public enum DopplerParser {
         default:
             return nil
         }
+    }
+
+    private static func parseDuctoVenosoIP(in text: String) -> Double? {
+        guard let match = text.firstMatch(
+            of: /(?i)\bducto\s+venoso\b[^.]{0,35}?\bip\b\s*[:=]?\s*(\d+(?:[.,]\d+)?)/
+        ) else {
+            return nil
+        }
+        return decimalValue(from: String(match.1))
     }
 
     private static func decimalValue(from capture: String) -> Double? {

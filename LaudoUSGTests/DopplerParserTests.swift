@@ -42,9 +42,10 @@ final class DopplerParserTests: XCTestCase {
     }
 
     func testDuctoVenosoNegativeWaveA() {
-        let findings = DopplerParser.parse(achados: "Ducto venoso onda A negativa")
+        let findings = DopplerParser.parse(achados: "Ducto venoso IP 0,72, onda A negativa")
 
         XCTAssertEqual(findings.ductoVenoso, .ondaANegativa)
+        XCTAssertEqual(findings.ductoVenosoIP, 0.72)
     }
 
     func testBiometriaUsesHadlockFemurDating() {

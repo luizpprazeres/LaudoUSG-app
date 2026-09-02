@@ -111,18 +111,49 @@ enum DopplerCalculator {
         return 50
     }
 
+    /// Faixas literais do calc.js Barcelona v2021. Mantida separada de
+    /// `zToPercentile`, que também é usada pelas curvas de crescimento.
+    static func barcelonaDopplerPercentile(_ z: Double) -> (value: Double, label: String) {
+        if z > 1.645 && z < 1.81 { return (96, "96") }
+        let bounds: [(Double, Double)] = [
+            (2.6, 100), (2.18, 99), (1.97, 98), (1.81, 97),
+            (1.6, 95), (1.52, 94), (1.45, 93), (1.38, 92), (1.31, 91), (1.26, 90),
+            (1.2, 89), (1.17, 88), (1.1, 87), (1.07, 86), (1.02, 85), (0.98, 84),
+            (0.94, 83), (0.9, 82), (0.86, 81), (0.84, 80), (0.79, 79), (0.76, 78),
+            (0.72, 77), (0.69, 76), (0.67, 75), (0.63, 74), (0.61, 73), (0.57, 72),
+            (0.54, 71), (0.51, 70), (0.48, 69), (0.46, 68), (0.43, 67), (0.4, 66),
+            (0.37, 65), (0.34, 64), (0.32, 63), (0.3, 62), (0.27, 61), (0.24, 60),
+            (0.22, 59), (0.19, 58), (0.17, 57), (0.14, 56), (0.12, 55), (0.09, 54),
+            (0.07, 53), (0.05, 52), (0.03, 51), (-0.01, 50), (-0.035, 49),
+            (-0.06, 48), (-0.08, 47), (-0.11, 46), (-0.13, 45), (-0.16, 44),
+            (-0.185, 43), (-0.21, 42), (-0.24, 41), (-0.26, 40), (-0.28, 39),
+            (-0.31, 38), (-0.34, 37), (-0.36, 36), (-0.4, 35), (-0.43, 34),
+            (-0.45, 33), (-0.48, 32), (-0.5, 31), (-0.54, 30), (-0.565, 29),
+            (-0.585, 28), (-0.62, 27), (-0.65, 26), (-0.69, 25), (-0.73, 24),
+            (-0.75, 23), (-0.79, 22), (-0.83, 21), (-0.85, 20), (-0.89, 19),
+            (-0.93, 18), (-0.97, 17), (-1.01, 16), (-1.04, 15), (-1.1, 14),
+            (-1.14, 13), (-1.2, 12), (-1.25, 11), (-1.31, 10), (-1.37, 9),
+            (-1.43, 8), (-1.51, 7), (-1.6, 6), (-1.645, 5), (-1.81, 4),
+            (-1.97, 3), (-2.18, 2), (-2.6, 1),
+        ]
+        for (lowerBound, percentile) in bounds where z >= lowerBound {
+            return (percentile, percentile == 100 ? ">99" : "\(Int(percentile))")
+        }
+        return (0, "<1")
+    }
+
     private static func calcArteriaUmbilical(ga: Double, ip: Double) -> VesselResult {
         let mean = 3.55219 - 0.13558 * ga + 0.00174 * ga * ga
         let sd = 0.299
         let zscore = (ip - mean) / sd
-        return VesselResult(ip: ip, zscore: zscore, percentile: zToPercentile(zscore), pathological: zscore > 1.645)
+        return VesselResult(ip: ip, zscore: zscore, percentile: barcelonaDopplerPercentile(zscore).value, pathological: zscore > 1.645)
     }
 
     private static func calcArteriaCerebralMedia(ga: Double, ip: Double) -> VesselResult {
         let mean = -2.7317 + 0.3335 * ga - 0.0058 * ga * ga
         let sd = -0.88005 + 0.08182 * ga - 0.00133 * ga * ga
         let zscore = (ip - mean) / sd
-        return VesselResult(ip: ip, zscore: zscore, percentile: zToPercentile(zscore), pathological: zscore < -1.645)
+        return VesselResult(ip: ip, zscore: zscore, percentile: barcelonaDopplerPercentile(zscore).value, pathological: zscore < -1.645)
     }
 
     private static func calcArteriasUterinas(
@@ -141,7 +172,7 @@ enum DopplerCalculator {
             ip: ipMedio,
             ipMedio: ipMedio,
             zscore: zscore,
-            percentile: zToPercentile(zscore),
+            percentile: barcelonaDopplerPercentile(zscore).value,
             pathological: zscore > 1.645
         )
     }
@@ -151,7 +182,7 @@ enum DopplerCalculator {
         let mean = -4.0636 + 0.383 * ga - 0.0059 * ga * ga
         let sd = -0.9664 + 0.09027 * ga - 0.0014 * ga * ga
         let zscore = (ratio - mean) / sd
-        return VesselResult(ip: ratio, zscore: zscore, percentile: zToPercentile(zscore), pathological: zscore < -1.645)
+        return VesselResult(ip: ratio, zscore: zscore, percentile: barcelonaDopplerPercentile(zscore).value, pathological: zscore < -1.645)
     }
 
     static func fmt(_ value: Double, decimals: Int = 2) -> String {
@@ -159,7 +190,9 @@ enum DopplerCalculator {
     }
 
     static func pct(_ value: Double) -> String {
-        value.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(value))" : fmt(value, decimals: 1)
+        if value <= 0 { return "<1" }
+        if value >= 100 { return ">99" }
+        return value.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(value))" : fmt(value, decimals: 1)
     }
 
     private static func status(_ pathological: Bool) -> String {

@@ -33,16 +33,29 @@ public struct PercentileResult: Sendable, Equatable {
 }
 
 public enum DopplerPercentileTable {
-    public static func calculate(artery: DopplerArtery, ip: Double, igWeeks: Int) -> PercentileResult? {
-        guard let range = table(for: artery)[igWeeks] else { return nil }
+    public static func calculate(
+        artery: DopplerArtery,
+        ip: Double,
+        igWeeks: Int,
+        igDays: Int = 0
+    ) -> PercentileResult? {
+        guard ip > 0,
+              (0...6).contains(igDays),
+              let formula = formulaValues(for: artery, ip: ip, igWeeks: igWeeks, igDays: igDays)
+        else { return nil }
+        let percentile = DopplerCalculator.barcelonaDopplerPercentile(formula.z).label
+        let estimated: String
+        if percentile == "<1" { estimated = "<P1" }
+        else if percentile == ">99" { estimated = ">P99" }
+        else { estimated = "P\(percentile)" }
 
         return PercentileResult(
             artery: artery,
             measuredIP: ip,
-            p5: range.p5,
-            p50: range.p50,
-            p95: range.p95,
-            estimatedPercentile: estimatedPercentile(for: ip, range: range)
+            p5: formula.range.p5,
+            p50: formula.range.p50,
+            p95: formula.range.p95,
+            estimatedPercentile: estimated
         )
     }
 
@@ -52,115 +65,41 @@ public enum DopplerPercentileTable {
         let p95: Double
     }
 
-    private static func table(for artery: DopplerArtery) -> [Int: Range] {
+    private static func formulaValues(
+        for artery: DopplerArtery,
+        ip: Double,
+        igWeeks: Int,
+        igDays: Int
+    ) -> (range: Range, z: Double)? {
+        let ga = Double(igWeeks) + Double(igDays) / 7.0
         switch artery {
         case .umbilical:
-            return umbilical
+            guard (20...44).contains(igWeeks) else { return nil }
+            let mean = 3.55219 - 0.13558 * ga + 0.00174 * ga * ga
+            let sd = 0.299
+            return (Range(p5: mean - 1.645 * sd, p50: mean, p95: mean + 1.645 * sd), (ip - mean) / sd)
         case .cerebralMedia:
-            return cerebralMedia
+            guard (20...44).contains(igWeeks) else { return nil }
+            let mean = -2.7317 + 0.3335 * ga - 0.0058 * ga * ga
+            let sd = -0.88005 + 0.08182 * ga - 0.00133 * ga * ga
+            return (Range(p5: mean - 1.645 * sd, p50: mean, p95: mean + 1.645 * sd), (ip - mean) / sd)
         case .uterinasMedia:
-            return uterinasMedia
+            guard (11...44).contains(igWeeks) else { return nil }
+            let totalDays = Double(igWeeks * 7 + igDays)
+            let meanLog = 1.39 - 0.012 * totalDays + 1.98e-5 * totalDays * totalDays
+            let sdLog = 0.272 - 0.000259 * totalDays
+            let range = Range(
+                p5: exp(meanLog - 1.645 * sdLog),
+                p50: exp(meanLog),
+                p95: exp(meanLog + 1.645 * sdLog)
+            )
+            return (range, (log(ip) - meanLog) / sdLog)
         case .ductoVenoso:
-            return [:]
+            guard (20...44).contains(igWeeks) else { return nil }
+            let mean = 0.903 - 0.0116 * ga
+            let sd = 0.1483
+            return (Range(p5: mean - 1.645 * sd, p50: mean, p95: mean + 1.645 * sd), (ip - mean) / sd)
         }
     }
 
-    private static func estimatedPercentile(for ip: Double, range: Range) -> String {
-        let tolerance = 0.0005
-
-        if ip < range.p5 - tolerance { return "<P5" }
-        if ip > range.p95 + tolerance { return ">P95" }
-        if abs(ip - range.p5) <= tolerance { return "P5" }
-        if abs(ip - range.p50) <= tolerance { return "P50" }
-        if abs(ip - range.p95) <= tolerance { return "P95" }
-
-        // P5/P95 cobrem ±1.6449σ na curva normal; reusa zTable do DopplerCalculator
-        // pra mapear z → percentil contínuo (P6..P94).
-        let sigma = (range.p95 - range.p5) / (2 * 1.6449)
-        guard sigma > 0 else { return "P50" }
-        let z = (ip - range.p50) / sigma
-        let p = DopplerCalculator.zToPercentile(z)
-        let rounded = Int(p.rounded())
-        if rounded <= 5 { return "P5" }
-        if rounded >= 95 { return "P95" }
-        return "P\(rounded)"
-    }
-
-    // Weekly p5, p50 and p95 derived from the Fetal Medicine Barcelona/FMF formulas already used by DopplerCalculator for UA PI.
-    private static let umbilical: [Int: Range] = [
-        20: Range(p5: 1.045, p50: 1.537, p95: 2.028),
-        21: Range(p5: 0.980, p50: 1.472, p95: 1.964),
-        22: Range(p5: 0.920, p50: 1.412, p95: 1.903),
-        23: Range(p5: 0.862, p50: 1.354, p95: 1.846),
-        24: Range(p5: 0.809, p50: 1.301, p95: 1.792),
-        25: Range(p5: 0.758, p50: 1.250, p95: 1.742),
-        26: Range(p5: 0.711, p50: 1.203, p95: 1.695),
-        27: Range(p5: 0.668, p50: 1.160, p95: 1.652),
-        28: Range(p5: 0.628, p50: 1.120, p95: 1.612),
-        29: Range(p5: 0.592, p50: 1.084, p95: 1.576),
-        30: Range(p5: 0.559, p50: 1.051, p95: 1.543),
-        31: Range(p5: 0.529, p50: 1.021, p95: 1.513),
-        32: Range(p5: 0.504, p50: 0.995, p95: 1.487),
-        33: Range(p5: 0.481, p50: 0.973, p95: 1.465),
-        34: Range(p5: 0.462, p50: 0.954, p95: 1.446),
-        35: Range(p5: 0.447, p50: 0.938, p95: 1.430),
-        36: Range(p5: 0.434, p50: 0.926, p95: 1.418),
-        37: Range(p5: 0.426, p50: 0.918, p95: 1.410),
-        38: Range(p5: 0.421, p50: 0.913, p95: 1.405),
-        39: Range(p5: 0.419, p50: 0.911, p95: 1.403),
-        40: Range(p5: 0.421, p50: 0.913, p95: 1.405),
-        41: Range(p5: 0.426, p50: 0.918, p95: 1.410),
-    ]
-
-    // Weekly p5, p50 and p95 derived from the Fetal Medicine Barcelona/FMF formulas already used by DopplerCalculator for MCA PI.
-    private static let cerebralMedia: [Int: Range] = [
-        20: Range(p5: 1.249, p50: 1.618, p95: 1.987),
-        21: Range(p5: 1.300, p50: 1.714, p95: 2.128),
-        22: Range(p5: 1.344, p50: 1.798, p95: 2.253),
-        23: Range(p5: 1.380, p50: 1.871, p95: 2.361),
-        24: Range(p5: 1.409, p50: 1.932, p95: 2.454),
-        25: Range(p5: 1.431, p50: 1.981, p95: 2.531),
-        26: Range(p5: 1.446, p50: 2.019, p95: 2.591),
-        27: Range(p5: 1.453, p50: 2.045, p95: 2.636),
-        28: Range(p5: 1.453, p50: 2.059, p95: 2.665),
-        29: Range(p5: 1.446, p50: 2.062, p95: 2.678),
-        30: Range(p5: 1.432, p50: 2.053, p95: 2.674),
-        31: Range(p5: 1.411, p50: 2.033, p95: 2.655),
-        32: Range(p5: 1.382, p50: 2.001, p95: 2.620),
-        33: Range(p5: 1.346, p50: 1.958, p95: 2.569),
-        34: Range(p5: 1.303, p50: 1.903, p95: 2.502),
-        35: Range(p5: 1.253, p50: 1.836, p95: 2.419),
-        36: Range(p5: 1.195, p50: 1.758, p95: 2.320),
-        37: Range(p5: 1.130, p50: 1.668, p95: 2.205),
-        38: Range(p5: 1.058, p50: 1.566, p95: 2.074),
-        39: Range(p5: 0.979, p50: 1.453, p95: 1.927),
-        40: Range(p5: 0.893, p50: 1.328, p95: 1.764),
-        41: Range(p5: 0.799, p50: 1.192, p95: 1.585),
-    ]
-
-    // Weekly p5, p50 and p95 derived from the Fetal Medicine Barcelona/FMF formulas already used by DopplerCalculator for mean uterine artery PI.
-    private static let uterinasMedia: [Int: Range] = [
-        20: Range(p5: 0.748, p50: 1.103, p95: 1.626),
-        21: Range(p5: 0.718, p50: 1.055, p95: 1.551),
-        22: Range(p5: 0.691, p50: 1.012, p95: 1.482),
-        23: Range(p5: 0.665, p50: 0.972, p95: 1.419),
-        24: Range(p5: 0.642, p50: 0.935, p95: 1.362),
-        25: Range(p5: 0.621, p50: 0.902, p95: 1.309),
-        26: Range(p5: 0.602, p50: 0.871, p95: 1.261),
-        27: Range(p5: 0.584, p50: 0.843, p95: 1.217),
-        28: Range(p5: 0.568, p50: 0.818, p95: 1.177),
-        29: Range(p5: 0.554, p50: 0.794, p95: 1.140),
-        30: Range(p5: 0.541, p50: 0.774, p95: 1.106),
-        31: Range(p5: 0.529, p50: 0.755, p95: 1.076),
-        32: Range(p5: 0.519, p50: 0.737, p95: 1.049),
-        33: Range(p5: 0.509, p50: 0.722, p95: 1.024),
-        34: Range(p5: 0.501, p50: 0.709, p95: 1.002),
-        35: Range(p5: 0.494, p50: 0.697, p95: 0.982),
-        36: Range(p5: 0.488, p50: 0.686, p95: 0.964),
-        37: Range(p5: 0.483, p50: 0.677, p95: 0.949),
-        38: Range(p5: 0.479, p50: 0.670, p95: 0.935),
-        39: Range(p5: 0.476, p50: 0.663, p95: 0.924),
-        40: Range(p5: 0.474, p50: 0.659, p95: 0.914),
-        41: Range(p5: 0.473, p50: 0.655, p95: 0.907),
-    ]
 }

@@ -6,18 +6,19 @@ struct DuctoVenosoCalculatorSheet: View {
     let onDismiss: () -> Void
 
     @State private var igWeeks: Int = 28
+    @State private var igDays: Int = 0
     @State private var piText: String = ""
     @State private var ondaA: DuctoVenosoCalculator.OndaA = .positiva
 
     private var result: DuctoVenosoCalculator.DVResult? {
         guard let pi = decimal(piText) else { return nil }
-        return DuctoVenosoCalculator.calculate(.init(igWeeks: igWeeks, pi: pi, ondaA: ondaA))
+        return DuctoVenosoCalculator.calculate(.init(igWeeks: igWeeks, igDays: igDays, pi: pi, ondaA: ondaA))
     }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.lg) {
-                Text("Z-score do IP do ducto venoso fetal (Hecher 2001). Marcador de função cardíaca direita.")
+                Text("Percentil do IP do ducto venoso pela Calculadora v2021 da Fetal Medicine Barcelona.")
                     .font(TextStyle.body).foregroundStyle(AppSurface.textSecondary)
                 igPicker
                 piInput
@@ -37,10 +38,16 @@ struct DuctoVenosoCalculatorSheet: View {
     private var igPicker: some View {
         VStack(alignment: .leading, spacing: Spacing.xxs) {
             Text("Idade gestacional").font(TextStyle.captionMedium).foregroundStyle(AppSurface.textSecondary)
-            Picker("Semanas", selection: $igWeeks) {
-                ForEach(20...40, id: \.self) { Text("\($0) sem").tag($0) }
+            HStack {
+                Picker("Semanas", selection: $igWeeks) {
+                    ForEach(20...44, id: \.self) { Text("\($0) sem").tag($0) }
+                }
+                .pickerStyle(.menu)
+                Picker("Dias", selection: $igDays) {
+                    ForEach(0...6, id: \.self) { Text("\($0) dias").tag($0) }
+                }
+                .pickerStyle(.menu)
             }
-            .pickerStyle(.menu)
         }
     }
 
@@ -74,7 +81,7 @@ struct DuctoVenosoCalculatorSheet: View {
                 Text("Z " + String(format: "%+.2f", r.zScore).replacingOccurrences(of: ".", with: ","))
                     .font(TextStyle.h2)
                     .foregroundStyle(BrandColor.primaryDeep)
-                Text("p\(r.percentile)")
+                Text("p\(DopplerCalculator.pct(Double(r.percentile)))")
                     .font(TextStyle.bodyLargeMedium)
                     .foregroundStyle(AppSurface.textSecondary)
             }

@@ -332,37 +332,41 @@ final class GenerateViewModel {
 
     func calcularPercentis() {
         let findings = DopplerParser.parse(achados: inputText)
-        guard let ig = findings.ig, ig.weeks >= 20 && ig.weeks <= 41 else {
-            lastWarning = "Adicione a IG aos achados (entre 20 e 41 semanas) pra calcular percentis Doppler."
+        guard let ig = findings.ig, ig.weeks >= 11 && ig.weeks <= 44 else {
+            lastWarning = "Adicione a IG aos achados (entre 11 e 44 semanas) pra calcular percentis Doppler."
             return
         }
 
         let weeks = ig.weeks
         var pieces: [String] = []
         if let ip = findings.umbilicalIP,
-           let result = DopplerPercentileTable.calculate(artery: .umbilical, ip: ip, igWeeks: weeks) {
+           let result = DopplerPercentileTable.calculate(artery: .umbilical, ip: ip, igWeeks: weeks, igDays: ig.days) {
             pieces.append("AU IP \(formatIP(ip)) (\(result.estimatedPercentile))")
         }
         if let ip = findings.cerebralMediaIP,
-           let result = DopplerPercentileTable.calculate(artery: .cerebralMedia, ip: ip, igWeeks: weeks) {
+           let result = DopplerPercentileTable.calculate(artery: .cerebralMedia, ip: ip, igWeeks: weeks, igDays: ig.days) {
             pieces.append("ACM IP \(formatIP(ip)) (\(result.estimatedPercentile))")
         }
+        if let ip = findings.ductoVenosoIP,
+           let result = DopplerPercentileTable.calculate(artery: .ductoVenoso, ip: ip, igWeeks: weeks, igDays: ig.days) {
+            pieces.append("Ducto venoso IP \(formatIP(ip)) (\(result.estimatedPercentile))")
+        }
         if let ip = findings.uterinasMediaIP,
-           let result = DopplerPercentileTable.calculate(artery: .uterinasMedia, ip: ip, igWeeks: weeks) {
+           let result = DopplerPercentileTable.calculate(artery: .uterinasMedia, ip: ip, igWeeks: weeks, igDays: ig.days) {
             pieces.append("Uterinas média IP \(formatIP(ip)) (\(result.estimatedPercentile))")
         } else if let dir = findings.uterinaDireitaIP, let esq = findings.uterinaEsquerdaIP {
             let media = (dir + esq) / 2
-            if let result = DopplerPercentileTable.calculate(artery: .uterinasMedia, ip: media, igWeeks: weeks) {
+            if let result = DopplerPercentileTable.calculate(artery: .uterinasMedia, ip: media, igWeeks: weeks, igDays: ig.days) {
                 pieces.append("Uterinas média IP \(formatIP(media)) (\(result.estimatedPercentile))")
             }
         }
 
         if pieces.isEmpty {
-            lastWarning = "Adicione AU IP, ACM IP ou Uterinas IP aos achados pra calcular percentis."
+            lastWarning = "Adicione IP de uterinas, AU, ACM ou ducto venoso aos achados pra calcular percentis."
             return
         }
 
-        let summary = "\n→ Percentis (\(weeks)s\(ig.days)d, Gratacós/FMF): " + pieces.joined(separator: " · ")
+        let summary = "\n→ Percentis (\(weeks)s\(ig.days)d, Fetal Medicine Barcelona v2021): " + pieces.joined(separator: " · ")
         insertSnippet(summary)
     }
 
