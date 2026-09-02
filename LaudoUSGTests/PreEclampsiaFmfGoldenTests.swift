@@ -69,6 +69,102 @@ final class PreEclampsiaFmfGoldenTests: XCTestCase {
         XCTAssertEqual(dias, esperado, accuracy: 1e-12)
     }
 
+    func testBlocoDeLaudoUsaRedacaoClinicaAprovada() throws {
+        let resultado = try PreEclampsiaCalculator.calcular(
+            gestantePadrao(),
+            medidas: .init(pamMmHg: 93.33333333333333, utaPiMedio: 0.98, afericoesPam: 1)
+        )
+
+        XCTAssertFalse(resultado.altoRisco)
+        XCTAssertTrue(
+            resultado.insertBloco.hasPrefix(
+                "CÁLCULO DE RISCO DE PRÉ-ECLÂMPSIA (1º trimestre)"
+            )
+        )
+        XCTAssertTrue(resultado.insertBloco.contains("Idade gestacional: 13 semanas e 0 dias."))
+        XCTAssertTrue(resultado.insertBloco.contains("Pressão arterial média: 93,3 mmHg (aferição única)"))
+        XCTAssertTrue(resultado.insertBloco.contains("IP médio das artérias uterinas: 0,98"))
+        XCTAssertTrue(
+            resultado.insertBloco.contains(
+                "Baixo risco para pré-eclâmpsia pré-termo (corte de 1 em 100). Seguimento pré-natal de rotina."
+            )
+        )
+        XCTAssertTrue(resultado.insertBloco.contains("Não constitui software certificado pela FMF."))
+        XCTAssertFalse(resultado.insertBloco.contains("Calculado com:"))
+        XCTAssertFalse(resultado.insertBloco.contains("Ressalvas:"))
+        XCTAssertFalse(resultado.insertBloco.contains("*"))
+    }
+
+    func testBlocoDeLaudoDiferenciaAltoRisco() throws {
+        let gestante = PreEclampsiaCalculator.Gestante(
+            idade: 40,
+            peso: 90,
+            altura: 160,
+            gaDias: 91,
+            etnia: .afro,
+            paridade: .nulipara,
+            intervaloAnos: nil,
+            igPartoAnterior: nil,
+            zEscorePesoAnterior: nil,
+            histFamiliarPE: true,
+            fiv: true,
+            hipertensaoCronica: true,
+            diabetes: true,
+            lesSaf: true,
+            fumante: false
+        )
+        let resultado = try PreEclampsiaCalculator.calcular(
+            gestante,
+            medidas: .init(pamMmHg: 120, utaPiMedio: 3, afericoesPam: 4)
+        )
+
+        XCTAssertTrue(resultado.altoRisco)
+        XCTAssertTrue(
+            resultado.insertBloco.contains(
+                "Alto risco para pré-eclâmpsia pré-termo (corte de 1 em 100)."
+            )
+        )
+        XCTAssertTrue(resultado.insertBloco.contains("ácido acetilsalicílico 150 mg à noite"))
+        XCTAssertFalse(resultado.insertBloco.contains("Baixo risco para pré-eclâmpsia"))
+    }
+
+    func testMorfoSegundoTrimestreSegueComoCategoriaMorfologicaNaAPI() throws {
+        let request = GenerateRequest(
+            rawInput: "Morfológico do segundo trimestre, 22 semanas e 3 dias.",
+            categoryHint: .morfologico
+        )
+        let data = try JSONEncoder.api.encode(request)
+        let json = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: data) as? [String: Any]
+        )
+
+        XCTAssertEqual(json["category_hint"] as? String, "MORFOLOGICO")
+        XCTAssertEqual(
+            json["raw_input"] as? String,
+            "Morfológico do segundo trimestre, 22 semanas e 3 dias."
+        )
+    }
+
+    private func gestantePadrao() -> PreEclampsiaCalculator.Gestante {
+        .init(
+            idade: 30,
+            peso: 69,
+            altura: 164,
+            gaDias: 91,
+            etnia: .branca,
+            paridade: .nulipara,
+            intervaloAnos: nil,
+            igPartoAnterior: nil,
+            zEscorePesoAnterior: nil,
+            histFamiliarPE: false,
+            fiv: false,
+            hipertensaoCronica: false,
+            diabetes: false,
+            lesSaf: false,
+            fumante: false
+        )
+    }
+
     private func calcular(_ caso: GoldenCaso) throws -> PreEclampsiaCalculator.Resultado {
         let g = caso.entrada.g
         return try PreEclampsiaCalculator.calcular(

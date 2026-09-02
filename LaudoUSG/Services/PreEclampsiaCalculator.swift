@@ -552,14 +552,10 @@ enum PreEclampsiaCalculator {
             ? String(Int(dias.rounded()))
             : formatar(dias, casas: 1)
 
-        var usados = ["história materna"]
-        if medidas.pamMmHg != nil { usados.append("PAM") }
-        if medidas.utaPiMedio != nil { usados.append("IP das artérias uterinas") }
-
         var linhas = [
-            "RASTREIO DE PRÉ-ECLÂMPSIA (1º trimestre)",
+            "CÁLCULO DE RISCO DE PRÉ-ECLÂMPSIA (1º trimestre)",
             "",
-            "Idade gestacional: \(semanas) semanas e \(diasTexto) dias",
+            "Idade gestacional: \(semanas) semanas e \(diasTexto) dias.",
         ]
 
         if let pam = medidas.pamMmHg {
@@ -589,34 +585,29 @@ enum PreEclampsiaCalculator {
         linhas.append(contentsOf: [
             "",
             "Risco de pré-eclâmpsia com parto antes de 37 semanas: 1 em \(formatarInteiro(umEmN))",
-            "Calculado com: \(usados.joined(separator: ", ")).",
             "",
         ])
 
         if altoRisco {
-            linhas.append(contentsOf: [
-                "Risco AUMENTADO para pré-eclâmpsia pré-termo (corte de 1 em 100).",
-                "Recomenda-se profilaxia com ácido acetilsalicílico 150 mg à noite, do primeiro trimestre até 36 semanas, conforme o ensaio ASPRE, a critério do médico assistente.",
-            ])
+            linhas.append(
+                "Alto risco para pré-eclâmpsia pré-termo (corte de 1 em 100). "
+                    + "Recomenda-se profilaxia com ácido acetilsalicílico 150 mg à noite, do primeiro trimestre até 36 semanas, conforme o ensaio ASPRE, a critério do médico assistente."
+            )
         } else {
-            linhas.append(contentsOf: [
-                "Risco não aumentado para pré-eclâmpsia pré-termo (corte de 1 em 100).",
-                "Seguimento pré-natal de rotina.",
-            ])
-        }
-
-        var ressalvas: [String] = []
-        if let numero = medidas.afericoesPam, numero < 4 {
-            let quantidade = numero == 1 ? "uma única aferição" : "\(numero) aferições"
-            ressalvas.append(
-                "a pressão arterial média foi obtida de \(quantidade); o protocolo da Fetal Medicine Foundation prevê quatro (ambos os braços, duas vezes), o que reduz a variabilidade da medida"
+            linhas.append(
+                "Baixo risco para pré-eclâmpsia pré-termo (corte de 1 em 100). "
+                    + "Seguimento pré-natal de rotina."
             )
         }
+
+        // A origem da PAM já aparece ao lado da medida. O texto simples é o
+        // contrato comum do iOS e da web; a web aplica o itálico apenas na
+        // visualização, sem gravar asteriscos no laudo.
         if marcadores.contains(where: \.truncado) {
-            ressalvas.append("valor de marcador fora da faixa do modelo, truncado conforme a especificação")
-        }
-        if !ressalvas.isEmpty {
-            linhas.append(contentsOf: ["", "Ressalvas: \(ressalvas.joined(separator: "; "))."])
+            linhas.append(contentsOf: [
+                "",
+                "Observação técnica: valor de marcador fora da faixa do modelo, truncado conforme a especificação.",
+            ])
         }
 
         linhas.append(contentsOf: [
