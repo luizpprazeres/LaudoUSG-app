@@ -9,7 +9,7 @@ struct TIRADSCalculatorSheet: View {
     @State private var ecogenicidade: TIRADSCalculator.Ecogenicidade = .hipo
     @State private var forma: TIRADSCalculator.Forma = .maisLarga
     @State private var margem: TIRADSCalculator.Margem = .lisaIndefinida
-    @State private var focos: TIRADSCalculator.FocosEcogenicos = .nenhum
+    @State private var focos: Set<TIRADSCalculator.FocosEcogenicos> = [.nenhum]
     @State private var tamanhoText: String = ""
 
     private var result: TIRADSCalculator.TIRADSResult? {
@@ -19,7 +19,7 @@ struct TIRADSCalculatorSheet: View {
             ecogenicidade: ecogenicidade,
             forma: forma,
             margem: margem,
-            focosEcogenicos: focos,
+            focosEcogenicos: Array(focos),
             maiorEixoCm: tam
         ))
     }
@@ -33,7 +33,7 @@ struct TIRADSCalculatorSheet: View {
                 pickerRow("Ecogenicidade", selection: $ecogenicidade, options: TIRADSCalculator.Ecogenicidade.allCases, label: { $0.rawValue })
                 pickerRow("Forma", selection: $forma, options: TIRADSCalculator.Forma.allCases, label: { $0.rawValue })
                 pickerRow("Margem", selection: $margem, options: TIRADSCalculator.Margem.allCases, label: { $0.rawValue })
-                pickerRow("Focos ecogênicos", selection: $focos, options: TIRADSCalculator.FocosEcogenicos.allCases, label: { $0.rawValue })
+                focosRow
                 sizeInput
                 if let result {
                     card(result)
@@ -67,6 +67,37 @@ struct TIRADSCalculatorSheet: View {
                 .padding(Spacing.sm)
                 .background(RoundedRectangle(cornerRadius: Radius.md).fill(AppSurface.card))
                 .overlay(RoundedRectangle(cornerRadius: Radius.md).stroke(AppSurface.border, lineWidth: 1))
+        }
+    }
+
+    private var focosRow: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            Text("Focos ecogênicos (podem ser somados)")
+                .font(TextStyle.captionMedium)
+                .foregroundStyle(AppSurface.textSecondary)
+            ForEach(TIRADSCalculator.FocosEcogenicos.allCases) { foco in
+                Button {
+                    if foco == .nenhum {
+                        focos = focos.contains(.nenhum) ? [] : [.nenhum]
+                    } else if focos.contains(foco) {
+                        focos.remove(foco)
+                    } else {
+                        focos.remove(.nenhum)
+                        focos.insert(foco)
+                    }
+                } label: {
+                    HStack {
+                        Image(systemName: focos.contains(foco) ? "checkmark.circle.fill" : "circle")
+                            .foregroundStyle(focos.contains(foco) ? BrandColor.primary : AppSurface.textSecondary)
+                        Text(foco.rawValue)
+                            .font(TextStyle.body)
+                            .foregroundStyle(AppSurface.textPrimary)
+                        Spacer()
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
         }
     }
 

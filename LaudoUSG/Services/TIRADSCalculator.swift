@@ -86,7 +86,7 @@ enum TIRADSCalculator {
         let ecogenicidade: Ecogenicidade
         let forma: Forma
         let margem: Margem
-        let focosEcogenicos: FocosEcogenicos
+        let focosEcogenicos: [FocosEcogenicos]
         let maiorEixoCm: Double
     }
 
@@ -116,7 +116,7 @@ enum TIRADSCalculator {
             + input.ecogenicidade.pontos
             + input.forma.pontos
             + input.margem.pontos
-            + input.focosEcogenicos.pontos
+            + pontosFocos(input.focosEcogenicos)
 
         let cat: Categoria
         if total == 0 { cat = .tr1 }
@@ -132,13 +132,27 @@ enum TIRADSCalculator {
         - Ecogenicidade: \(input.ecogenicidade.rawValue) (\(input.ecogenicidade.pontos) pts)
         - Forma: \(input.forma.rawValue) (\(input.forma.pontos) pts)
         - Margem: \(input.margem.rawValue) (\(input.margem.pontos) pts)
-        - Focos ecogênicos: \(input.focosEcogenicos.rawValue) (\(input.focosEcogenicos.pontos) pts)
+        - Focos ecogênicos: \(rotuloFocos(input.focosEcogenicos)) (\(pontosFocos(input.focosEcogenicos)) pts)
         - Pontuação total: \(total) pontos.
 
         Conclusão: \(cat.label). \(recomendacao)
         """
 
         return TIRADSResult(pontos: total, categoria: cat, recomendacao: recomendacao, insertBloco: bloco)
+    }
+
+    private static func focosAtivos(_ focos: [FocosEcogenicos]) -> [FocosEcogenicos] {
+        let unicos = Array(Set(focos))
+        let ativos = unicos.filter { $0 != .nenhum }
+        return ativos.isEmpty ? [.nenhum] : ativos.sorted { $0.rawValue < $1.rawValue }
+    }
+
+    private static func pontosFocos(_ focos: [FocosEcogenicos]) -> Int {
+        focosAtivos(focos).reduce(0) { $0 + $1.pontos }
+    }
+
+    private static func rotuloFocos(_ focos: [FocosEcogenicos]) -> String {
+        focosAtivos(focos).map(\.rawValue).joined(separator: " + ")
     }
 
     private static func recomendar(categoria: Categoria, tamanho rawTamanho: Double) -> String {
