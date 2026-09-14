@@ -3,6 +3,7 @@ import SwiftUI
 struct MenuSheet: View {
     @Environment(AppState.self) private var app
 
+    let onTapComputador: () -> Void
     let onTapHistorico: () -> Void
     let onTapAnalytics: () -> Void
     let onTapBiblioteca: () -> Void
@@ -12,6 +13,11 @@ struct MenuSheet: View {
 
     private var items: [MenuSheetItem] {
         [
+            MenuSheetItem(
+                label: "Computador",
+                systemImage: "laptopcomputer.and.iphone",
+                action: onTapComputador
+            ),
             MenuSheetItem(label: "Histórico", systemImage: "clock", action: onTapHistorico),
             MenuSheetItem(label: "Analytics", systemImage: "chart.bar", action: onTapAnalytics),
             MenuSheetItem(label: "Biblioteca", systemImage: "books.vertical", action: onTapBiblioteca),
@@ -128,10 +134,11 @@ private struct MenuSheetItem: Identifiable {
 
     #Preview {
         MenuSheet(
+            onTapComputador: {},
             onTapHistorico: {},
-        onTapAnalytics: {},
-        onTapBiblioteca: {},
-        onTapPreferencias: {},
+            onTapAnalytics: {},
+            onTapBiblioteca: {},
+            onTapPreferencias: {},
             onTapSobre: {},
             onLogout: {}
         )

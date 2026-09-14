@@ -7,6 +7,7 @@ struct GenerateView: View {
     @Environment(AppState.self) private var app
     @State private var vm = GenerateViewModel()
     @State private var path: [AppDestination] = []
+    @State private var pendingDestination: AppDestination?
     @State private var didCopyLaudo: Bool = false
     @State private var isEditingLaudo: Bool = false  // toggle visualização (com highlight) vs edição (TextEditor)
     @State private var isSanityExpanded: Bool = false // acordeão de pontos a revisar
@@ -22,6 +23,10 @@ struct GenerateView: View {
             content
                 .navigationDestination(for: AppDestination.self) { destination in
                     switch destination {
+                    case .computer:
+                        ComputerCompanionScreen(category: vm.category)
+                            .navigationTitle("Computador")
+                            .navigationBarTitleDisplayMode(.inline)
                     case .history: HistoryView()
                     case .reportDetail(let id): ReportDetailView(reportId: id)
                     case .analytics: AnalyticsView()
@@ -49,6 +54,8 @@ struct GenerateView: View {
             && !app.needsLegalAcceptance
             && !app.needsOnboarding
             && hasSeenTour
+            && !vm.isMenuSheetPresented
+            && path.isEmpty
     }
 
     private func focusAchadosIfReady() {
@@ -60,7 +67,16 @@ struct GenerateView: View {
         }
     }
 
+    @ViewBuilder
     private var content: some View {
+        if path.isEmpty {
+            generatorContent
+        } else {
+            AppSurface.background.ignoresSafeArea()
+        }
+    }
+
+    private var generatorContent: some View {
         ZStack(alignment: .bottom) {
             AppSurface.background.ignoresSafeArea()
 
@@ -106,7 +122,11 @@ struct GenerateView: View {
                     // teclado subiria atrás dessas telas.
                     .onAppear { focusAchadosIfReady() }
                     .onChange(of: canFocusAchados) { _, ready in
-                        if ready { focusAchadosIfReady() }
+                        if ready {
+                            focusAchadosIfReady()
+                        } else {
+                            isAchadosFocused = false
+                        }
                     }
                 } else {
                     laudoEditor
@@ -132,8 +152,15 @@ struct GenerateView: View {
                 onDismiss: { vm.isCategorySheetPresented = false }
             )
         }
-        .sheet(isPresented: Binding(get: { vm.isMenuSheetPresented }, set: { vm.isMenuSheetPresented = $0 })) {
+        .sheet(
+            isPresented: Binding(
+                get: { vm.isMenuSheetPresented },
+                set: { vm.isMenuSheetPresented = $0 }
+            ),
+            onDismiss: completePendingNavigation
+        ) {
             MenuSheet(
+                onTapComputador: { navigate(to: .computer) },
                 onTapHistorico: { navigate(to: .history) },
                 onTapAnalytics: { navigate(to: .analytics) },
                 onTapBiblioteca: { navigate(to: .library) },
@@ -253,6 +280,7 @@ struct GenerateView: View {
         HStack(spacing: Spacing.sm) {
             Button {
                 Haptics.tap()
+                isAchadosFocused = false
                 vm.isMenuSheetPresented = true
             } label: {
                 Image(systemName: "line.3.horizontal")
@@ -1046,7 +1074,13 @@ struct GenerateView: View {
     }
 
     private func navigate(to destination: AppDestination) {
+        pendingDestination = destination
         vm.isMenuSheetPresented = false
+    }
+
+    private func completePendingNavigation() {
+        guard let destination = pendingDestination else { return }
+        pendingDestination = nil
         path.append(destination)
     }
 }
