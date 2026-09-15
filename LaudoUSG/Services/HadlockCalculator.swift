@@ -50,6 +50,35 @@ enum PercentileSource: String, Codable, Sendable, CaseIterable {
     }
 
     var auditTag: String { displayName }
+
+    /// Fontes cuja tabela ainda não foi curada não aparecem nas preferências
+    /// e, se já estiverem salvas, caem para o padrão (Intergrowth-21st).
+    var isAvailable: Bool {
+        switch self {
+        case .intergrowth21st, .hadlock1991: true
+        case .whoMulticentre2017:
+            !(WHOMulticentreTable.unisex.isEmpty
+                && WHOMulticentreTable.boys.isEmpty
+                && WHOMulticentreTable.girls.isEmpty)
+        }
+    }
+}
+
+/// Biometrias aceitas em mm ou cm (o campo diz "ex: 72 mm ou 7,2 cm").
+/// O limiar de cada medida fica entre o MAIOR valor plausível em cm e o
+/// MENOR valor plausível em mm a partir de 14 semanas, para que uma CA ou CC
+/// de termo (30–40 cm) nunca seja lida como milímetros.
+enum BiometryMeasure: Sendable {
+    case dbp, cc, ca, cf
+
+    var mmThreshold: Double {
+        switch self {
+        case .dbp: 12   // cm: 2–10   | mm: 20–100
+        case .cc: 45    // cm: 8–38   | mm: 80–380
+        case .ca: 45    // cm: 7–42   | mm: 70–420
+        case .cf: 10    // cm: 1–8,5  | mm: 12–85
+        }
+    }
 }
 
 struct BiometryResult: Sendable, Hashable {
@@ -78,10 +107,13 @@ enum HadlockCalculator {
         weightFormula: WeightFormula = .hadlock4_1985,
         percentileSource: PercentileSource = .intergrowth21st
     ) -> BiometryResult? {
-        let dbpCm = normalizeCm(input.dbp)
-        let ccCm = normalizeCm(input.cc)
-        let caCm = normalizeCm(input.ca)
-        let cfCm = normalizeCm(input.cf)
+        let dbpCm = normalizeCm(input.dbp, measure: .dbp)
+        let ccCm = normalizeCm(input.cc, measure: .cc)
+        let caCm = normalizeCm(input.ca, measure: .ca)
+        let cfCm = normalizeCm(input.cf, measure: .cf)
+        let effectiveSource: PercentileSource = percentileSource.isAvailable
+            ? percentileSource
+            : .intergrowth21st
 
         guard dbpCm > 1, ccCm > 1, caCm > 1, cfCm > 1 else { return nil }
 
@@ -96,7 +128,7 @@ enum HadlockCalculator {
         let weight = Int(efw.rounded())
         let variation = Int((efw * 0.15).rounded())
         guard let lookup = percentileLookup(
-            source: percentileSource,
+            source: effectiveSource,
             weight: weight,
             igWeeks: input.igWeeks,
             igDays: input.igDays,
@@ -108,13 +140,13 @@ enum HadlockCalculator {
             weight: weight,
             variation: variation,
             percentileLabel: percentileLabel,
-            source: percentileSource,
+            source: effectiveSource,
             sexDetected: input.sex,
             sexUsedInLookup: lookup.sexUsed
         )
 
         logger.info(
-            "biometry weight=\(weight) percentile=\(percentileValue) source=\(percentileSource.auditTag) sexDetected=\(input.sex.rawValue) sexUsed=\(lookup.sexUsed.rawValue) version=\(lookup.version)"
+            "biometry weight=\(weight) percentile=\(percentileValue) source=\(effectiveSource.auditTag) sexDetected=\(input.sex.rawValue) sexUsed=\(lookup.sexUsed.rawValue) version=\(lookup.version)"
         )
 
         return BiometryResult(
@@ -126,7 +158,7 @@ enum HadlockCalculator {
             isLGA: percentileValue > 90,
             insertBloco: bloco,
             formulaUsed: weightFormula,
-            percentileSourceUsed: percentileSource,
+            percentileSourceUsed: effectiveSource,
             sexDetected: input.sex,
             sexUsedInLookup: lookup.sexUsed,
             sourceVersion: lookup.version
@@ -134,7 +166,7 @@ enum HadlockCalculator {
     }
 
     static func gestationalAgeByFemur(cf: Double) -> GestationalAge? {
-        let cfMm = cf > 20 ? cf : cf * 10
+        let cfMm = cf >= BiometryMeasure.cf.mmThreshold ? cf : cf * 10
         guard cfMm > 10 else { return nil }
         let cfCm = cfMm / 10
         let weeks = 10.35 + 2.46 * cfCm + 0.17 * pow(cfCm, 2)
@@ -143,8 +175,8 @@ enum HadlockCalculator {
         return GestationalAge(weeks: roundedDays / 7, days: roundedDays % 7, source: .biometria)
     }
 
-    private static func normalizeCm(_ value: Double) -> Double {
-        value > 20 ? value / 10 : value
+    static func normalizeCm(_ value: Double, measure: BiometryMeasure) -> Double {
+        value >= measure.mmThreshold ? value / 10 : value
     }
 
     private static func percentileLookup(

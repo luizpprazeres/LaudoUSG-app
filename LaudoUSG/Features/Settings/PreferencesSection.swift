@@ -39,7 +39,7 @@ struct PreferencesSection: View {
     // MARK: - Percentil
 
     private var percentileGroup: some View {
-        group("Percentil obstétrico", items: PercentileSource.allCases) { source in
+        group("Percentil obstétrico", items: PercentileSource.allCases.filter(\.isAvailable)) { source in
             optionRow(
                 title: source.displayName,
                 subtitle: subtitle(for: source),

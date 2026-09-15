@@ -85,6 +85,52 @@ final class HadlockCalculatorTests: XCTestCase {
         XCTAssertEqual(result?.sexUsedInLookup, .unisex)
     }
 
+    // MARK: - Normalização mm/cm por medida (achado #6 da auditoria de calculadoras)
+
+    func testTermMeasurementsInCmAreNotMistakenForMm() {
+        // CA de 35 cm e CC de 33,5 cm são valores de termo em cm; antes viravam 3,5 e 3,35.
+        let inCm = BiometryInput(dbp: 9.2, cc: 33.5, ca: 35.0, cf: 7.2, igWeeks: 38, igDays: 0)
+        let inMm = BiometryInput(dbp: 92, cc: 335, ca: 350, cf: 72, igWeeks: 38, igDays: 0)
+        let a = calculate(inCm, source: .intergrowth21st)
+        let b = calculate(inMm, source: .intergrowth21st)
+        XCTAssertNotNil(a)
+        XCTAssertEqual(a?.weightGrams, b?.weightGrams)
+        XCTAssertEqual(a?.percentileValue, b?.percentileValue)
+        XCTAssertGreaterThan(a?.weightGrams ?? 0, 2500, "peso de termo esperado")
+    }
+
+    func testNormalizeCmThresholdsPerMeasure() {
+        XCTAssertEqual(HadlockCalculator.normalizeCm(35, measure: .ca), 35)      // 35 cm
+        XCTAssertEqual(HadlockCalculator.normalizeCm(350, measure: .ca), 35)     // 350 mm
+        XCTAssertEqual(HadlockCalculator.normalizeCm(33.5, measure: .cc), 33.5)  // 33,5 cm
+        XCTAssertEqual(HadlockCalculator.normalizeCm(9.2, measure: .dbp), 9.2)   // 9,2 cm
+        XCTAssertEqual(HadlockCalculator.normalizeCm(92, measure: .dbp), 9.2)    // 92 mm
+        XCTAssertEqual(HadlockCalculator.normalizeCm(7.2, measure: .cf), 7.2)    // 7,2 cm
+        XCTAssertEqual(HadlockCalculator.normalizeCm(14, measure: .cf), 1.4)     // 14 mm (14 semanas)
+    }
+
+    func testGestationalAgeByFemurAcceptsMmAndCm() {
+        let fromMm = HadlockCalculator.gestationalAgeByFemur(cf: 56)
+        let fromCm = HadlockCalculator.gestationalAgeByFemur(cf: 5.6)
+        XCTAssertNotNil(fromMm)
+        XCTAssertEqual(fromMm?.weeks, fromCm?.weeks)
+        XCTAssertEqual(fromMm?.days, fromCm?.days)
+        XCTAssertNotNil(HadlockCalculator.gestationalAgeByFemur(cf: 14), "14 mm (14 semanas) deve ser aceito")
+    }
+
+    // MARK: - WHO indisponível cai para o padrão
+
+    func testWHOFallsBackToIntergrowthWhilePendingCuration() throws {
+        if PercentileSource.whoMulticentre2017.isAvailable {
+            throw XCTSkip("tabela WHO já curada; o fallback não se aplica")
+        }
+        let result = calculate(input(.normal), source: .whoMulticentre2017)
+        XCTAssertNotNil(result, "preferência WHO salva não pode deixar o percentil nulo")
+        XCTAssertEqual(result?.percentileSourceUsed, .intergrowth21st)
+        XCTAssertEqual(result?.sourceVersion, IntergrowthTable.version)
+        XCTAssertFalse(PercentileSource.allCases.filter(\.isAvailable).contains(.whoMulticentre2017))
+    }
+
     private enum CaseKind {
         case normal
         case small
