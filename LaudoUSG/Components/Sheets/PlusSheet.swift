@@ -31,6 +31,7 @@ struct PlusSheet: View {
         case birads
         case tirads
         case preEclampsia
+        case trissomias
         case volumeProstatico
         case volumeTireoideano
         case volumeUterino
@@ -116,6 +117,11 @@ struct PlusSheet: View {
                     )
                 case .preEclampsia:
                     PreEclampsiaCalculatorSheet(
+                        onInsert: { insert($0) },
+                        onDismiss: onDismiss
+                    )
+                case .trissomias:
+                    TrisomyCalculatorSheet(
                         onInsert: { insert($0) },
                         onDismiss: onDismiss
                     )
@@ -243,6 +249,13 @@ struct PlusSheet: View {
                         icon: "exclamationmark.triangle",
                         tint: Color(hex: "F43F5E"),
                         destination: .preEclampsia
+                    )
+                    calculatorRow(
+                        title: "Risco de trissomias (1T)",
+                        subtitle: "FMF combinado — idade, TN, FCF, marcadores e bioquímica",
+                        icon: "staroflife",
+                        tint: Color(hex: "6366F1"),
+                        destination: .trissomias
                     )
                 }
                 if showsMamaCalcs {
