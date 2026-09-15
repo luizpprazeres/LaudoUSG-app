@@ -16,6 +16,7 @@ enum PreEclampsiaCalculator {
         case afro
         case sulAsiatica = "sul-asiatica"
         case lesteAsiatica = "leste-asiatica"
+        case mista
 
         var label: String {
             switch self {
@@ -23,6 +24,7 @@ enum PreEclampsiaCalculator {
             case .afro: "Negra / afro-caribenha"
             case .sulAsiatica: "Sul-asiática"
             case .lesteAsiatica: "Leste-asiática"
+            case .mista: "Mista"
             }
         }
     }
@@ -55,6 +57,8 @@ enum PreEclampsiaCalculator {
         let fiv: Bool
         let hipertensaoCronica: Bool
         let diabetes: Bool
+        /// Diabetes TIPO 1 — só afeta a mediana do IP uterino (app FMF, medido 15/09/2026). Requer `diabetes`.
+        var diabetesTipo1: Bool = false
         let lesSaf: Bool
         let fumante: Bool
     }
@@ -106,8 +110,8 @@ enum PreEclampsiaCalculator {
     }
 
     static let corteAltoRisco = 1.0 / 100.0
-    static let versaoParametros = "FMF/AJOG-2020+cal-2026-09-15"
-    static let janelaDias = 77.0...99.0
+    static let versaoParametros = "FMF/AJOG-2020+cal-2026-09-15b"
+    static let janelaDias = 77.0...98.0  // o app recusa 14+1 (medido 15/09/2026)
 
     private static let sigma = 6.8833
     private static let ln2Pi = Foundation.log(2.0 * Double.pi)
@@ -115,7 +119,21 @@ enum PreEclampsiaCalculator {
     private static let salvaguardaHAS = false
     // Calibração de paridade com o software oficial, validada em 2026-08-22; não usar o paper aqui.
     private static let calMapHasPeso = -1.8859e-4
-    private static let calMapIntercepto = -0.003568
+    private static let calMapIntercepto = -0.005947  // cal-2026-09-15b (era −0.003568 com termo de idade)
+    // ===== Calibração cal-2026-09-15b — 127 pontos lidos do app v1.0.44 pelo driver CDP (packages/fmf/driver) =====
+    private static let calMapIdade = 0.0            // app: MoM da PAM constante de 16 a 48 anos (pub +4.39271e-4/ano)
+    private static let calMapFumante = -0.0090      // pub −0.004523672
+    private static let calMapAfroExtra = -0.0024    // soma ao termo publicado
+    private static let calMapHistFam = 0.0080       // pub 0.005976240
+    private static let calMapHas = 0.0505           // pub 0.051007216 (meio-termo entre 22/08 e 15/09)
+    private static let calUtaPiIntercepto = 0.007446
+    private static let calUtaPiIdade = -0.000679    // pub −0.001117349 (interação idade×IG mantida)
+    private static let calUtaPiIg = -0.0046912      // pub −0.004407905
+    private static let calUtaPiAfro = 0.0246        // pub 0.018069553
+    private static let calUtaPiLesteAsiatica = 0.0092
+    private static let calUtaPiMista = 0.0135
+    private static let calUtaPiDm1 = -0.0243
+    private static let calPesoMaxMom = 120.0        // app trunca o peso em 120 kg nas medianas
     private static let cortes = [37, 34, 32]
 
     static func pamDeAfericoes(_ afericoes: [Afericao]) throws -> Pam {
@@ -146,7 +164,7 @@ enum PreEclampsiaCalculator {
         let dias = 23.53 + 8.052 * Foundation.sqrt(1.037 * ccnMm)
         guard janelaDias.contains(dias) else {
             throw PeErroDeDominio(
-                "idade gestacional de \(formatar(dias, casas: 1)) dias fora da janela do modelo de 1º trimestre (77–99 dias)"
+                "idade gestacional de \(formatar(dias, casas: 1)) dias fora da janela do modelo de 1º trimestre (77–98 dias)"
             )
         }
         return dias
@@ -216,7 +234,7 @@ enum PreEclampsiaCalculator {
 
     static func log10MapEsperada(_ gestante: Gestante) -> Double {
         let ga = gestante.gaDias - 77
-        let peso = gestante.peso - 69
+        let peso = min(gestante.peso, calPesoMaxMom) - 69
         let altura = gestante.altura - 164
         let idade = gestante.idade - 35
         let afro = indicador(gestante.etnia == .afro)
@@ -225,17 +243,18 @@ enum PreEclampsiaCalculator {
         return 1.943223919 + calMapIntercepto
             + 0.000209037 * ga
             - 0.000020452 * ga * ga
-            + 0.000439271 * idade
+            + calMapIdade * idade
             + 0.001193313 * peso
             - 0.000008823 * peso * peso
             - 0.000206306 * altura
-            - 0.004523672 * indicador(gestante.fumante)
+            + calMapFumante * indicador(gestante.fumante)
             - 0.001191227 * afro
             - 0.000050679 * afro * ga
-            + 0.051007216 * has
+            + calMapAfroExtra * afro
+            + calMapHas * has
             + calMapHasPeso * has * peso
             + 0.004445020 * indicador(gestante.diabetes)
-            + 0.005976240 * indicador(gestante.histFamiliarPE)
+            + calMapHistFam * indicador(gestante.histFamiliarPE)
             - 0.009402127 * indicador(gestante.paridade == .multiparaSemPE)
             + 0.000744526 * (gestante.paridade == .multiparaSemPE ? gestante.intervaloAnos ?? 0 : 0)
             + 0.006091903 * indicador(gestante.paridade == .multiparaComPE)
@@ -243,18 +262,21 @@ enum PreEclampsiaCalculator {
 
     static func log10UtaPiEsperado(_ gestante: Gestante) -> Double {
         let ga = gestante.gaDias - 77
-        let peso = gestante.peso - 69
+        let peso = min(gestante.peso, calPesoMaxMom) - 69
         let idade = gestante.idade - 35
         let comPE = gestante.paridade == .multiparaComPE
 
-        return 0.255731426
-            - 0.004407905 * ga
+        return 0.255731426 + calUtaPiIntercepto
+            + calUtaPiIg * ga
             - 0.000888890 * peso
             + 0.000006006 * peso * peso
             + 0.000008322 * peso * ga
-            - 0.001117349 * idade
+            + calUtaPiIdade * idade
             + 0.000015061 * idade * ga
-            + 0.018069553 * indicador(gestante.etnia == .afro)
+            + calUtaPiAfro * indicador(gestante.etnia == .afro)
+            + calUtaPiLesteAsiatica * indicador(gestante.etnia == .lesteAsiatica)
+            + calUtaPiMista * indicador(gestante.etnia == .mista)
+            + calUtaPiDm1 * indicador(gestante.diabetesTipo1)
             + calUtaPiPePrevia * indicador(comPE)
     }
 
@@ -292,7 +314,7 @@ enum PreEclampsiaCalculator {
 
         guard janelaDias.contains(gestante.gaDias) else {
             throw PeErroDeDominio(
-                "idade gestacional de \(formatar(gestante.gaDias, casas: 1)) dias fora da janela do modelo de 1º trimestre (77–99 dias)"
+                "idade gestacional de \(formatar(gestante.gaDias, casas: 1)) dias fora da janela do modelo de 1º trimestre (77–98 dias)"
             )
         }
         try validarPlausibilidade("idade", gestante.idade, minimo: 8, maximo: 70)

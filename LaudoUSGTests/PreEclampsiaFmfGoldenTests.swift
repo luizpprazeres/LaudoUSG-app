@@ -7,8 +7,8 @@ final class PreEclampsiaFmfGoldenTests: XCTestCase {
     func testTodosOs342CasosGolden() throws {
         let golden = try carregarGolden()
         XCTAssertEqual(golden.versao, PreEclampsiaCalculator.versaoParametros)
-        XCTAssertEqual(golden.casos.count, 342)
-        XCTAssertEqual(golden.casos.filter { $0.esperado.erroDeDominio == true }.count, 10)
+        XCTAssertEqual(golden.casos.count, 346)
+        XCTAssertEqual(golden.casos.filter { $0.esperado.erroDeDominio == true }.count, 21)
 
         for caso in golden.casos {
             if caso.esperado.erroDeDominio == true {
@@ -182,6 +182,7 @@ final class PreEclampsiaFmfGoldenTests: XCTestCase {
                 fiv: g.fiv,
                 hipertensaoCronica: g.hipertensaoCronica,
                 diabetes: g.diabetes,
+                diabetesTipo1: g.diabetesTipo1 ?? false,
                 lesSaf: g.lesSaf,
                 fumante: g.fumante
             ),
@@ -258,6 +259,7 @@ private struct GoldenGestante: Decodable {
     let fiv: Bool
     let hipertensaoCronica: Bool
     let diabetes: Bool
+    let diabetesTipo1: Bool?
     let lesSaf: Bool
     let fumante: Bool
 }
