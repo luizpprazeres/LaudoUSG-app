@@ -116,6 +116,8 @@ final class GenerateViewModel {
     var isCategorySheetPresented = false
     var isMenuSheetPresented = false
     var isPlusSheetPresented = false
+    /// Preenchimento da calculadora de trissomias, preservado entre aberturas da sheet.
+    let trisomyCalculatorState = TrisomyCalculatorState()
     var isSalaSheetPresented = false
     var isCompanionSheetPresented = false
     var isIGCalculatorPresented = false
@@ -283,6 +285,16 @@ final class GenerateViewModel {
 
     var shortcuts: [GenerateShortcut] {
         GenerateShortcut.defaults(for: category)
+    }
+
+    /// Insere no LAUDO gerado (aba Laudo) — para resultados que pertencem ao laudo e não aos achados.
+    func insertIntoLaudo(_ snippet: String) {
+        let atual = editedLaudoText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let bloco = snippet.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !bloco.isEmpty else { return }
+        laudoTextChanged(atual.isEmpty ? bloco : atual + "\n\n" + bloco)
+        activeTab = .laudo
+        isPlusSheetPresented = false
     }
 
     func insertSnippet(_ snippet: String) {

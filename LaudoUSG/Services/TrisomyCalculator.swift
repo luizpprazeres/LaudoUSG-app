@@ -817,82 +817,32 @@ enum TrisomyCalculator {
         markersUsed: [String],
         warnings: [String]
     ) -> String {
+        // Enxuto de propósito: IG, CCN, TN e demais medidas já constam no laudo.
+        // O que importa aqui é o risco basal e o risco ajustado, legíveis de uma vez.
+        let basal1318 = formatarRazao(basal.t18.probability + basal.t13.probability)
+        let marcadores = markersUsed.filter { $0 != "Idade materna" }
+        let porMarcadores = marcadores.isEmpty ? "" : " (\(marcadores.joined(separator: ", ")))"
+
         var linhas = [
-            "RASTREIO COMBINADO DE TRISSOMIAS (1º trimestre)",
-            "",
-            "Idade gestacional pelo CCN: \(gaWeeks) semanas e \(gaDaysRemainder) dias (CCN \(formatar(entrada.crl, casas: 1)) mm).",
-            "Idade materna: \(formatar(entrada.maternalAge, casas: 1)) anos.",
-            "Translucência nucal: \(formatar(entrada.nt, casas: 2)) mm.",
+            "RASTREIO COMBINADO DE TRISSOMIAS (1º trimestre, FMF)",
+            "Risco basal, pela idade materna e idade gestacional: trissomia 21 — \(basal.t21.texto); trissomias 13/18 — \(basal1318).",
+            "Risco ajustado pelos marcadores\(porMarcadores): trissomia 21 — \(t21.texto); trissomias 13/18 — \(t18t13.texto).",
         ]
 
-        if let gaDaysDated = entrada.gaDaysDated {
-            let semanas = Int(Foundation.floor(gaDaysDated / 7))
-            let dias = Int(jsRound(gaDaysDated.truncatingRemainder(dividingBy: 7)))
-            linhas.append("Idade gestacional datada: \(semanas) semanas e \(dias) dias.")
-        }
-        if let fhr = entrada.fhr {
-            linhas.append("Frequência cardíaca fetal: \(formatar(fhr, casas: 0)) bpm.")
-        }
-        if let nbAbsent = entrada.nasalBoneAbsent {
-            linhas.append("Osso nasal: \(nbAbsent ? "ausente" : "presente").")
-        }
-        if let tr = entrada.tricuspidRegurgitation {
-            linhas.append("Fluxo tricúspide: \(tr ? "regurgitação presente" : "normal").")
-        }
-        if let dvPI = entrada.dvPI {
-            linhas.append("Ducto venoso: IP \(formatar(dvPI, casas: 2)).")
-        }
-        if entrada.pappaMoM != nil || entrada.freeBetaHcgMoM != nil {
-            var partes: [String] = []
-            if let pappa = entrada.pappaMoM {
-                partes.append("PAPP-A \(formatar(pappa, casas: 2)) MoM")
-            }
-            if let hcg = entrada.freeBetaHcgMoM {
-                partes.append("free β-hCG \(formatar(hcg, casas: 2)) MoM")
-            }
-            linhas.append("Bioquímica (MoM corrigido pelo laboratório): \(partes.joined(separator: "; ")).")
-        }
-
-        var antecedentes: [String] = []
-        if entrada.previousT21 { antecedentes.append("trissomia 21") }
-        if entrada.previousT18 { antecedentes.append("trissomia 18") }
-        if entrada.previousT13 { antecedentes.append("trissomia 13") }
-        if !antecedentes.isEmpty {
-            linhas.append("Gestação prévia afetada por \(antecedentes.joined(separator: ", ")).")
-        }
-
-        linhas.append(contentsOf: [
-            "",
-            "Risco basal (idade materna e idade gestacional): trissomia 21 — \(basal.t21.texto); trissomia 18 — \(basal.t18.texto); trissomia 13 — \(basal.t13.texto).",
-            "Risco ajustado pelos marcadores: trissomia 21 — \(t21.texto); trissomias 13/18 — \(t18t13.texto).",
-            "",
-            "Marcadores utilizados: \(markersUsed.joined(separator: ", ")).",
-        ])
-
-        let classificacao: String
         switch t21.category {
         case .alto:
-            classificacao = "Alto risco para trissomia 21 (≥ 1 em 100). Recomenda-se aconselhamento genético e oferta de teste diagnóstico invasivo (biópsia de vilo corial ou amniocentese), a critério do médico assistente."
+            linhas.append("Alto risco para trissomia 21 (≥ 1 em 100): recomenda-se aconselhamento genético e oferta de teste diagnóstico invasivo, a critério do médico assistente.")
         case .intermediario:
-            classificacao = "Risco intermediário para trissomia 21 (entre 1 em 101 e 1 em 1.000). Pode-se considerar rastreio contingente com DNA fetal livre no sangue materno ou marcadores adicionais, a critério do médico assistente."
+            linhas.append("Risco intermediário para trissomia 21 (entre 1 em 101 e 1 em 1.000): pode-se considerar DNA fetal livre no sangue materno, a critério do médico assistente.")
         case .baixo:
-            classificacao = "Baixo risco para trissomia 21 (< 1 em 1.000). Seguimento pré-natal de rotina."
+            linhas.append("Baixo risco para trissomia 21 (< 1 em 1.000).")
         }
-        linhas.append(classificacao)
         if t18t13.category == .alto {
-            linhas.append("Alto risco para trissomias 13/18 (≥ 1 em 100). Recomenda-se aconselhamento genético e avaliação morfológica detalhada.")
+            linhas.append("Alto risco para trissomias 13/18 (≥ 1 em 100): recomenda-se aconselhamento genético e avaliação morfológica detalhada.")
         }
-
         if !warnings.isEmpty {
-            linhas.append("")
-            linhas.append("Observação técnica: " + warnings.joined(separator: " "))
+            linhas.append("Observação: " + warnings.joined(separator: " "))
         }
-
-        linhas.append(contentsOf: [
-            "",
-            "Baseado no algoritmo de rastreio combinado do 1º trimestre da Fetal Medicine Foundation (Kagan KO et al. Ultrasound Obstet Gynecol 2008;31:618-24; Wright D et al. Ultrasound Obstet Gynecol 2008;31:376-83). Não constitui software certificado pela FMF.",
-        ])
-
         return linhas.joined(separator: "\n")
     }
 

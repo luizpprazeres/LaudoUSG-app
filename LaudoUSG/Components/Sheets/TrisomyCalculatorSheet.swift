@@ -1,11 +1,11 @@
 import SwiftUI
 
+/// Preenchimento e resultado da calculadora. Vive no modelo da tela de geração para que o usuário
+/// possa fechar a sheet, gerar o laudo e voltar para inserir sem perder o que digitou.
 @MainActor
-struct TrisomyCalculatorSheet: View {
-    let onInsert: (String) -> Void
-    let onDismiss: () -> Void
-
-    private enum OssoNasal: String, CaseIterable {
+@Observable
+final class TrisomyCalculatorState {
+    enum OssoNasal: String, CaseIterable {
         case naoAvaliado = "Não avaliado"
         case presente = "Presente"
         case ausente = "Ausente"
@@ -19,7 +19,7 @@ struct TrisomyCalculatorSheet: View {
         }
     }
 
-    private enum Tricuspide: String, CaseIterable {
+    enum Tricuspide: String, CaseIterable {
         case naoAvaliada = "Não avaliada"
         case normal = "Normal"
         case regurgitacao = "Regurgitação"
@@ -33,36 +33,50 @@ struct TrisomyCalculatorSheet: View {
         }
     }
 
-    @State private var dataNascimento: Date = {
+    var dataNascimento: Date = {
         Calendar(identifier: .gregorian).date(byAdding: .year, value: -30, to: Date()) ?? Date()
     }()
-    @State private var exameEmOutraData = false
-    @State private var dataExame = Date()
+    var exameEmOutraData = false
+    var dataExame = Date()
 
-    @State private var ccn = ""
-    @State private var tn = ""
-    @State private var fcf = ""
-    @State private var usarIGDatada = false
-    @State private var semanasDatada = 12
-    @State private var diasDatada = 0
+    var ccn = ""
+    var tn = ""
+    var fcf = ""
+    var usarIGDatada = false
+    var semanasDatada = 12
+    var diasDatada = 0
 
-    @State private var etnia = TrisomyCalculator.Etnia.branca
-    @State private var peso = ""
-    @State private var fumante = false
-    @State private var previaT21 = false
-    @State private var previaT18 = false
-    @State private var previaT13 = false
+    var etnia = TrisomyCalculator.Etnia.branca
+    var peso = ""
+    var fumante = false
+    var previaT21 = false
+    var previaT18 = false
+    var previaT13 = false
 
-    @State private var ossoNasal = OssoNasal.naoAvaliado
-    @State private var tricuspide = Tricuspide.naoAvaliada
-    @State private var dvPI = ""
+    var ossoNasal = OssoNasal.naoAvaliado
+    var tricuspide = Tricuspide.naoAvaliada
+    var dvPI = ""
 
-    @State private var pappa = ""
-    @State private var freeBeta = ""
-    @State private var momCorrigido = false
+    var pappa = ""
+    var freeBeta = ""
+    var momCorrigido = false
 
-    @State private var resultado: TrisomyCalculator.Resultado?
-    @State private var erro: String?
+    var resultado: TrisomyCalculator.Resultado?
+    var erro: String?
+
+    init() {}
+}
+
+@MainActor
+struct TrisomyCalculatorSheet: View {
+    @Bindable var state: TrisomyCalculatorState
+    /// Só é possível inserir depois que existe um laudo gerado (o texto vai para a aba Laudo).
+    var canInsert: Bool = true
+    let onInsert: (String) -> Void
+    let onDismiss: () -> Void
+
+    private typealias OssoNasal = TrisomyCalculatorState.OssoNasal
+    private typealias Tricuspide = TrisomyCalculatorState.Tricuspide
 
     var body: some View {
         ScrollView {
@@ -74,10 +88,10 @@ struct TrisomyCalculatorSheet: View {
                 bioquimica
                 calcularButton
 
-                if let erro {
+                if let erro = state.erro {
                     erroCard(erro)
                 }
-                if let resultado {
+                if let resultado = state.resultado {
                     resultadoCard(resultado)
                     detalhesCard(resultado)
                     insertButton(resultado)
@@ -89,8 +103,8 @@ struct TrisomyCalculatorSheet: View {
         .navigationTitle("Trissomias (1T)")
         .navigationBarTitleDisplayMode(.inline)
         .onChange(of: fingerprint) { _, _ in
-            resultado = nil
-            erro = nil
+            state.resultado = nil
+            state.erro = nil
         }
     }
 
@@ -111,27 +125,27 @@ struct TrisomyCalculatorSheet: View {
             sectionTitle("Dados maternos")
             dataNascimentoField
 
-            riskToggle("Exame em outra data", isOn: $exameEmOutraData)
-            if exameEmOutraData {
-                dateField("Data do exame", selection: $dataExame, in: Self.faixaExame)
+            riskToggle("Exame em outra data", isOn: $state.exameEmOutraData)
+            if state.exameEmOutraData {
+                dateField("Data do exame", selection: $state.dataExame, in: Self.faixaExame)
             }
 
-            Picker("Etnia", selection: $etnia) {
+            Picker("Etnia", selection: $state.etnia) {
                 ForEach(TrisomyCalculator.Etnia.allCases, id: \.self) {
                     Text($0.label).tag($0)
                 }
             }
             .pickerStyle(.menu)
 
-            numberField("Peso", placeholder: "69", text: $peso, keyboard: .decimalPad, suffix: "kg")
+            numberField("Peso", placeholder: "69", text: $state.peso, keyboard: .decimalPad, suffix: "kg")
             Text("Opcional; obrigatório se a tricúspide for avaliada.")
                 .font(TextStyle.caption)
                 .foregroundStyle(AppSurface.textMuted)
 
-            riskToggle("Tabagismo", isOn: $fumante)
-            riskToggle("Gestação prévia com trissomia 21", isOn: $previaT21)
-            riskToggle("Gestação prévia com trissomia 18", isOn: $previaT18)
-            riskToggle("Gestação prévia com trissomia 13", isOn: $previaT13)
+            riskToggle("Tabagismo", isOn: $state.fumante)
+            riskToggle("Gestação prévia com trissomia 21", isOn: $state.previaT21)
+            riskToggle("Gestação prévia com trissomia 18", isOn: $state.previaT18)
+            riskToggle("Gestação prévia com trissomia 13", isOn: $state.previaT13)
         }
         .cardStyle()
     }
@@ -140,24 +154,24 @@ struct TrisomyCalculatorSheet: View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             sectionTitle("Biometria fetal")
             HStack(spacing: Spacing.sm) {
-                numberField("CCN", placeholder: "60", text: $ccn, keyboard: .decimalPad, suffix: "mm")
-                numberField("TN", placeholder: "1,8", text: $tn, keyboard: .decimalPad, suffix: "mm")
+                numberField("CCN", placeholder: "60", text: $state.ccn, keyboard: .decimalPad, suffix: "mm")
+                numberField("TN", placeholder: "1,8", text: $state.tn, keyboard: .decimalPad, suffix: "mm")
             }
             if let gaCCN {
                 Text("IG pelo CCN: \(formatarIG(gaCCN))")
                     .font(TextStyle.footnote)
                     .foregroundStyle(BrandColor.primaryDeep)
             }
-            numberField("FCF", placeholder: "160", text: $fcf, keyboard: .numberPad, suffix: "bpm")
+            numberField("FCF", placeholder: "160", text: $state.fcf, keyboard: .numberPad, suffix: "bpm")
 
-            riskToggle("Usar IG datada (DUM / datação prévia)", isOn: $usarIGDatada)
-            if usarIGDatada {
+            riskToggle("Usar IG datada (DUM / datação prévia)", isOn: $state.usarIGDatada)
+            if state.usarIGDatada {
                 HStack(spacing: Spacing.sm) {
-                    Picker("Semanas", selection: $semanasDatada) {
+                    Picker("Semanas", selection: $state.semanasDatada) {
                         ForEach(10...14, id: \.self) { Text("\($0) sem").tag($0) }
                     }
                     .pickerStyle(.menu)
-                    Picker("Dias", selection: $diasDatada) {
+                    Picker("Dias", selection: $state.diasDatada) {
                         ForEach(0...6, id: \.self) { Text("\($0) d").tag($0) }
                     }
                     .pickerStyle(.menu)
@@ -175,24 +189,24 @@ struct TrisomyCalculatorSheet: View {
             sectionTitle("Marcadores adicionais")
             VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text("Osso nasal").font(TextStyle.body)
-                Picker("Osso nasal", selection: $ossoNasal) {
+                Picker("Osso nasal", selection: $state.ossoNasal) {
                     ForEach(OssoNasal.allCases, id: \.self) { Text($0.rawValue).tag($0) }
                 }
                 .pickerStyle(.segmented)
             }
             VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text("Fluxo tricúspide").font(TextStyle.body)
-                Picker("Fluxo tricúspide", selection: $tricuspide) {
+                Picker("Fluxo tricúspide", selection: $state.tricuspide) {
                     ForEach(Tricuspide.allCases, id: \.self) { Text($0.rawValue).tag($0) }
                 }
                 .pickerStyle(.segmented)
-                if tricuspide != .naoAvaliada, decimal(peso) == nil {
-                    Text("Informe o peso materno para usar o marcador tricúspide.")
+                if state.tricuspide != .naoAvaliada, decimal(state.peso) == nil {
+                    Text("Informe o state.peso materno para usar o marcador tricúspide.")
                         .font(TextStyle.caption)
                         .foregroundStyle(SemanticColor.warningText)
                 }
             }
-            numberField("IP do ducto venoso", placeholder: "1,05", text: $dvPI, keyboard: .decimalPad)
+            numberField("IP do ducto venoso", placeholder: "1,05", text: $state.dvPI, keyboard: .decimalPad)
         }
         .cardStyle()
     }
@@ -201,11 +215,11 @@ struct TrisomyCalculatorSheet: View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             sectionTitle("Bioquímica")
             HStack(spacing: Spacing.sm) {
-                numberField("PAPP-A", placeholder: "1,00", text: $pappa, keyboard: .decimalPad, suffix: "MoM")
-                numberField("Free β-hCG", placeholder: "1,00", text: $freeBeta, keyboard: .decimalPad, suffix: "MoM")
+                numberField("PAPP-A", placeholder: "1,00", text: $state.pappa, keyboard: .decimalPad, suffix: "MoM")
+                numberField("Free β-hCG", placeholder: "1,00", text: $state.freeBeta, keyboard: .decimalPad, suffix: "MoM")
             }
-            riskToggle("MoM corrigido pelo laboratório", isOn: $momCorrigido)
-            Text("Informe os MoM já corrigidos (peso, etnia, tabagismo, método). Obrigatório confirmar para usar a bioquímica.")
+            riskToggle("MoM corrigido pelo laboratório", isOn: $state.momCorrigido)
+            Text("Informe os MoM já corrigidos (state.peso, state.etnia, tabagismo, método). Obrigatório confirmar para usar a bioquímica.")
                 .font(TextStyle.caption)
                 .foregroundStyle(AppSurface.textMuted)
         }
@@ -214,7 +228,7 @@ struct TrisomyCalculatorSheet: View {
 
     private var dataNascimentoField: some View {
         VStack(alignment: .leading, spacing: Spacing.xxs) {
-            dateField("Data de nascimento", selection: $dataNascimento, in: Self.faixaNascimento)
+            dateField("Data de nascimento", selection: $state.dataNascimento, in: Self.faixaNascimento)
             Text("\(formatar(idadeNaDataDoExame, casas: 1)) anos na data do exame")
                 .font(TextStyle.footnote)
                 .foregroundStyle(BrandColor.primaryDeep)
@@ -339,10 +353,19 @@ struct TrisomyCalculatorSheet: View {
     }
 
     private func insertButton(_ resultado: TrisomyCalculator.Resultado) -> some View {
-        PrimaryButton(title: "Inserir no laudo", icon: "plus.circle.fill") {
-            Haptics.success()
-            onInsert("\n" + resultado.insertBloco + "\n")
-            onDismiss()
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            PrimaryButton(title: "Inserir no laudo", icon: "plus.circle.fill") {
+                Haptics.success()
+                onInsert("\n" + resultado.insertBloco + "\n")
+                onDismiss()
+            }
+            .disabled(!canInsert)
+            .opacity(canInsert ? 1 : 0.5)
+            if !canInsert {
+                Text("Gere o laudo primeiro. O preenchimento fica guardado: volte aqui depois e toque em Inserir para levar o resultado à aba Laudo.")
+                    .font(TextStyle.caption)
+                    .foregroundStyle(AppSurface.textMuted)
+            }
         }
     }
 
@@ -352,7 +375,7 @@ struct TrisomyCalculatorSheet: View {
             Text(mensagem).font(TextStyle.body)
             Spacer(minLength: 0)
             Button {
-                erro = nil
+                state.erro = nil
             } label: {
                 Image(systemName: "xmark")
             }
@@ -366,31 +389,31 @@ struct TrisomyCalculatorSheet: View {
     private func calcular() {
         do {
             let entrada = try montarEntrada()
-            resultado = try TrisomyCalculator.calcular(entrada)
-            erro = nil
+            state.resultado = try TrisomyCalculator.calcular(entrada)
+            state.erro = nil
             Haptics.success()
         } catch let dominio as TrisomyErroDeDominio {
-            resultado = nil
-            erro = dominio.mensagem
+            state.resultado = nil
+            state.erro = dominio.mensagem
             Haptics.warning()
         } catch {
-            resultado = nil
-            erro = "Não foi possível calcular. Revise os campos preenchidos."
+            state.resultado = nil
+            state.erro = "Não foi possível calcular. Revise os campos preenchidos."
             Haptics.warning()
         }
     }
 
     private func montarEntrada() throws -> TrisomyCalculator.Entrada {
-        guard let crl = decimal(ccn) else {
+        guard let crl = decimal(state.ccn) else {
             throw TrisomyErroDeDominio("preencha o CCN em milímetros")
         }
-        guard let nt = decimal(tn) else {
+        guard let nt = decimal(state.tn) else {
             throw TrisomyErroDeDominio("preencha a translucência nucal em milímetros")
         }
 
-        let pappaValor = decimal(pappa)
-        let freeBetaValor = decimal(freeBeta)
-        if (pappaValor != nil || freeBetaValor != nil), !momCorrigido {
+        let pappaValor = decimal(state.pappa)
+        let freeBetaValor = decimal(state.freeBeta)
+        if (pappaValor != nil || freeBetaValor != nil), !state.momCorrigido {
             throw TrisomyErroDeDominio("A bioquímica deve ser informada como MoM já corrigido pelo laboratório.")
         }
 
@@ -398,33 +421,33 @@ struct TrisomyCalculatorSheet: View {
             maternalAge: idadeNaDataDoExame,
             crl: crl,
             nt: nt,
-            fhr: decimal(fcf),
-            gaDaysDated: usarIGDatada ? Double(semanasDatada * 7 + diasDatada) : nil,
+            fhr: decimal(state.fcf),
+            gaDaysDated: state.usarIGDatada ? Double(state.semanasDatada * 7 + state.diasDatada) : nil,
             freeBetaHcgMoM: freeBetaValor,
             pappaMoM: pappaValor,
-            isMoMCorrected: momCorrigido,
-            dvPI: decimal(dvPI),
-            tricuspidRegurgitation: tricuspide.valor,
-            nasalBoneAbsent: ossoNasal.valor,
-            smoking: fumante,
-            ethnicity: etnia,
-            weight: decimal(peso),
-            previousT21: previaT21,
-            previousT18: previaT18,
-            previousT13: previaT13
+            isMoMCorrected: state.momCorrigido,
+            dvPI: decimal(state.dvPI),
+            tricuspidRegurgitation: state.tricuspide.valor,
+            nasalBoneAbsent: state.ossoNasal.valor,
+            smoking: state.fumante,
+            ethnicity: state.etnia,
+            weight: decimal(state.peso),
+            previousT21: state.previaT21,
+            previousT18: state.previaT18,
+            previousT13: state.previaT13
         )
     }
 
     private var dataExameEfetiva: Date {
-        exameEmOutraData ? dataExame : Date()
+        state.exameEmOutraData ? state.dataExame : Date()
     }
 
     private var idadeNaDataDoExame: Double {
-        dataExameEfetiva.timeIntervalSince(dataNascimento) / 86_400 / 365.25
+        dataExameEfetiva.timeIntervalSince(state.dataNascimento) / 86_400 / 365.25
     }
 
     private var gaCCN: Double? {
-        guard let crl = decimal(ccn), TrisomyCalculator.faixaCrl.contains(crl) else { return nil }
+        guard let crl = decimal(state.ccn), TrisomyCalculator.faixaCrl.contains(crl) else { return nil }
         return TrisomyCalculator.crlParaGaDias(crl)
     }
 
@@ -546,12 +569,12 @@ struct TrisomyCalculatorSheet: View {
 
     private var fingerprint: String {
         [
-            String(dataNascimento.timeIntervalSince1970), String(exameEmOutraData),
-            String(dataExame.timeIntervalSince1970),
-            ccn, tn, fcf, String(usarIGDatada), String(semanasDatada), String(diasDatada),
-            etnia.rawValue, peso, String(fumante), String(previaT21), String(previaT18), String(previaT13),
-            ossoNasal.rawValue, tricuspide.rawValue, dvPI,
-            pappa, freeBeta, String(momCorrigido),
+            String(state.dataNascimento.timeIntervalSince1970), String(state.exameEmOutraData),
+            String(state.dataExame.timeIntervalSince1970),
+            state.ccn, state.tn, state.fcf, String(state.usarIGDatada), String(state.semanasDatada), String(state.diasDatada),
+            state.etnia.rawValue, state.peso, String(state.fumante), String(state.previaT21), String(state.previaT18), String(state.previaT13),
+            state.ossoNasal.rawValue, state.tricuspide.rawValue, state.dvPI,
+            state.pappa, state.freeBeta, String(state.momCorrigido),
         ].joined(separator: "§")
     }
 }
@@ -573,6 +596,6 @@ private extension View {
 
 #Preview {
     NavigationStack {
-        TrisomyCalculatorSheet(onInsert: { _ in }, onDismiss: {})
+        TrisomyCalculatorSheet(state: TrisomyCalculatorState(), canInsert: false, onInsert: { _ in }, onDismiss: {})
     }
 }

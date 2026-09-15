@@ -188,7 +188,9 @@ struct GenerateView: View {
                 onImageExtract: vm.isCompanionConnected ? { results, summary, text in
                     vm.receiveCompanionImageFindings(results, summary: summary, insertedText: text)
                 } : nil,
-                dopplerOnly: vm.dopplerOnly
+                dopplerOnly: vm.dopplerOnly,
+                trisomyState: vm.trisomyCalculatorState,
+                onInsertIntoLaudo: { vm.insertIntoLaudo($0) }
             )
         }
         .sheet(isPresented: Binding(get: { vm.isConsultorSheetPresented }, set: { vm.isConsultorSheetPresented = $0 })) {

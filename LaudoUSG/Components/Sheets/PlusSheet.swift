@@ -13,8 +13,13 @@ struct PlusSheet: View {
     var reportId: String? = nil
     var onImageExtract: (([BiometricData], String, String) -> Void)? = nil
     var dopplerOnly = false
+    /// Estado persistente da calculadora de trissomias (vive no modelo da tela de geração).
+    var trisomyState: TrisomyCalculatorState? = nil
+    /// Insere texto na aba Laudo (usado pelas calculadoras cujo resultado pertence ao laudo, não aos achados).
+    var onInsertIntoLaudo: ((String) -> Void)? = nil
 
     @State private var path: [PlusDestination] = []
+    @State private var fallbackTrisomyState = TrisomyCalculatorState()
     @State private var phrases: [UserPhrase] = []
     @State private var isLoadingPhrases: Bool = false
     @State private var phrasesUsesFallback: Bool = false
@@ -122,7 +127,11 @@ struct PlusSheet: View {
                     )
                 case .trissomias:
                     TrisomyCalculatorSheet(
-                        onInsert: { insert($0) },
+                        state: trisomyState ?? fallbackTrisomyState,
+                        canInsert: reportText != nil && onInsertIntoLaudo != nil,
+                        onInsert: { texto in
+                            if let onInsertIntoLaudo { onInsertIntoLaudo(texto) } else { insert(texto) }
+                        },
                         onDismiss: onDismiss
                     )
                 case .volumeProstatico:
