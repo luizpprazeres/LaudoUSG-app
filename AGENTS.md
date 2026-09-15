@@ -5,7 +5,7 @@
 
 ## O que é
 
-App iOS nativo (SwiftUI) que permite médicos ultrassonografistas **ditarem achados e gerarem laudos por IA**. Frontend mobile de um produto que roda em produção em `laudousg.com`. Backend Next.js já existe e é consumido — **não recriar**.
+App iOS nativo (SwiftUI) que permite médicos ultrassonografistas **ditarem achados e gerarem laudos por IA**. Frontend mobile do produto LaudoUSG, cuja web atual roda em `www.laudousg.com.br`. Backend Next.js já existe e é consumido — **não recriar**.
 
 ## Status atual
 
@@ -124,5 +124,5 @@ NÃO delegue ao Codex: decisões de arquitetura, integração com state global, 
 
 - Backend: `https://laudousgmobile.vercel.app`
 - Supabase: `https://yldtkqrsbgcnwlydrrot.supabase.co`
-- Web em produção: `https://laudousg.com` (login dev: `luizp02121@gmail.com` / `teste123`)
+- Web em produção: `https://www.laudousg.com.br` (`apps/web` do monorepo; mesmo Supabase e login do iOS — login dev: `luizp02121@gmail.com` / `teste123`). `laudousg.com` é a web antiga, descontinuada, com banco próprio.
 - Anon key Supabase: em `LaudoUSG/Core/AppConfig.swift` (não é secret — é anon key pública, RLS protege)

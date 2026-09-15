@@ -5,7 +5,7 @@
 
 ## O que é
 
-App iOS nativo (SwiftUI) que permite médicos ultrassonografistas **ditarem achados e gerarem laudos por IA**. Frontend mobile de um produto que roda em produção em `laudousg.com`. Backend Next.js já existe e é consumido — **não recriar**.
+App iOS nativo (SwiftUI) que permite médicos ultrassonografistas **ditarem achados e gerarem laudos por IA**. Frontend mobile do produto LaudoUSG, cuja web atual roda em `www.laudousg.com.br`. Backend Next.js já existe e é consumido — **não recriar**.
 
 ## Relação entre repos (LEIA — fonte comum de confusão)
 
@@ -13,16 +13,16 @@ App iOS nativo (SwiftUI) que permite médicos ultrassonografistas **ditarem acha
 
 | Path | O que é | Status |
 |---|---|---|
-| `laudousg/` | Web em PROD (laudousg.com) | **NÃO MEXER** — independente, não compartilha código |
 | `laudousg-swift/` | **VOCÊ ESTÁ AQUI** — app iOS nativo SwiftUI | Ativo, em desenvolvimento |
-| `laudousgmobile-def/` | Monorepo pnpm+turbo: `apps/api/` (backend Vivo em prod Vercel) + `apps/mobile/` (RN descontinuado, congelado) + `packages/db` + `packages/shared` | Backend vivo, RN congelado |
+| `laudousgmobile-def/` | Monorepo pnpm+turbo: `apps/api/` (backend vivo em prod Vercel) + `apps/web/` (web ATUAL por cliques, `www.laudousg.com.br`) + `apps/mobile/` (app Android RN/Expo, ativo, paridade com o iOS) + `packages/db` + `packages/shared` | Tudo vivo, mesmo Supabase `yldtkqrsbgcnwlydrrot` |
+| `laudousg/` | Web ANTIGA (`laudousg.com`, repo `Projeto-laudare`, Supabase próprio `gimxiyjfuaqptahssqgb`) | **DESCONTINUADA desde 2026-08, mas ainda no ar. NÃO MEXER** |
 
 **O que o app iOS consome do `laudousgmobile-def/apps/api/`:**
 - `POST /api/generate` (SSE), `POST /api/transcribe`, `GET /api/reports/[id]`, `GET|PATCH /api/me/profile`, `DELETE /api/me/delete-account`, `GET|POST /api/sala/*`
 
 **O que NÃO fazer:**
-- Não importar nem copiar literal de `laudousgmobile-def/apps/mobile/` — RN descontinuado, só serve de referência clínica (calculadoras IG/Doppler)
-- Não tentar consolidar com `~/laudousg/` — projetos separados por design
+- Não copiar código literal de `laudousgmobile-def/apps/mobile/` — é o app Android (ativo), outra stack; portar ideias, não arquivos
+- Não tentar consolidar com `~/laudousg/` — é a web antiga, descontinuada
 - Não recriar backend — deploy em `laudousgmobile.vercel.app`, modificar via PR no monorepo
 
 Detalhes em `~/laudousgmobile-def/README.md`.
@@ -146,5 +146,5 @@ NÃO delegue ao Codex: decisões de arquitetura, integração com state global, 
 
 - Backend: `https://laudousgmobile.vercel.app`
 - Supabase: `https://yldtkqrsbgcnwlydrrot.supabase.co`
-- Web em produção: `https://laudousg.com` (login dev: `luizp02121@gmail.com` / `teste123`)
+- Web em produção: `https://www.laudousg.com.br` (`apps/web` do monorepo; mesmo Supabase e login do iOS — login dev: `luizp02121@gmail.com` / `teste123`). `laudousg.com` é a web antiga, descontinuada, com banco próprio.
 - Anon key Supabase: em `LaudoUSG/Core/AppConfig.swift` (não é secret — é anon key pública, RLS protege)
