@@ -10,21 +10,18 @@ struct ImageAnalysisSheet: View {
     let onInsert: (String) -> Void
     let onDismiss: () -> Void
     var onExtract: (([BiometricData], String) -> Void)? = nil
+    var dopplerOnly = false
 
     @State private var selectedItems: [PhotosPickerItem] = []
     @State private var images: [AnalysisImage] = []
     @State private var isCameraPresented = false
     @State private var isAnalyzing = false
-    @State private var includeDoppler = false
     @State private var errorMessage: String?
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.lg) {
                 intro
-                if canAddDoppler {
-                    dopplerOption
-                }
                 actions
                 selectedImages
                 analyzeButton
@@ -56,31 +53,8 @@ struct ImageAnalysisSheet: View {
         #endif
     }
 
-    private var canAddDoppler: Bool {
-        category == .obstetrica || category == .morfologico
-    }
-
-    private var dopplerOption: some View {
-        Toggle(isOn: $includeDoppler) {
-            VStack(alignment: .leading, spacing: Spacing.xxs) {
-                Text("Extrair também o Doppler")
-                    .font(TextStyle.bodySemibold)
-                    .foregroundStyle(AppSurface.textPrimary)
-                Text("Mantém a biometria e acrescenta IR/IP dos vasos encontrados.")
-                    .font(TextStyle.caption)
-                    .foregroundStyle(AppSurface.textSecondary)
-            }
-        }
-        .tint(BrandColor.primary)
-        .padding(Spacing.md)
-        .background(
-            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
-                .fill(includeDoppler ? BrandColor.primaryTint : AppSurface.card)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
-                .stroke(includeDoppler ? BrandColor.primaryBorder : AppSurface.border, lineWidth: 1)
-        )
+    private var analysisCategory: ReportCategory {
+        ImageAnalysisService.analysisCategory(for: category, dopplerOnly: dopplerOnly)
     }
 
     private var intro: some View {
@@ -274,9 +248,14 @@ struct ImageAnalysisSheet: View {
                 let result = try await ImageAnalysisService.analyze(
                     images: images.map(\.data),
                     category: category,
-                    includeDoppler: includeDoppler
+                    dopplerOnly: dopplerOnly,
+                    includeDoppler: category == .dopplerObstetrico || category == .morfologico
                 )
-                let text = ImageAnalysisService.format(result, category: category)
+                let text = ImageAnalysisService.format(
+                    result,
+                    category: analysisCategory,
+                    includeDoppler: category == .dopplerObstetrico || category == .morfologico
+                )
                 guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                     throw ImageAnalysisError.emptyResult(nil)
                 }

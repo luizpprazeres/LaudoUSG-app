@@ -88,7 +88,12 @@ enum FeedbackState: Equatable {
 @Observable
 @MainActor
 final class GenerateViewModel {
-    var category: ReportCategory = .abdomenTotal
+    var category: ReportCategory = .abdomenTotal {
+        didSet {
+            if category != oldValue { dopplerOnly = false }
+        }
+    }
+    var dopplerOnly = false
     var writingStyle: WritingStyle = .tradicional
     var inputText: String = ""
     var streamedOutput: String = ""
@@ -482,7 +487,8 @@ final class GenerateViewModel {
             rawInput: inputText,
             categoryHint: category,
             writingStyleId: writingStyleId,
-            mode: generationMode
+            mode: generationMode,
+            dopplerMode: category == .dopplerObstetrico ? (dopplerOnly ? .isolated : .combined) : nil
         )
 
         generateTask?.cancel()
@@ -656,6 +662,7 @@ final class GenerateViewModel {
     }
 
     func reset() {
+        dopplerOnly = false
         generateTask?.cancel()
         stopStreamingFeedback()
         lastReportId = nil

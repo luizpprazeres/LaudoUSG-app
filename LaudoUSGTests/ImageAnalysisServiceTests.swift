@@ -2,6 +2,12 @@ import XCTest
 @testable import LaudoUSG
 
 final class ImageAnalysisServiceTests: XCTestCase {
+    func testSelectedDopplerModeKeepsBiometryOnlyInCombinedExam() {
+        XCTAssertEqual(ImageAnalysisService.analysisCategory(for: .dopplerObstetrico, dopplerOnly: false), .obstetrica)
+        XCTAssertEqual(ImageAnalysisService.analysisCategory(for: .dopplerObstetrico, dopplerOnly: true), .dopplerObstetrico)
+        XCTAssertEqual(ImageAnalysisService.analysisCategory(for: .morfologico, dopplerOnly: true), .morfologico)
+    }
+
     func testStandaloneDopplerFormatsResistanceAndPulsatilityWithoutBiometry() {
         let data = BiometricData(
             dbp: "82 mm",
@@ -31,7 +37,7 @@ final class ImageAnalysisServiceTests: XCTestCase {
             ipDuctusVenosus: "1,89"
         )
 
-        let text = ImageAnalysisService.format([data], category: .obstetrica)
+        let text = ImageAnalysisService.format([data], category: .obstetrica, includeDoppler: true)
 
         XCTAssertTrue(text.contains("Biometria fetal"))
         XCTAssertTrue(text.contains("DBP: 82 mm"))

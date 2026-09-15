@@ -22,6 +22,51 @@ enum ImageAnalysisError: Error, LocalizedError {
 }
 
 enum ImageAnalysisService {
+    static func analysisCategory(for category: ReportCategory, dopplerOnly: Bool) -> ReportCategory {
+        category == .dopplerObstetrico && !dopplerOnly ? .obstetrica : category
+    }
+
+    private static let dopplerFields: [WritableKeyPath<BiometricData, String?>] = [
+        \.irRightUterine, \.ipRightUterine, \.irLeftUterine, \.ipLeftUterine,
+        \.irUmbilical, \.ipUmbilical, \.irMCA, \.ipMCA,
+        \.irDuctusVenosus, \.ipDuctusVenosus
+    ]
+
+    static func selectImagingData(
+        _ data: BiometricData,
+        category: ReportCategory,
+        dopplerOnly: Bool = false,
+        includeDoppler: Bool = false
+    ) -> BiometricData {
+        if category == .dopplerObstetrico && dopplerOnly {
+            var selected = BiometricData()
+            for field in dopplerFields { selected[keyPath: field] = data[keyPath: field] }
+            return selected
+        }
+        if category == .obstetrica || (category == .morfologico && !includeDoppler) {
+            var selected = data
+            for field in dopplerFields { selected[keyPath: field] = nil }
+            return selected
+        }
+        return data
+    }
+
+    static func imageRequest(
+        image: Data,
+        category: ReportCategory,
+        dopplerOnly: Bool = false,
+        includeDoppler: Bool = false
+    ) -> AnalyzeImageRequest {
+        let combined = category == .dopplerObstetrico && !dopplerOnly
+        return AnalyzeImageRequest(
+            imageBase64: image.base64EncodedString(),
+            category: analysisCategory(for: category, dopplerOnly: dopplerOnly).rawValue,
+            gemelar: false,
+            modules: combined || (category == .morfologico && includeDoppler)
+                ? [ReportCategory.dopplerObstetrico.rawValue] : []
+        )
+    }
+
     private static let logger = Logger(subsystem: "com.laudousg.LaudoUSG", category: "image-analysis")
 
     static func canAnalyze(category: ReportCategory) -> Bool {
@@ -36,6 +81,7 @@ enum ImageAnalysisService {
     static func analyze(
         images: [Data],
         category: ReportCategory,
+        dopplerOnly: Bool = false,
         includeDoppler: Bool = false
     ) async throws -> [BiometricData] {
         guard canAnalyze(category: category) else { throw ImageAnalysisError.unsupportedCategory }
@@ -46,15 +92,20 @@ enum ImageAnalysisService {
             let result = try await analyze(
                 image: image,
                 category: category,
+                dopplerOnly: dopplerOnly,
                 includeDoppler: includeDoppler
             )
-            results.append(result)
+            results.append(selectImagingData(result, category: category, dopplerOnly: dopplerOnly, includeDoppler: includeDoppler))
         }
         return results
     }
 
-    static func format(_ results: [BiometricData], category: ReportCategory) -> String {
-        let merged = merge(results)
+    static func format(_ results: [BiometricData], category: ReportCategory, includeDoppler: Bool = false) -> String {
+        let data = merge(results)
+        // A categoria de formatacao ja foi resolvida: OBSTETRICA com extra e o combinado.
+        let merged = category == .obstetrica && includeDoppler
+            ? data
+            : selectImagingData(data, category: category, dopplerOnly: true, includeDoppler: includeDoppler)
         var sections: [String] = []
 
         if category == .tireoide {
@@ -168,19 +219,13 @@ enum ImageAnalysisService {
     private static func analyze(
         image: Data,
         category: ReportCategory,
+        dopplerOnly: Bool,
         includeDoppler: Bool
     ) async throws -> BiometricData {
         guard !image.isEmpty else { throw ImageAnalysisError.emptyImage }
         logger.info("Uploading compressed image: \(image.count, privacy: .public) bytes")
 
-        let request = AnalyzeImageRequest(
-            imageBase64: image.base64EncodedString(),
-            category: category.rawValue,
-            gemelar: false,
-            modules: includeDoppler && category != .dopplerObstetrico
-                ? [ReportCategory.dopplerObstetrico.rawValue]
-                : []
-        )
+        let request = imageRequest(image: image, category: category, dopplerOnly: dopplerOnly, includeDoppler: includeDoppler)
         let encoder = JSONEncoder()
         let body = try encoder.encode(request)
         logger.info("Image analysis request body: \(body.count, privacy: .public) bytes")
@@ -313,6 +358,6 @@ enum ImageAnalysisService {
             ? .mamaria
             : data.thyroidRightLobe != nil || data.thyroidLeftLobe != nil || data.thyroidIsthmus != nil || !(data.thyroidNodules ?? []).isEmpty
                 ? .tireoide : .morfologico
-        return format([data], category: category).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return format([data], category: category, includeDoppler: true).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }
