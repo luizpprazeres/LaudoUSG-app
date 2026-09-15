@@ -100,6 +100,13 @@ struct GenerateView: View {
                 if vm.activeTab == .achados {
                     ScrollView {
                         VStack(alignment: .leading, spacing: Spacing.md) {
+                            if vm.category == .dopplerObstetrico {
+                                Toggle("Somente Doppler", isOn: Binding(
+                                    get: { vm.dopplerOnly }, set: { vm.dopplerOnly = $0 }
+                                ))
+                                .tint(BrandColor.primary)
+                                .disabled(vm.phase.isBusy)
+                            }
                             shortcutsBar
                             achadosEditor
                             Color.clear.frame(height: 120)
@@ -180,7 +187,8 @@ struct GenerateView: View {
                 reportId: vm.lastReportId,
                 onImageExtract: vm.isCompanionConnected ? { results, summary, text in
                     vm.receiveCompanionImageFindings(results, summary: summary, insertedText: text)
-                } : nil
+                } : nil,
+                dopplerOnly: vm.dopplerOnly
             )
         }
         .sheet(isPresented: Binding(get: { vm.isConsultorSheetPresented }, set: { vm.isConsultorSheetPresented = $0 })) {
@@ -263,7 +271,8 @@ struct GenerateView: View {
             CompanionSheet(
                 category: vm.category,
                 onDismiss: { vm.isCompanionSheetPresented = false },
-                onConnectionChanged: { vm.companionConnection = $0 }
+                onConnectionChanged: { vm.companionConnection = $0 },
+                dopplerOnly: vm.dopplerOnly
             )
         }
         .overlay {

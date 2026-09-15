@@ -59,10 +59,27 @@ final class ObstetricGenerationContractTests: XCTestCase {
     func testDopplerIsoladoPermaneceDopplerObstetrico() throws {
         let request = GenerateRequest(
             rawInput: "Doppler obstétrico isolado. IP uterina direita 0,8 e esquerda 0,9.",
-            categoryHint: .dopplerObstetrico
+            categoryHint: .dopplerObstetrico,
+            dopplerMode: .isolated
         )
         let json = try jsonDoRequest(request)
         XCTAssertEqual(json["category_hint"] as? String, "DOPPLER_OBSTETRICO")
+        XCTAssertEqual(json["doppler_mode"] as? String, "isolated")
+    }
+
+    func testDopplerCombinadoMantemEscolhaEDitado() throws {
+        let ditado = "DBP 82 mm. IP umbilical 0,9."
+        let json = try jsonDoRequest(GenerateRequest(rawInput: ditado, categoryHint: .dopplerObstetrico, dopplerMode: .combined))
+        XCTAssertEqual(json["category_hint"] as? String, "DOPPLER_OBSTETRICO")
+        XCTAssertEqual(json["doppler_mode"] as? String, "combined")
+        XCTAssertEqual(json["raw_input"] as? String, ditado)
+    }
+
+    func testModoDopplerNaoVazaParaMorfoOuPelve() throws {
+        for category in [ReportCategory.morfologico, .obstetrica, .pelveFeminina] {
+            let json = try jsonDoRequest(GenerateRequest(rawInput: "Exame selecionado", categoryHint: category, dopplerMode: .isolated))
+            XCTAssertNil(json["doppler_mode"])
+        }
     }
 
     private func jsonDoRequest(_ request: GenerateRequest) throws -> [String: Any] {

@@ -1,11 +1,11 @@
 # Política de Privacidade — LaudoUSG
 
-> **Versão:** 2.0
-> **Última atualização:** 22/05/2026
+> **Versão:** 2.1
+> **Última atualização:** 13/09/2026
 > **Conformidade declarada:** LGPD (Lei 13.709/2018), Marco Civil da Internet (Lei 12.965/2014), Apple App Store Review Guidelines §5.1.
 
 <!--
-Nota interna (não-renderizada): conteúdo desta v2.0 aguarda revisão jurídica externa antes do submit final ao App Store.
+Nota interna (não-renderizada): conteúdo desta v2.1 aguarda revisão jurídica externa antes do submit final ao App Store. Conferir também a versão pública vinculada na loja antes da submissão.
 Identificação do Controlador: responsável identificado na conta de desenvolvedor e nos documentos legais do app.
 -->
 
@@ -91,6 +91,12 @@ Os Termos de Uso (Cláusula 5.2) **vedam expressamente** que o Usuário insira d
 | Logs de erro e crash | Diagnóstico técnico | Legítimo interesse (Art. 7º, IX) |
 | Identificador de instalação do app | Sessão e segurança | Execução de contrato (Art. 7º, V) |
 
+### 4.4 Assinaturas pela Apple
+
+Nas compras iniciadas no aplicativo iOS, o pagamento é processado pela Apple. O LaudoUSG recebe os identificadores das transações, o produto contratado, datas de compra e validade e informações de situação da assinatura, como renovação, período de teste, expiração ou reembolso. Esses dados são usados para validar a compra, restaurar o acesso, prevenir fraude e disponibilizar o plano na conta LaudoUSG.
+
+O identificador da sua conta LaudoUSG é enviado à Apple como `appAccountToken` para vincular a compra à conta usada no aplicativo. O LaudoUSG não recebe o número completo do cartão, código de segurança nem a senha da sua conta Apple por esse fluxo. A Apple trata os dados de pagamento segundo seus próprios termos e sua política de privacidade.
+
 ## 5. Dados que NÃO Coletamos (compromisso)
 
 **O LaudoUSG NÃO coleta intencionalmente:**
@@ -108,7 +114,7 @@ Os Termos de Uso (Cláusula 5.2) **vedam expressamente** que o Usuário insira d
 
 1. **Diretamente do Usuário:** ao se cadastrar, autenticar-se ou utilizar o Aplicativo;
 2. **Automaticamente:** durante o uso do Aplicativo, por meios técnicos (logs de servidor, identificador de sessão);
-3. **De terceiros:** **NÃO coletamos dados de fontes terceiras**.
+3. **Da Apple:** recebemos dados de transações e atualizações de assinatura para validar compras feitas no iOS e manter o acesso da conta LaudoUSG.
 
 ## 7. Finalidades do Tratamento
 
@@ -131,12 +137,15 @@ Para operar o Serviço, contratamos provedores que atuam como **Operadores** (LG
 | **Supabase** | Banco de dados, autenticação, armazenamento | EUA (AWS us-east-1) | Cadastrais, conteúdo, logs |
 | **Vercel** | Hospedagem do backend Next.js | EUA / multi-região | Requisições, logs técnicos |
 | **Deepgram** | Transcrição de áudio em tempo real | EUA | Áudio temporário para transcrição |
-| **OpenAI** | Geração de texto e análise de conteúdo multimodal quando aplicável | EUA | Texto do ditado, laudos, imagens temporárias quando selecionadas |
-| **Groq** | Fallback de geração de texto (llama-3.3-70b) | EUA | Texto do ditado |
+| **OpenAI** | Geração de texto, análise de conteúdo multimodal e transcrição de gravações | EUA | Texto do ditado, laudos, imagens selecionadas e áudio temporário para transcrição |
 | **Resend** | Envio de emails transacionais | EUA / Europa | Email, conteúdo do email |
-| **Apple** | Distribuição do app e serviços da plataforma iOS | Global, conforme termos da Apple | Dados técnicos e de distribuição tratados pela Apple como provedora da plataforma |
+| **Apple** | Distribuição, compras e assinaturas no iOS | Global, conforme termos da Apple | Dados de transação, assinatura e identificador da conta para vinculação da compra; dados de pagamento tratados pela Apple |
 
-**Funcionalidades futuras** (como push notifications, analytics adicionais ou billing) deverão ser **refletidas nesta Política antes de entrarem em produção**, quando envolverem novos dados, operadores ou finalidades.
+**Permissão para IA no iOS:** antes de enviar conteúdo para os recursos de IA, o app solicita uma autorização específica, separada do aceite desta Política. A OpenAI recebe achados e conteúdo de laudos para elaboração ou revisão, imagens selecionadas para análise e áudio quando usada a transcrição de gravações. A Deepgram recebe áudio quando usada a transcrição ao vivo. Os resultados podem ser associados à sua conta e ao histórico de laudos.
+
+Você pode recusar ou retirar essa autorização em **Preferências > Privacidade e IA**. A escolha é armazenada por conta neste dispositivo. Sem autorização, novas solicitações de IA são bloqueadas; histórico, gestão da conta e calculadoras locais continuam disponíveis. Retirar a autorização não apaga automaticamente o conteúdo já salvo no histórico. Evite inserir identificadores de pacientes no conteúdo enviado.
+
+**Funcionalidades futuras** que envolvam novos dados, operadores ou finalidades deverão ser refletidas nesta Política antes de entrarem em produção.
 
 O Controlador busca utilizar fornecedores que disponibilizem termos, políticas, acordos de tratamento de dados ou mecanismos contratuais compatíveis com proteção de dados, segurança da informação e confidencialidade. Sempre que aplicável, tais fornecedores devem tratar dados apenas para as finalidades contratadas, adotar medidas técnicas e organizacionais adequadas e **não vender** dados pessoais tratados em nome do LaudoUSG.
 
@@ -164,7 +173,7 @@ Você pode solicitar mais informações sobre as garantias por meio do contato@l
 | Backups | Rotação **mensal** (dados de Conta excluída saem do último backup em até 30 dias) | Boas práticas de segurança |
 | Dados necessários a defesa em processos | Até trânsito em julgado + prescrição | Cumprimento de obrigação legal |
 
-**Exclusão de Conta:** o Usuário pode excluir sua Conta a qualquer momento via **Configurações → Zona de risco → "Excluir minha conta"**. A exclusão é **definitiva e em cascata** (perfil, laudos, frases, sessões), restando apenas logs de acesso retidos pelo prazo legal mínimo.
+**Exclusão de Conta:** o Usuário pode excluir sua Conta a qualquer momento via **Preferências > Conta > Excluir minha conta**. A exclusão é **definitiva e em cascata** (perfil, laudos, frases, sessões e vínculos de assinatura no LaudoUSG), restando apenas logs de acesso retidos pelo prazo legal mínimo. Excluir a conta LaudoUSG não cancela a cobrança da Apple; a assinatura deve ser gerenciada nos ajustes de assinaturas da Apple. O app oferece acesso a esse gerenciamento sem exigir o cancelamento como condição para excluir a conta.
 
 ## 11. Seus Direitos como Titular (LGPD Art. 18)
 
@@ -184,7 +193,7 @@ Você tem direito a, a qualquer momento e mediante requisição:
 
 ### Como exercer seus direitos:
 
-- **Exclusão imediata da Conta:** dentro do app, em Configurações → "Excluir minha conta";
+- **Exclusão imediata da Conta:** dentro do app, em Preferências > Conta > Excluir minha conta;
 - **Outras solicitações:** email contato@laudousg.com, com identificação por meio do email cadastrado.
 
 **Prazo de resposta:** até **15 (quinze) dias** úteis para requisições recebidas via DPO.
@@ -261,5 +270,5 @@ Dúvidas, solicitações ou exercício de direitos:
 
 ---
 
-**Data de vigência desta versão:** 2026-05-22
-**Versão:** 2.0
+**Data de vigência desta versão:** 2026-09-13
+**Versão:** 2.1

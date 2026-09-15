@@ -6,6 +6,14 @@ import Observation
 final class AppState {
     var session: SessionState = .checking
     var profile: UserProfile?
+    private(set) var profileUserID: String?
+    private(set) var aiConsentDecision: Bool?
+
+    func setAIConsent(_ allowed: Bool) {
+        guard let userID = profileUserID else { return }
+        AIConsentPolicy.set(allowed, userID: userID)
+        aiConsentDecision = allowed
+    }
     var defaultWritingStyleId: String = GenerateRequest.defaultWritingStyleId
     var availableStyles: [WritingStyleRecord] = []
     var reportPreferences: [ReportPreferenceRecord] = []
@@ -40,6 +48,36 @@ final class AppState {
     var hasProEffective: Bool { effectiveTier == .pro }
     var hasEssencialOrAboveEffective: Bool { effectiveTier != nil }
     var hasActiveIAP: Bool { store.hasActiveSubscription }
+
+    // MARK: - IAP ↔ conta
+
+    /// Vincula o StoreKit ao usuário logado. Só transações compradas com este id
+    /// (appAccountToken) passam a contar como acesso neste aparelho.
+    func bindStoreToCurrentUser() async {
+        guard let userId = await AuthService.shared.currentUserId(),
+              let uuid = UUID(uuidString: userId), session == .authenticated,
+              profileUserID == userId else { return }
+        await store.bind(userID: uuid)
+    }
+
+    /// Login/abertura: vincula, reenvia ao backend as transações do usuário
+    /// (idempotente; finaliza só o que for aceito) e, se houve algo, recarrega
+    /// o perfil para o `plan` efetivo refletir a assinatura.
+    func syncSubscriptions() async {
+        await bindStoreToCurrentUser()
+        guard session == .authenticated else { return }
+        if await store.syncWithBackend() != nil {
+            await refreshProfile()
+        }
+    }
+
+    /// "Restaurar compras": App Store → entitlement local → backend → perfil.
+    func restorePurchases() async -> StoreManager.RestoreOutcome {
+        await bindStoreToCurrentUser()
+        let outcome = await store.restore()
+        await refreshProfile()
+        return outcome
+    }
 
     /// Rótulo do plano considerando IAP + backend (para exibição).
     var effectivePlanLabel: String {
@@ -83,6 +121,8 @@ final class AppState {
     func refreshProfile() async {
         do {
             let record = try await ProfileService.fetchProfile()
+            guard session == .authenticated,
+                  await AuthService.shared.currentUserId() == record.id else { return }
             updateProfile(record)
         } catch {
             // Falha silenciosa — UI segue com profile anterior.
@@ -115,6 +155,8 @@ final class AppState {
     }
 
     func updateProfile(_ record: UserProfileRecord) {
+        profileUserID = record.id
+        aiConsentDecision = AIConsentPolicy.decision(userID: record.id)
         profile = UserProfile(
             email: record.email ?? profile?.email ?? "",
             displayName: record.name ?? record.email ?? profile?.displayName ?? "",
@@ -180,6 +222,11 @@ final class AppState {
     }
 
     func signOut() {
+        profileUserID = nil
+        aiConsentDecision = nil
+        // Primeiro o IAP: nenhuma assinatura da conta Apple pode continuar
+        // liberando acesso para o próximo médico que entrar neste iPhone.
+        store.clearAccount()
         profile = nil
         availableStyles = []
         reportPreferences = []

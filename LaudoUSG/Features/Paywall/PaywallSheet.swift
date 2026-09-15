@@ -13,6 +13,7 @@ struct PaywallSheet: View {
 
     @State private var selectedID: String?
     @State private var inFlightMessage: String?
+    @State private var isRestoring = false
 
     private let termsURL = URL(string: "https://laudousg.com/terms")!
     private let privacyURL = URL(string: "https://laudousg.com/privacy")!
@@ -64,25 +65,54 @@ struct PaywallSheet: View {
             Image(systemName: "sparkles")
                 .font(.system(size: 34, weight: .semibold))
                 .foregroundStyle(BrandColor.primary)
-            Text("Desbloqueie todo o LaudoUSG")
+            Text("Assinatura LaudoUSG")
                 .font(TextStyle.h2)
                 .foregroundStyle(AppSurface.textPrimary)
-            Text("7 dias grátis, depois renova automaticamente. Cancele quando quiser.")
+            Text(selectedTrialLabel.map { "\($0), depois renova automaticamente. Cancele quando quiser." }
+                 ?? "Renova automaticamente. Cancele quando quiser.")
                 .font(TextStyle.bodyLarge)
                 .foregroundStyle(AppSurface.textSecondary)
         }
     }
 
+    /// Benefícios do PLANO SELECIONADO — só o que o app entrega de fato para
+    /// aquele nível (o Consultor IA é do Profissional; ver `hasProEffective`).
     private var benefits: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            benefitRow("Laudos com IA a partir do seu ditado")
-            benefitRow("Consultor IA para revisar e tirar dúvidas")
-            benefitRow("Até 800 laudos/mês (Essencial) ou ilimitado (Profissional)")
+            ForEach(benefitLines, id: \.self) { line in
+                benefitRow(line)
+            }
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: Radius.xl, style: .continuous).fill(AppSurface.card))
         .overlay(RoundedRectangle(cornerRadius: Radius.xl, style: .continuous).stroke(AppSurface.border, lineWidth: 1))
+    }
+
+    private var selectedTier: PlanTier? {
+        selectedID.flatMap(IAPEntitlementResolver.tier(forProductID:))
+    }
+
+    private var selectedTrialLabel: String? {
+        guard let id = selectedID, let product = store.product(id: id) else { return nil }
+        return trialLabel(product)
+    }
+
+    private var benefitLines: [String] {
+        switch selectedTier {
+        case .pro:
+            return [
+                "Laudos ilimitados gerados por IA a partir do seu ditado",
+                "Consultor IA para revisar o laudo e tirar dúvidas",
+                "Suporte prioritário por WhatsApp",
+            ]
+        case .essential, nil:
+            return [
+                "Até 800 laudos por mês gerados por IA a partir do seu ditado",
+                "Todas as categorias, calculadoras e esquemas",
+                "Suporte por WhatsApp",
+            ]
+        }
     }
 
     // MARK: - Planos
@@ -160,18 +190,27 @@ struct PaywallSheet: View {
             guard let id = selectedID, let product = store.product(id: id) else { return }
             Task {
                 inFlightMessage = nil
-                let ok = await store.purchase(product)
-                if ok {
+                switch await store.purchase(product) {
+                case .success:
+                    // Pago à Apple: o acesso local vale já; a sincronização com
+                    // a conta é reenviada automaticamente se ainda não confirmou.
                     Haptics.success()
                     onSuccess()
-                } else if let err = store.lastErrorMessage {
-                    inFlightMessage = err
+                case .successPendingSync(let message):
+                    inFlightMessage = message
+                case .pending:
+                    inFlightMessage = "Compra aguardando aprovação. O acesso é liberado assim que for aprovada."
+                case .cancelled:
+                    break
+                case .failed(let message):
+                    Haptics.error()
+                    inFlightMessage = message
                 }
             }
         } label: {
             HStack {
                 if store.isPurchasing { ProgressView().tint(.white) }
-                Text(store.isPurchasing ? "Processando…" : "Assinar")
+                Text(store.isPurchasing ? "Processando…" : selectedTrialLabel.map { "Começar \($0)" } ?? "Assinar")
                     .font(TextStyle.bodyLargeSemibold)
                     .foregroundStyle(.white)
             }
@@ -185,13 +224,27 @@ struct PaywallSheet: View {
 
     private var secondaryActions: some View {
         VStack(spacing: Spacing.sm) {
-            Button("Restaurar compras") {
+            Button(isRestoring ? "Restaurando…" : "Restaurar compras") {
                 Task {
-                    await store.restore()
-                    if store.hasActiveSubscription { Haptics.success(); onSuccess() }
-                    else { inFlightMessage = store.lastErrorMessage ?? "Nenhuma assinatura para restaurar." }
+                    inFlightMessage = nil
+                    isRestoring = true
+                    defer { isRestoring = false }
+                    switch await store.restore() {
+                    case .restored:
+                        Haptics.success()
+                        onSuccess()
+                    case .restoredPendingSync:
+                        inFlightMessage = "Assinatura encontrada na Apple. A sincronização com sua conta está pendente; tente Restaurar compras novamente com conexão."
+                    case .noneFound:
+                        inFlightMessage = "Nenhuma assinatura encontrada nesta conta Apple."
+                    case .boundToAnotherAccount:
+                        inFlightMessage = "A assinatura desta conta Apple pertence a outra conta LaudoUSG. Entre com a conta usada na compra."
+                    case .failed(let message):
+                        inFlightMessage = message
+                    }
                 }
             }
+            .disabled(isRestoring || store.isPurchasing)
             .font(TextStyle.bodyMedium)
             .foregroundStyle(BrandColor.primary)
 
@@ -261,6 +314,9 @@ struct PaywallSheet: View {
 
     private func trialLabel(_ product: Product) -> String? {
         guard let offer = product.subscription?.introductoryOffer, offer.paymentMode == .freeTrial else { return nil }
+        // Só promete o trial se ESTA conta Apple ainda é elegível (quem já usou
+        // um trial no grupo paga o preço cheio desde o 1º dia).
+        guard store.isEligibleForIntroOffer(product) == true else { return nil }
         let p = offer.period
         if p.unit == .week { return "\(p.value * 7) dias grátis" }
         if p.unit == .day { return "\(p.value) dias grátis" }

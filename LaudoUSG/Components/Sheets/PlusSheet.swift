@@ -12,6 +12,7 @@ struct PlusSheet: View {
     var venousScheme: VenousSchemePayload? = nil
     var reportId: String? = nil
     var onImageExtract: (([BiometricData], String, String) -> Void)? = nil
+    var dopplerOnly = false
 
     @State private var path: [PlusDestination] = []
     @State private var phrases: [UserPhrase] = []
@@ -167,7 +168,8 @@ struct PlusSheet: View {
                         onDismiss: onDismiss,
                         onExtract: onImageExtract.map { callback in
                             { results, text in callback(results, text, text) }
-                        }
+                        },
+                        dopplerOnly: dopplerOnly
                     )
                 }
             }

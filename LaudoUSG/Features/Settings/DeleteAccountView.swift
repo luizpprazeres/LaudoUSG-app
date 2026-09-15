@@ -1,4 +1,5 @@
 import SwiftUI
+import StoreKit
 
 struct DeleteAccountView: View {
     @Environment(AppState.self) private var app
@@ -9,6 +10,7 @@ struct DeleteAccountView: View {
     @State private var isDeleting = false
     @State private var didDelete = false
     @State private var errorMessage: String?
+    @State private var isManageSubscriptionsPresented = false
     @FocusState private var isConfirmFocused: Bool
 
     var body: some View {
@@ -29,6 +31,7 @@ struct DeleteAccountView: View {
         .navigationTitle("Excluir conta")
         .navigationBarTitleDisplayMode(.inline)
         .scrollDismissesKeyboard(.interactively)
+        .manageSubscriptionsSheet(isPresented: $isManageSubscriptionsPresented)
         .onChange(of: confirmText) { _, newValue in
             let normalized = newValue.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
             if normalized != newValue { confirmText = normalized }
@@ -38,6 +41,17 @@ struct DeleteAccountView: View {
     private var firstStep: some View {
         VStack(alignment: .leading, spacing: Spacing.lg) {
             destructiveCard
+
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                Text("Se você assina pela Apple, excluir a conta não cancela a cobrança. Cancele sua assinatura na App Store antes de continuar.")
+                    .font(TextStyle.body)
+                    .foregroundStyle(AppSurface.textSecondary)
+                Button("Gerenciar assinatura Apple") {
+                    isManageSubscriptionsPresented = true
+                }
+                .font(TextStyle.bodyMedium)
+                .foregroundStyle(BrandColor.primary)
+            }
 
             Text("Ao excluir sua conta, serão apagados:")
                 .font(TextStyle.body)

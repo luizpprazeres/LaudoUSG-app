@@ -1,5 +1,10 @@
 import Foundation
 
+enum DopplerExamMode: String, Codable, Sendable {
+    case combined
+    case isolated
+}
+
 struct GenerateRequest: Codable, Sendable {
     static let defaultWritingStyleId = "11111111-1111-4111-8111-111111111111"
 
@@ -10,6 +15,7 @@ struct GenerateRequest: Codable, Sendable {
     let resumeFromReportId: String?
     let clarifyAnswers: [ClarifyAnswer]?
     let mode: String?
+    let dopplerMode: DopplerExamMode?
 
     init(
         rawInput: String,
@@ -18,7 +24,8 @@ struct GenerateRequest: Codable, Sendable {
         consolidatedTranscript: String? = nil,
         resumeFromReportId: String? = nil,
         clarifyAnswers: [ClarifyAnswer]? = nil,
-        mode: String? = nil
+        mode: String? = nil,
+        dopplerMode: DopplerExamMode? = nil
     ) {
         self.rawInput = rawInput
         self.categoryHint = categoryHint
@@ -27,6 +34,7 @@ struct GenerateRequest: Codable, Sendable {
         self.resumeFromReportId = resumeFromReportId
         self.clarifyAnswers = clarifyAnswers
         self.mode = mode
+        self.dopplerMode = categoryHint == .dopplerObstetrico ? dopplerMode : nil
     }
 }
 

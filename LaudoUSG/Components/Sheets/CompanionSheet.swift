@@ -110,6 +110,7 @@ struct CompanionSheet: View {
     let category: ReportCategory
     let onDismiss: () -> Void
     var onConnectionChanged: ((CompanionConnection?) -> Void)? = nil
+    var dopplerOnly = false
     @State private var vm = CompanionViewModel()
     @State private var imageAnalysisOpen = false
     @FocusState private var codeFieldFocused: Bool
@@ -145,7 +146,8 @@ struct CompanionSheet: View {
                         onDismiss: { imageAnalysisOpen = false },
                         onExtract: { results, summary in
                             vm.receiveImageFindings(results, summary: summary)
-                        }
+                        },
+                        dopplerOnly: dopplerOnly
                     )
                 }
             }

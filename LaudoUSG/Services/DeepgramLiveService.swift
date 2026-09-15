@@ -129,6 +129,13 @@ final class DeepgramLiveService {
 
     func start() async {
         guard !isStreaming else { return }
+        do {
+            try await AIConsentPolicy.authorize(path: "/api/deepgram/token")
+        } catch {
+            errorMessage = error.localizedDescription
+            status = "Permissão de IA necessária"
+            return
+        }
         errorMessage = nil
         finalText = ""; interimText = ""
         audioLevel = 0; elapsed = 0; startDate = Date()

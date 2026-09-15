@@ -2,7 +2,7 @@ import Foundation
 
 enum LegalVersions {
     static let termsOfUse = "2.0"
-    static let privacyPolicy = "2.0"
+    static let privacyPolicy = "2.1"
     static let medicalDisclaimer = "2.0"
 }
 

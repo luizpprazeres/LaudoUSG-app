@@ -197,6 +197,7 @@ actor APIClient {
     }
 
     private func perform(_ request: URLRequest) async throws -> Data {
+        try await AIConsentPolicy.authorize(path: request.url?.path ?? "")
         do {
             let (data, response) = try await session.data(for: request)
             try validate(response: response, data: data)
@@ -209,6 +210,7 @@ actor APIClient {
     }
 
     private func stream(_ request: URLRequest) async throws -> URLSession.AsyncBytes {
+        try await AIConsentPolicy.authorize(path: request.url?.path ?? "")
         do {
             let (stream, response) = try await session.bytes(for: request)
             try validate(response: response, data: nil)

@@ -29,7 +29,18 @@ struct AppShellView: View {
                 app.session == .authenticated
                 && app.profile != nil
                 && !app.needsLegalAcceptance
+                && app.aiConsentDecision == true
                 && app.needsOnboarding
+            },
+            set: { _ in }
+        )
+    }
+
+    private var showAIConsentGate: Binding<Bool> {
+        Binding(
+            get: {
+                app.session == .authenticated && app.profileUserID != nil
+                && !app.needsLegalAcceptance && app.aiConsentDecision == nil
             },
             set: { _ in }
         )
@@ -70,6 +81,9 @@ struct AppShellView: View {
             OnboardingFlow(onCompleted: {})
                 .environment(app)
         }
+        .fullScreenCover(isPresented: showAIConsentGate) {
+            AIConsentView().environment(app)
+        }
         .fullScreenCover(isPresented: $isTourPresented) {
             TourFlowView {
                 hasSeenTour = true
@@ -81,6 +95,7 @@ struct AppShellView: View {
             if !hasSeenTour
                 && app.profile != nil
                 && !app.needsLegalAcceptance
+                && app.aiConsentDecision != nil
                 && !app.needsOnboarding {
                 isTourPresented = true
             }
@@ -92,6 +107,8 @@ struct AppShellView: View {
         async let styles = ProfileService.fetchWritingStyles()
         async let reportPreferences = ProfileService.fetchReportPreferences()
         if let profileValue = try? await profile {
+            guard app.session == .authenticated,
+                  await AuthService.shared.currentUserId() == profileValue.id else { return }
             app.updateProfile(profileValue)
         }
         if let stylesValue = try? await styles {
@@ -101,6 +118,10 @@ struct AppShellView: View {
             app.reportPreferences = preferencesValue.preferences
             app.availableVariants = preferencesValue.availableVariants
         }
+        // IAP: vincula o StoreKit a ESTE usuário e ressincroniza com o backend
+        // (idempotente). Antes disso nenhuma assinatura da conta Apple conta —
+        // é o que impede o plano de um médico vazar para o próximo login.
+        await app.syncSubscriptions()
     }
 
     private var splashView: some View {

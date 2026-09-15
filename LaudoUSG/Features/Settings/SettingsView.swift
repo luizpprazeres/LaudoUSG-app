@@ -106,6 +106,11 @@ struct SettingsView: View {
                 }
 
                 section(title: "Conta") {
+                    NavigationLink(destination: AIConsentView()) {
+                        navRowLabel("Privacidade e IA")
+                    }
+                    .buttonStyle(PressableButtonStyle())
+                    Divider().padding(.leading, Spacing.md)
                     infoRow(label: "Email", value: app.profile?.email ?? "—")
                     Divider().padding(.leading, Spacing.md)
                     infoRow(label: "Plano", value: app.effectivePlanLabel)
@@ -131,13 +136,30 @@ struct SettingsView: View {
                         Haptics.tap()
                         isPaywallPresented = true
                     } label: {
-                        navRowLabel(app.hasEssencialOrAboveEffective ? "Ver planos" : "Assinar — 7 dias grátis")
+                        navRowLabel(app.hasEssencialOrAboveEffective ? "Ver planos" : "Assinar")
                     }
                     .buttonStyle(PressableButtonStyle())
 
                     Divider().padding(.leading, Spacing.md)
                     Button {
-                        Task { await app.store.restore() }
+                        Haptics.tap()
+                        Task {
+                            saveMessage = nil
+                            let outcome = await app.restorePurchases()
+                            switch outcome {
+                            case .restored:
+                                Haptics.success()
+                                saveMessage = "Assinatura restaurada."
+                            case .restoredPendingSync:
+                                saveMessage = "Assinatura encontrada na Apple. A sincronização da conta está pendente. Tente restaurar novamente com conexão."
+                            case .noneFound:
+                                saveMessage = "Nenhuma assinatura encontrada nesta conta Apple."
+                            case .boundToAnotherAccount:
+                                saveMessage = "Erro: a assinatura desta conta Apple pertence a outra conta LaudoUSG. Entre com a conta usada na compra."
+                            case .failed(let message):
+                                saveMessage = "Erro: \(message)"
+                            }
+                        }
                     } label: {
                         navRowLabel("Restaurar compras")
                     }
