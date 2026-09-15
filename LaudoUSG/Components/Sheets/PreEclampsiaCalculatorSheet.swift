@@ -20,7 +20,15 @@ struct PreEclampsiaCalculatorSheet: View {
         case bilateral = "Direita + esquerda"
     }
 
-    @State private var idade = ""
+    private enum ModoDiabetes: String, CaseIterable {
+        case nao = "Não"
+        case tipo1 = "Tipo 1"
+        case tipo2 = "Tipo 2"
+    }
+
+    @State private var dataNascimento: Date = {
+        Calendar(identifier: .gregorian).date(byAdding: .year, value: -30, to: Date()) ?? Date()
+    }()
     @State private var peso = ""
     @State private var altura = ""
     @State private var modoIG = ModoIG.semanas
@@ -37,7 +45,7 @@ struct PreEclampsiaCalculatorSheet: View {
     @State private var historiaFamiliarPE = false
     @State private var fiv = false
     @State private var hipertensaoCronica = false
-    @State private var diabetes = false
+    @State private var diabetesModo = ModoDiabetes.nao
     @State private var lesSaf = false
     @State private var fumante = false
 
@@ -99,11 +107,11 @@ struct PreEclampsiaCalculatorSheet: View {
     private var dadosMaternos: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             sectionTitle("Dados maternos")
+            dataNascimentoField
             HStack(spacing: Spacing.sm) {
-                numberField("Idade na DPP", placeholder: "30", text: $idade, keyboard: .decimalPad, suffix: "anos")
                 numberField("Peso", placeholder: "69", text: $peso, keyboard: .decimalPad, suffix: "kg")
+                numberField("Altura", placeholder: "164", text: $altura, keyboard: .decimalPad, suffix: "cm")
             }
-            numberField("Altura", placeholder: "164", text: $altura, keyboard: .decimalPad, suffix: "cm")
 
             Picker("Etnia", selection: $etnia) {
                 ForEach(PreEclampsiaCalculator.Etnia.allCases, id: \.self) {
@@ -252,11 +260,50 @@ struct PreEclampsiaCalculatorSheet: View {
             riskToggle("Mãe teve pré-eclâmpsia", isOn: $historiaFamiliarPE)
             riskToggle("Concepção por FIV", isOn: $fiv)
             riskToggle("Hipertensão crônica", isOn: $hipertensaoCronica)
-            riskToggle("Diabetes tipo 1 ou 2", isOn: $diabetes)
+            diabetesField
             riskToggle("LES ou SAF", isOn: $lesSaf)
             riskToggle("Tabagismo", isOn: $fumante)
         }
         .cardStyle()
+    }
+
+    private var dataNascimentoField: some View {
+        VStack(alignment: .leading, spacing: Spacing.xxs) {
+            Text("Data de nascimento")
+                .font(TextStyle.caption)
+                .foregroundStyle(AppSurface.textSecondary)
+            DatePicker(
+                "Data de nascimento",
+                selection: $dataNascimento,
+                in: Self.faixaNascimento,
+                displayedComponents: .date
+            )
+            .datePickerStyle(.compact)
+            .labelsHidden()
+            .environment(\.locale, Locale(identifier: "pt_BR"))
+            .padding(Spacing.sm)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(AppSurface.muted))
+            .overlay(RoundedRectangle(cornerRadius: Radius.lg).stroke(AppSurface.border, lineWidth: 1))
+
+            if let idadeNaDPPAtual {
+                Text("\(formatar(idadeNaDPPAtual, casas: 1)) anos na DPP")
+                    .font(TextStyle.footnote)
+                    .foregroundStyle(BrandColor.primaryDeep)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var diabetesField: some View {
+        VStack(alignment: .leading, spacing: Spacing.xxs) {
+            Text("Diabetes")
+                .font(TextStyle.body)
+            Picker("Diabetes", selection: $diabetesModo) {
+                ForEach(ModoDiabetes.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            }
+            .pickerStyle(.segmented)
+        }
     }
 
     @ViewBuilder
@@ -377,8 +424,8 @@ struct PreEclampsiaCalculatorSheet: View {
     }
 
     private func montarEntrada() throws -> EntradaMontada {
-        guard let idade = decimal(idade), let peso = decimal(peso), let altura = decimal(altura) else {
-            throw PeErroDeDominio("preencha idade, peso e altura")
+        guard let peso = decimal(peso), let altura = decimal(altura) else {
+            throw PeErroDeDominio("preencha peso e altura")
         }
 
         let gaDias: Double
@@ -390,6 +437,8 @@ struct PreEclampsiaCalculatorSheet: View {
         } else {
             gaDias = Double(semanas * 7 + dias)
         }
+
+        let idade = idadeDecimalNaDPP(gaDias: gaDias, nascimento: dataNascimento)
 
         let intervalo = decimal(intervaloAnos)
         let igAnterior = decimal(igPartoAnterior)
@@ -442,7 +491,8 @@ struct PreEclampsiaCalculatorSheet: View {
             histFamiliarPE: historiaFamiliarPE,
             fiv: fiv,
             hipertensaoCronica: hipertensaoCronica,
-            diabetes: diabetes,
+            diabetes: diabetesModo != .nao,
+            diabetesTipo1: diabetesModo == .tipo1,
             lesSaf: lesSaf,
             fumante: fumante
         )
@@ -473,6 +523,30 @@ struct PreEclampsiaCalculatorSheet: View {
     private var gaCCN: Double? {
         guard let ccn = decimal(ccn) else { return nil }
         return try? PreEclampsiaCalculator.gaDiasPorCCN(ccn)
+    }
+
+    private var gaDiasAtual: Double? {
+        modoIG == .ccn ? gaCCN : Double(semanas * 7 + dias)
+    }
+
+    private var idadeNaDPPAtual: Double? {
+        guard let gaDias = gaDiasAtual else { return nil }
+        return idadeDecimalNaDPP(gaDias: gaDias, nascimento: dataNascimento)
+    }
+
+    /// Idade decimal na DPP: DPP = data do exame (hoje) + (280 − IG em dias); idade = (DPP − nascimento) / 365,25.
+    private func idadeDecimalNaDPP(gaDias: Double, nascimento: Date, hoje: Date = Date()) -> Double {
+        let diasAteDPP = 280.0 - gaDias
+        let dpp = hoje.addingTimeInterval(diasAteDPP * 86_400)
+        return dpp.timeIntervalSince(nascimento) / 86_400 / 365.25
+    }
+
+    private static var faixaNascimento: ClosedRange<Date> {
+        let hoje = Date()
+        let calendar = Calendar(identifier: .gregorian)
+        let minima = calendar.date(byAdding: .year, value: -70, to: hoje) ?? hoje
+        let maxima = calendar.date(byAdding: .year, value: -8, to: hoje) ?? hoje
+        return minima...maxima
     }
 
     private func numberField(
@@ -567,10 +641,11 @@ struct PreEclampsiaCalculatorSheet: View {
 
     private var fingerprint: String {
         [
-            idade, peso, altura, modoIG.rawValue, String(semanas), String(dias), ccn,
+            String(dataNascimento.timeIntervalSince1970), peso, altura, modoIG.rawValue,
+            String(semanas), String(dias), ccn,
             etnia.rawValue, paridade.rawValue, intervaloAnos, igPartoAnterior,
             zEscorePesoAnterior, String(historiaFamiliarPE), String(fiv),
-            String(hipertensaoCronica), String(diabetes), String(lesSaf), String(fumante),
+            String(hipertensaoCronica), diabetesModo.rawValue, String(lesSaf), String(fumante),
             modoPressao.rawValue, sistolicas.joined(separator: "|"), diastolicas.joined(separator: "|"),
             modoUterinas.rawValue, utaPiMedio, utaPiDireita, utaPiEsquerda,
         ].joined(separator: "§")

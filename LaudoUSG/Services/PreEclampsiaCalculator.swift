@@ -211,7 +211,8 @@ enum PreEclampsiaCalculator {
         }
         let risco37 = riscos[37] ?? 0
         let umEmN = risco37 > 0 ? Foundation.floor(1.0 / risco37 + 0.5) : .infinity
-        let altoRisco = risco37 >= corteAltoRisco
+        // Estritamente MAIOR: o app da FMF exibe "1 in 100" como risco NÃO aumentado (medido 15/09/2026).
+        let altoRisco = risco37 > corteAltoRisco
 
         return Resultado(
             versaoParametros: versaoParametros,
