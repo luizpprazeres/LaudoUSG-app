@@ -106,7 +106,7 @@ enum PreEclampsiaCalculator {
     }
 
     static let corteAltoRisco = 1.0 / 100.0
-    static let versaoParametros = "FMF/AJOG-2020+cal-2026-08-22"
+    static let versaoParametros = "FMF/AJOG-2020+cal-2026-09-15"
     static let janelaDias = 77.0...99.0
 
     private static let sigma = 6.8833
@@ -255,10 +255,15 @@ enum PreEclampsiaCalculator {
             - 0.001117349 * idade
             + 0.000015061 * idade * ga
             + 0.018069553 * indicador(gestante.etnia == .afro)
-            + 0.004971474 * indicador(comPE)
-            - 0.006836336 * (comPE ? gestante.zEscorePesoAnterior ?? 0 : 0)
-            - 0.005119599 * (comPE ? (gestante.igPartoAnterior ?? 40) - 40 : 0)
+            + calUtaPiPePrevia * indicador(comPE)
     }
+
+    /// PE prévia — MEDIDO no software oficial (v1.0.44, 15/09/2026, 3 pontos: parto
+    /// anterior em 32, 36 e 40 semanas, peso ao nascer em branco, 1500 g ou 2500 g):
+    /// o MoM exibido foi 0,98 em todos — ajuste CONSTANTE, sem IG do parto nem
+    /// Z-score. Tayyar 2015 publica +0,004971474 − 0,006836336·Z − 0,005119599·(IG − 40);
+    /// o app não aplica. Espelha `CAL_UTA_PI_PE_PREVIA` do packages/fmf.
+    static let calUtaPiPePrevia = 0.0124
 
     static func mapMoM(_ pam: Double, _ gestante: Gestante) -> Double {
         pam / Foundation.pow(10, log10MapEsperada(gestante))
@@ -304,9 +309,6 @@ enum PreEclampsiaCalculator {
         if gestante.paridade == .multiparaComPE {
             guard gestante.igPartoAnterior != nil else {
                 throw PeErroDeDominio("multípara com PE anterior exige a IG do parto anterior")
-            }
-            guard gestante.zEscorePesoAnterior != nil else {
-                throw PeErroDeDominio("multípara com PE anterior exige o Z-score do peso ao nascer anterior")
             }
         }
         if gestante.paridade == .multiparaSemPE {

@@ -8,7 +8,7 @@ final class PreEclampsiaFmfGoldenTests: XCTestCase {
         let golden = try carregarGolden()
         XCTAssertEqual(golden.versao, PreEclampsiaCalculator.versaoParametros)
         XCTAssertEqual(golden.casos.count, 342)
-        XCTAssertEqual(golden.casos.filter { $0.esperado.erroDeDominio == true }.count, 11)
+        XCTAssertEqual(golden.casos.filter { $0.esperado.erroDeDominio == true }.count, 10)
 
         for caso in golden.casos {
             if caso.esperado.erroDeDominio == true {
