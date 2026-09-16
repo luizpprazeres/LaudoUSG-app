@@ -254,7 +254,8 @@ struct ImageAnalysisSheet: View {
                 let text = ImageAnalysisService.format(
                     result,
                     category: analysisCategory,
-                    includeDoppler: category == .dopplerObstetrico || category == .morfologico
+                    includeDoppler: category == .dopplerObstetrico || category == .morfologico,
+                    dopplerOnly: category == .dopplerObstetrico && dopplerOnly
                 )
                 guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                     throw ImageAnalysisError.emptyResult(nil)

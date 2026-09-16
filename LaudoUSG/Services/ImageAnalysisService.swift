@@ -100,7 +100,10 @@ enum ImageAnalysisService {
         return results
     }
 
-    static func format(_ results: [BiometricData], category: ReportCategory, includeDoppler: Bool = false) -> String {
+    /// `dopplerOnly` = Doppler ISOLADO: só aí os índices de resistividade (IR) entram no texto.
+    /// No obstétrico COM Doppler (combinado) o laudo usa apenas o IP — o IR extraído da imagem
+    /// vazava para o ditado e o laudo passava a citar os dois (relato de 16/09/2026).
+    static func format(_ results: [BiometricData], category: ReportCategory, includeDoppler: Bool = false, dopplerOnly: Bool = false) -> String {
         let data = merge(results)
         // A categoria de formatacao ja foi resolvida: OBSTETRICA com extra e o combinado.
         let merged = category == .obstetrica && includeDoppler
@@ -179,16 +182,17 @@ enum ImageAnalysisService {
             sections.append("Biometria fetal:\n" + biometria.joined(separator: "\n"))
         }
 
+        let comIR = category == .dopplerObstetrico && dopplerOnly
         let doppler = rows([
-            ("IR uterina direita", merged.irRightUterine),
+            ("IR uterina direita", comIR ? merged.irRightUterine : nil),
             ("IP uterina direita", merged.ipRightUterine),
-            ("IR uterina esquerda", merged.irLeftUterine),
+            ("IR uterina esquerda", comIR ? merged.irLeftUterine : nil),
             ("IP uterina esquerda", merged.ipLeftUterine),
-            ("IR artéria umbilical", merged.irUmbilical),
+            ("IR artéria umbilical", comIR ? merged.irUmbilical : nil),
             ("IP artéria umbilical", merged.ipUmbilical),
-            ("IR artéria cerebral média", merged.irMCA),
+            ("IR artéria cerebral média", comIR ? merged.irMCA : nil),
             ("IP artéria cerebral média", merged.ipMCA),
-            ("IR ducto venoso", merged.irDuctusVenosus),
+            ("IR ducto venoso", comIR ? merged.irDuctusVenosus : nil),
             ("IP ducto venoso", merged.ipDuctusVenosus)
         ])
         if !doppler.isEmpty {
