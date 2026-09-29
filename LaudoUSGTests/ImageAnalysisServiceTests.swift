@@ -17,7 +17,7 @@ final class ImageAnalysisServiceTests: XCTestCase {
             ipUmbilical: "1,80"
         )
 
-        let text = ImageAnalysisService.format([data], category: .dopplerObstetrico)
+        let text = ImageAnalysisService.format([data], category: .dopplerObstetrico, dopplerOnly: true)
 
         XCTAssertTrue(text.contains("IR uterina direita: 0,59"))
         XCTAssertTrue(text.contains("IP uterina direita: 0,81"))
@@ -42,7 +42,9 @@ final class ImageAnalysisServiceTests: XCTestCase {
         XCTAssertTrue(text.contains("Biometria fetal"))
         XCTAssertTrue(text.contains("DBP: 82 mm"))
         XCTAssertTrue(text.contains("CC: 295 mm"))
-        XCTAssertTrue(text.contains("IR artéria cerebral média: 0,81"))
+        XCTAssertFalse(text.contains("IR artéria cerebral média"))
+        XCTAssertFalse(text.contains("IR ducto venoso"))
+        XCTAssertTrue(text.contains("IP artéria cerebral média: 1,75"))
         XCTAssertTrue(text.contains("IP ducto venoso: 1,89"))
     }
 
