@@ -28,4 +28,6 @@ O App Store Connect confirmou que o build 208 já havia sido produzido pelo Xcod
 
 Archive Release assinado com sucesso em `/tmp/LaudoUSG-209.xcarchive`, versão `1.0 (209)`, bundle `com.laudousg.LaudoUSG`, team `W772N4FGJ6`, arm64. Exportação local para `/tmp/LaudoUSG-209-export` passou. O upload oficial via Xcode terminou com `Upload succeeded` em 29/09/2026 às 13:05 (horário local), e o App Store Connect mostrou `1.0 (209)` em processamento.
 
+O processamento terminou no App Store Connect. O build 209 está associado ao grupo interno `Beta Médicos`, com um tester, e a tela do build permite expirá-lo, confirmando que ele está disponível no TestFlight interno. As notas de teste foram salvas com o roteiro sintético de criação, revisão explícita, envio para a Sala e invalidação da revisão após edição. Nenhuma distribuição externa nem submissão à revisão pública da App Store foi realizada.
+
 Antes do upload, o E2E sintético iOS → Sala canônica comprovou: chegada pendente, revisão médica explícita, invalidação após edição, nova revisão, nome local excluído da cópia, acréscimo da auxiliar separado, seleção preservada entre dois laudos e redirecionamento autenticado do domínio antigo. Nenhum dado de paciente foi usado. A suíte completa permaneceu em 94 testes aprovados, 3 ignorados e zero falhas.
