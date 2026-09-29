@@ -21,3 +21,11 @@ Compilação Release concluída, mas o archive encerrou com exit 65 na etapa Cod
 Rodada inicial interrompida porque CoreSimulator não iniciou o host de testes. Somente o simulador dedicado foi reiniciado; nenhum serviço global ou simulador de E2E foi alterado. Retry incremental terminou com exit 0 e `TEST SUCCEEDED`: 97 testes, 94 passaram, 3 ignorados e zero falhas, confirmados por `xcresulttool get test-results summary`. Resultado: `/tmp/laudousg-testflight-fullqa-retry-20260929.xcresult`; log: `/tmp/laudousg-testflight-fullqa-retry.log`. As duas expectativas obsoletas de IR foram alinhadas ao contrato de produção já existente no baseline dc10b70. Nenhum código de produção mudou neste ajuste.
 
 CodeRabbit NÃO EXECUTADO. E2E autenticado está sob validação independente do root; este registro não substitui seu aceite.
+
+## Publicação final — build 209
+
+O App Store Connect confirmou que o build 208 já havia sido produzido pelo Xcode Cloud a partir do commit `c4dac67` (ajuste das expectativas de Doppler). Para manter esta publicação rastreável e evitar ambiguidade com o processo paralelo, o root gerou o build 209 a partir da mesma `main`, sem mudar o código do aplicativo.
+
+Archive Release assinado com sucesso em `/tmp/LaudoUSG-209.xcarchive`, versão `1.0 (209)`, bundle `com.laudousg.LaudoUSG`, team `W772N4FGJ6`, arm64. Exportação local para `/tmp/LaudoUSG-209-export` passou. O upload oficial via Xcode terminou com `Upload succeeded` em 29/09/2026 às 13:05 (horário local), e o App Store Connect mostrou `1.0 (209)` em processamento.
+
+Antes do upload, o E2E sintético iOS → Sala canônica comprovou: chegada pendente, revisão médica explícita, invalidação após edição, nova revisão, nome local excluído da cópia, acréscimo da auxiliar separado, seleção preservada entre dois laudos e redirecionamento autenticado do domínio antigo. Nenhum dado de paciente foi usado. A suíte completa permaneceu em 94 testes aprovados, 3 ignorados e zero falhas.
