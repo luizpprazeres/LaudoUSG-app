@@ -111,6 +111,10 @@ final class GenerateViewModel {
     var activeTab: GenerateTab = .achados
     var editedLaudoText: String = ""
     var saveStatus: GenerateSaveStatus = .idle
+    var reviewStatus: ReportReviewStatus?
+    var reviewMessage: String?
+    var isReviewingForSala = false
+    var reviewedAt: Date?
     var feedbackState: FeedbackState = .idle
 
     var isCategorySheetPresented = false
@@ -484,6 +488,10 @@ final class GenerateViewModel {
         streamedOutput = ""
         displayedOutput = ""
         editedLaudoText = ""
+        reviewStatus = nil
+        reviewedAt = nil
+        reviewMessage = nil
+        isReviewingForSala = false
         generationFindings = []
         latestVenousScheme = nil
         saveStatus = .idle
@@ -540,6 +548,9 @@ final class GenerateViewModel {
 
     func laudoTextChanged(_ newValue: String) {
         editedLaudoText = newValue
+        reviewStatus = nil
+        reviewedAt = nil
+        reviewMessage = nil
         saveStatus = .saving
         saveTask?.cancel()
         saveTask = Task { @MainActor in
@@ -562,6 +573,45 @@ final class GenerateViewModel {
             saveStatus = .saved
         } catch {
             saveStatus = .failed(error.localizedDescription)
+        }
+    }
+
+    /// Encerra o debounce e salva o texto atual antes da confirmação médica.
+    func flushLaudoAutosave() async -> Bool {
+        let pendingSave = saveTask
+        pendingSave?.cancel()
+        saveTask = nil
+        await pendingSave?.value
+        saveStatus = .saving
+        await persistLaudo()
+        return saveStatus == .saved
+    }
+
+    func reviewCurrentLaudoForSala() async {
+        guard !isReviewingForSala,
+              let reportId = lastReportId,
+              !editedLaudoText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        isReviewingForSala = true
+        reviewMessage = nil
+        defer { isReviewingForSala = false }
+
+        guard await flushLaudoAutosave() else {
+            reviewMessage = "Não foi possível salvar o laudo. Corrija a falha antes de revisar."
+            return
+        }
+
+        do {
+            let textBeingReviewed = editedLaudoText
+            let response = try await HistoryService.reviewReport(id: reportId, expectedText: textBeingReviewed)
+            guard lastReportId == reportId, editedLaudoText == textBeingReviewed else { return }
+            reviewStatus = response.reviewStatus
+            reviewedAt = response.reviewedAt
+            reviewMessage = "Revisado. Esta versão foi liberada para a Sala."
+            Haptics.success()
+        } catch {
+            reviewStatus = nil
+            reviewedAt = nil
+            reviewMessage = error.localizedDescription
         }
     }
 
@@ -682,6 +732,9 @@ final class GenerateViewModel {
         streamedOutput = ""
         displayedOutput = ""
         editedLaudoText = ""
+        reviewStatus = nil
+        reviewedAt = nil
+        reviewMessage = nil
         liveTranscript = ""
         generationFindings = []
         latestVenousScheme = nil

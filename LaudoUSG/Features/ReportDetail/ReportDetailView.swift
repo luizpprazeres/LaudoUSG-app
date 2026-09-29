@@ -13,6 +13,8 @@ final class ReportDetailViewModel {
     var isSaving: Bool = false
     var error: String?
     var saveStatus: SaveStatus = .idle
+    var isReviewingForSala = false
+    var reviewMessage: String?
 
     enum SaveStatus { case idle, saved, failed }
 
@@ -37,6 +39,9 @@ final class ReportDetailViewModel {
 
     func textChanged(_ newValue: String) {
         editingText = newValue
+        report?.reviewStatus = nil
+        report?.reviewedAt = nil
+        reviewMessage = nil
         saveStatus = .idle
         saveTask?.cancel()
         saveTask = Task { @MainActor in
@@ -49,14 +54,49 @@ final class ReportDetailViewModel {
     func save() async {
         guard let report else { return }
         isSaving = true
+        let textToSave = editingText
         do {
-            try await HistoryService.updateFinalOutput(reportId: report.id, finalText: editingText)
-            saveStatus = .saved
+            try await HistoryService.updateFinalOutput(reportId: report.id, finalText: textToSave)
+            if editingText == textToSave { saveStatus = .saved }
         } catch {
             saveStatus = .failed
             self.error = error.localizedDescription
         }
         isSaving = false
+    }
+
+    func reviewCurrentTextForSala() async {
+        guard !isReviewingForSala,
+              let report,
+              !editingText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        isReviewingForSala = true
+        reviewMessage = nil
+        defer { isReviewingForSala = false }
+
+        let pendingSave = saveTask
+        pendingSave?.cancel()
+        saveTask = nil
+        await pendingSave?.value
+        await save()
+        guard saveStatus == .saved, !isSaving else {
+            reviewMessage = "Não foi possível salvar o laudo. Corrija a falha antes de revisar."
+            return
+        }
+
+        let textBeingReviewed = editingText
+        do {
+            let response = try await HistoryService.reviewReport(id: report.id, expectedText: textBeingReviewed)
+            guard editingText == textBeingReviewed else { return }
+            self.report?.contentRevision = response.contentRevision
+            self.report?.reviewStatus = response.reviewStatus
+            self.report?.reviewedAt = response.reviewedAt
+            reviewMessage = "Revisado. Esta versão foi liberada para a Sala."
+            Haptics.success()
+        } catch {
+            self.report?.reviewStatus = nil
+            self.report?.reviewedAt = nil
+            reviewMessage = error.localizedDescription
+        }
     }
 }
 
@@ -163,6 +203,7 @@ struct ReportDetailView: View {
     private var laudoTab: some View {
         VStack(spacing: 0) {
             formattingToolbar
+                .disabled(vm.isReviewingForSala)
                 .padding(.horizontal, Spacing.md)
                 .padding(.vertical, Spacing.xs)
             Divider()
@@ -171,6 +212,7 @@ struct ReportDetailView: View {
                     text: Binding(get: { vm.editingText }, set: { vm.textChanged($0) }),
                     bridge: editorBridge
                 )
+                .disabled(vm.isReviewingForSala)
                 .padding(.horizontal, Spacing.md)
                 .padding(.top, Spacing.xs)
             } else {
@@ -274,34 +316,70 @@ struct ReportDetailView: View {
     }
 
     private var bottomActions: some View {
-        HStack(spacing: Spacing.xs) {
-            SecondaryButton(
-                title: didCopy ? "Copiado" : "Copiar",
-                icon: didCopy ? "checkmark" : "doc.on.doc"
-            ) {
-                performCopy()
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            HStack(spacing: Spacing.xs) {
+                SecondaryButton(
+                    title: didCopy ? "Copiado" : "Copiar",
+                    icon: didCopy ? "checkmark" : "doc.on.doc"
+                ) {
+                    performCopy()
+                }
+                Button {
+                    Haptics.tap()
+                    isSalaSheetPresented = true
+                } label: {
+                    HStack(spacing: Spacing.xs) {
+                        Image(systemName: "person.crop.rectangle.stack")
+                            .font(.system(size: 14, weight: .semibold))
+                        Text("Enviar p/ Sala")
+                            .font(TextStyle.bodyMedium)
+                    }
+                    .padding(.horizontal, Spacing.sm)
+                    .frame(minHeight: 40)
+                    .foregroundStyle(.white)
+                    .background(
+                        RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
+                            .fill(BrandColor.primary)
+                    )
+                }
+                .buttonStyle(PressableButtonStyle())
+                .accessibilityLabel("Enviar para Sala do Auxiliar")
+                Spacer(minLength: 0)
             }
+
             Button {
-                Haptics.tap()
-                isSalaSheetPresented = true
+                Task { await vm.reviewCurrentTextForSala() }
             } label: {
                 HStack(spacing: Spacing.xs) {
-                    Image(systemName: "person.crop.rectangle.stack")
-                        .font(.system(size: 14, weight: .semibold))
-                    Text("Enviar p/ Sala")
+                    if vm.isReviewingForSala {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Image(systemName: vm.report?.reviewStatus == .reviewed ? "checkmark.seal.fill" : "checkmark.seal")
+                    }
+                    Text(vm.report?.reviewStatus == .reviewed
+                         ? "Revisado — liberado para Sala"
+                         : "Revisado — liberar para Sala")
                         .font(TextStyle.bodyMedium)
+                    Spacer(minLength: 0)
                 }
+                .foregroundStyle(vm.report?.reviewStatus == .reviewed ? SemanticColor.successText : BrandColor.primary)
                 .padding(.horizontal, Spacing.sm)
-                .frame(minHeight: 40)
-                .foregroundStyle(.white)
-                .background(
-                    RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
-                        .fill(BrandColor.primary)
-                )
+                .frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
+                .background(Capsule().fill(AppSurface.card))
+                .overlay(Capsule().stroke(AppSurface.border, lineWidth: 1))
             }
             .buttonStyle(PressableButtonStyle())
-            .accessibilityLabel("Enviar para Sala do Auxiliar")
-            Spacer()
+            .disabled(vm.isReviewingForSala || vm.isSaving || vm.editingText.isEmpty)
+            .accessibilityLabel(vm.report?.reviewStatus == .reviewed
+                                ? "Laudo revisado e liberado para a Sala"
+                                : "Revisado — liberar para Sala")
+
+            if let message = vm.reviewMessage {
+                Text(message)
+                    .font(TextStyle.caption)
+                    .foregroundStyle(vm.report?.reviewStatus == .reviewed ? SemanticColor.successText : AppSurface.textSecondary)
+                    .accessibilityAddTraits(.updatesFrequently)
+            }
         }
     }
 

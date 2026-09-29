@@ -79,7 +79,7 @@ struct SettingsView: View {
                                 Text("Sessão de turno")
                                     .font(TextStyle.bodyLargeMedium)
                                     .foregroundStyle(AppSurface.textPrimary)
-                                Text("Gere o código que o auxiliar usa pra entrar em sala.laudousg.com")
+                                Text("Gere o código que o auxiliar usa pra entrar em sala.laudousg.com.br")
                                     .font(TextStyle.caption)
                                     .foregroundStyle(AppSurface.textSecondary)
                                     .lineLimit(2)

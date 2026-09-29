@@ -529,6 +529,7 @@ struct GenerateView: View {
             } else if isEditingLaudo {
                 // Modo edição — TextEditor padrão (sem highlight, mas editável)
                 TextEditor(text: Binding(get: { vm.editedLaudoText }, set: { vm.laudoTextChanged($0) }))
+                    .disabled(vm.isReviewingForSala)
                     .font(TextStyle.bodyLarge)
                     .scrollContentBackground(.hidden)
                     .background(AppSurface.background)
@@ -808,6 +809,7 @@ struct GenerateView: View {
                         .overlay(Capsule().stroke(AppSurface.border, lineWidth: 1))
                     }
                     .buttonStyle(PressableButtonStyle())
+                    .disabled(vm.isReviewingForSala)
 
                     Button {
                         performCopyLaudo()
@@ -843,6 +845,43 @@ struct GenerateView: View {
                     }
                     .buttonStyle(PressableButtonStyle())
                     .accessibilityLabel("Enviar laudo para Sala do Auxiliar")
+                }
+            }
+
+            if vm.hasLaudoOutput {
+                Button {
+                    Task { await vm.reviewCurrentLaudoForSala() }
+                } label: {
+                    HStack(spacing: Spacing.xs) {
+                        if vm.isReviewingForSala {
+                            ProgressView().controlSize(.small)
+                        } else {
+                            Image(systemName: vm.reviewStatus == .reviewed ? "checkmark.seal.fill" : "checkmark.seal")
+                        }
+                        Text(vm.reviewStatus == .reviewed
+                             ? "Revisado — liberado para Sala"
+                             : "Revisado — liberar para Sala")
+                            .font(TextStyle.captionMedium)
+                        Spacer(minLength: 0)
+                    }
+                    .foregroundStyle(vm.reviewStatus == .reviewed ? SemanticColor.successText : BrandColor.primary)
+                    .padding(.horizontal, Spacing.sm)
+                    .frame(maxWidth: .infinity, minHeight: 38, alignment: .leading)
+                    .background(Capsule().fill(AppSurface.card))
+                    .overlay(Capsule().stroke(AppSurface.border, lineWidth: 1))
+                }
+                .buttonStyle(PressableButtonStyle())
+                .disabled(vm.isReviewingForSala || vm.lastReportId == nil || vm.editedLaudoText.isEmpty)
+                .accessibilityLabel(vm.reviewStatus == .reviewed
+                                    ? "Laudo revisado e liberado para a Sala"
+                                    : "Revisado — liberar para Sala")
+
+                if let reviewMessage = vm.reviewMessage {
+                    Text(reviewMessage)
+                        .font(TextStyle.caption)
+                        .foregroundStyle(vm.reviewStatus == .reviewed ? SemanticColor.successText : AppSurface.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityAddTraits(.updatesFrequently)
                 }
             }
 

@@ -9,6 +9,10 @@ enum ReportStatus: String, Codable {
     case discarded
 }
 
+enum ReportReviewStatus: String, Codable {
+    case reviewed
+}
+
 struct Report: Identifiable, Codable, Hashable {
     let id: String
     var categoryCode: String
@@ -18,6 +22,9 @@ struct Report: Identifiable, Codable, Hashable {
     var consolidatedTranscript: String?
     var generatedOutput: String?
     var finalOutput: String?
+    var contentRevision: Int?
+    var reviewStatus: ReportReviewStatus?
+    var reviewedAt: Date?
     var createdAt: Date
     var updatedAt: Date
 

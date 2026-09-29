@@ -18,7 +18,7 @@ final class AIConsentPolicyTests: XCTestCase {
         for path in ["/api/generate", "/api/consultant", "/api/transcribe", "/api/analyze-image", "/api/deepgram/token", "api/generate/"] {
             XCTAssertTrue(AIConsentPolicy.requiresPermission(path: path), path)
         }
-        for path in ["/api/me/profile", "/api/reports/123", "/api/me/delete-account", "/api/iap/validate-receipt", "/api/sala/push"] {
+        for path in ["/api/me/profile", "/api/reports/123", "/api/reports/123/review", "/api/me/delete-account", "/api/iap/validate-receipt", "/api/sala/push"] {
             XCTAssertFalse(AIConsentPolicy.requiresPermission(path: path), path)
         }
     }
