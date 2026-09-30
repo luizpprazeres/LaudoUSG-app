@@ -910,7 +910,7 @@ struct GenerateView: View {
     private var hasVisualSchema: Bool {
         vm.category == .pelveFeminina
             || vm.category == .dopplerVenosoMmii
-            || vm.category == .dopplerVenosoMmiiMedidas
+            || (vm.category == .dopplerVenosoMmiiMedidas && vm.latestVenousScheme != nil)
     }
 
     private func openVisualSchema() {

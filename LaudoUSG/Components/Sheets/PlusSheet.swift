@@ -326,8 +326,8 @@ struct PlusSheet: View {
                 }
                 if showsVenousSchema {
                     calculatorRow(
-                        title: "Cartografia venosa (preview)",
-                        subtitle: "Esquema MMII bilateral com editor por chips",
+                        title: "Cartografia venosa",
+                        subtitle: "Mapa estruturado recebido com o laudo",
                         icon: "waveform.path",
                         tint: Color(hex: "F59E0B"),
                         destination: .venousSchema
@@ -430,11 +430,11 @@ struct PlusSheet: View {
         return !(reportText?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
     }
 
-    /// Cartografia venosa MMII — Step 1 ainda sem gate de laudo gerado
-    /// (será aplicado no Step 5). Visível pra Doppler venoso MMII (com/sem medidas).
+    /// O backend só emite o esquema para DOPPLER_VENOSO_MMII. Um laudo antigo
+    /// de medidas ainda pode abrir o mapa se tiver recebido o payload.
     private var showsVenousSchema: Bool {
         guard let c = categoryHint else { return false }
-        return c == .dopplerVenosoMmii || c == .dopplerVenosoMmiiMedidas
+        return c == .dopplerVenosoMmii || (c == .dopplerVenosoMmiiMedidas && venousScheme != nil)
     }
 
     private var consultorSection: some View {

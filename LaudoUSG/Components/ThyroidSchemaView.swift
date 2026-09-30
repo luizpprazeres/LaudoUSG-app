@@ -496,7 +496,7 @@ private struct LeftLobeShape: Shape {
 
 // MARK: - Marcadores (P&B uniformizado com mama)
 
-private struct ThyroidMarkerView: View {
+struct ThyroidMarkerView: View {
     let finding: ThyroidFinding
     let radius: CGFloat
     let scale: CGFloat

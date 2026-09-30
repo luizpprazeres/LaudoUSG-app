@@ -14,6 +14,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
     case obstetrica = "OBSTETRICA"
     case dopplerObstetrico = "DOPPLER_OBSTETRICO"
     case morfologico = "MORFOLOGICO"
+    case cervicometria = "CERVICOMETRIA"
     case musculoesqueletico = "MUSCULOESQUELETICO_V2"
     case musculoesqueleticoRaras = "MUSCULOESQUELETICO_RARAS"
     case escrotal = "ESCROTAL"
@@ -39,14 +40,15 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
 
     var id: String { rawValue }
 
-    /// Categorias que aparecem para o usuário escolher. Filtra as experimentais.
+    /// Categorias aprovadas para iniciar um exame novo. Códigos legados seguem
+    /// no enum para decodificar laudos já salvos, mesmo quando não são oferecidos.
     static var selectable: [ReportCategory] {
-        allCases.filter { !$0.isExperimental || AppExperiments.showTestCategory }
+        allCases.filter { !$0.isExperimental }
     }
 
-    /// Nenhuma categoria é experimental hoje. O mecanismo fica de pé porque a
-    /// próxima vai precisar dele — foi assim que a TESTE viveu escondida.
-    var isExperimental: Bool { false }
+    var isExperimental: Bool {
+        self == .abdomenTotalDoppler || self == .musculoesqueleticoRaras
+    }
 
     var label: String {
         switch self {
@@ -63,6 +65,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .obstetrica: return "Obstétrica"
         case .dopplerObstetrico: return "Doppler Obstétrico"
         case .morfologico: return "Morfológico"
+        case .cervicometria: return "Cervicometria"
         case .musculoesqueletico: return "Musculoesquelético"
         case .musculoesqueleticoRaras: return "Musculo raras"
         case .escrotal: return "Escrotal"
@@ -98,6 +101,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .obstetrica: return "USG obstétrico"
         case .dopplerObstetrico: return "Hemodinâmica fetal"
         case .morfologico: return "Anatomia fetal completa"
+        case .cervicometria: return "Colo uterino"
         case .musculoesqueletico: return "Articulações e partes moles"
         case .musculoesqueleticoRaras: return "Indicações raras"
         case .escrotal: return "Testículos, epidídimos"
@@ -127,7 +131,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .pelveFeminina: return "A855F7"
         case .obstetrica: return "EC4899"
         case .dopplerObstetrico: return "F97316"
-        case .morfologico: return "8B5CF6"
+        case .morfologico, .cervicometria: return "8B5CF6"
         case .musculoesqueletico, .musculoesqueleticoRaras: return "84CC16"
         case .escrotal, .regiaoInguinal, .paredeAbdominal, .partesMoles, .prostataTransretal, .prostataSuprapubica: return "10B981"
         case .transfontanela, .ocular: return "6366F1"
@@ -146,7 +150,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .cervical, .glandulasSalivares: return "person.crop.circle.badge.checkmark"
         case .mamaria: return "heart.text.square"
         case .pelveFeminina: return "figure.stand"
-        case .obstetrica, .dopplerObstetrico, .morfologico: return "figure.and.child.holdinghands"
+        case .obstetrica, .dopplerObstetrico, .morfologico, .cervicometria: return "figure.and.child.holdinghands"
         case .musculoesqueletico, .musculoesqueleticoRaras: return "figure.run"
         case .escrotal, .regiaoInguinal, .paredeAbdominal, .partesMoles: return "circle.dashed"
         case .prostataTransretal, .prostataSuprapubica: return "circle.grid.cross"
@@ -165,6 +169,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         .obstetrica,
         .dopplerObstetrico,
         .morfologico,
+        .cervicometria,
         .viasUrinarias,
         .musculoesqueletico,
         .dopplerCarotidas,

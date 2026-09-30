@@ -29,10 +29,11 @@ struct ThyroidSchemaSheet: View {
                     .foregroundStyle(AppSurface.textSecondary)
                     .padding(.horizontal, Spacing.md)
 
-                ThyroidSchemaView(findings: findings) { id, side, tercio in
+                ThyroidDualViewSchema(findings: findings) { id, side, tercio in
                     moveFinding(id: id, side: side, tercio: tercio)
                 }
                 .frame(maxWidth: .infinity)
+                .frame(height: 620)
                 .background(
                     RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
                         .fill(Color.white)

@@ -7,7 +7,8 @@ struct CategorySheet: View {
     @State private var search = ""
 
     private var priorityCategories: [ReportCategory] {
-        filtered(ReportCategory.priority)
+        let selectable = Set(ReportCategory.selectable)
+        return filtered(ReportCategory.priority.filter { selectable.contains($0) })
     }
 
     private var otherCategories: [ReportCategory] {

@@ -3,8 +3,7 @@ import UIKit
 
 /// Gera PDF (paisagem A4) e PNG (alta resolução) do esquema tireoidiano.
 /// Espelha `BreastSchemaExporter` — mesma estrutura, paisagem A4.
-/// O esquema é quadrado (480×480), então fica menor em proporção que o da mama;
-/// sobra mais espaço pra lista textual à direita.
+/// A prévia usa as mesmas vistas frontal e transversa da Web.
 @MainActor
 enum ThyroidSchemaExporter {
 
@@ -16,10 +15,9 @@ enum ThyroidSchemaExporter {
     // MARK: - PDF (paisagem)
 
     static func exportPDF(findings: [ThyroidFinding]) -> URL? {
-        // Esquema quadrado: altura limita o tamanho.
         let usableH: CGFloat = pageHeight - margin * 2 - 56  // header ocupa ~56pt
         let imgH = min(usableH, 500)
-        let imgW = imgH  // 1:1
+        let imgW = imgH
         let textColumnGap: CGFloat = 16
         let textColumnX = margin + imgW + textColumnGap
         let textColumnW = pageWidth - textColumnX - margin
@@ -27,7 +25,7 @@ enum ThyroidSchemaExporter {
         // Renderiza schema em UIImage high-DPI
         let schemaView = ZStack {
             Color.white
-            ThyroidSchemaView(findings: findings)
+            ThyroidDualViewSchema(findings: findings, forceWide: true)
                 .frame(width: imgW, height: imgH)
         }
         .frame(width: imgW, height: imgH)
@@ -77,7 +75,7 @@ enum ThyroidSchemaExporter {
         let size: CGFloat = 1024
         let view = ZStack {
             Color.white
-            ThyroidSchemaView(findings: findings)
+            ThyroidDualViewSchema(findings: findings, forceWide: true)
                 .frame(width: size, height: size)
         }
         .frame(width: size, height: size)
