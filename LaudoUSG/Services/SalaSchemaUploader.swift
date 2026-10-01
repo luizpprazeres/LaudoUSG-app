@@ -8,17 +8,13 @@ enum SalaSchemaUploader {
     private static let log = Logger(subsystem: "com.laudousg.LaudoUSG", category: "sala-schema")
 
     static func upload(
-        png: Data, pdf: Data?, examType: String, examLabel: String, reportId: String?
+        png: Data, pdf: Data?, examType: String, examLabel: String, reportId: String?,
+        myomaContract: MyomaSchemeContract? = nil
     ) async -> Bool {
-        var payload: [String: Any] = [
-            "examType": examType,
-            "examLabel": examLabel,
-            "png": png.base64EncodedString(),
-        ]
-        if let pdf { payload["pdf"] = pdf.base64EncodedString() }
-        if let reportId { payload["reportId"] = reportId }
-
-        guard let body = try? JSONSerialization.data(withJSONObject: payload) else { return false }
+        guard let body = try? makePayloadData(
+            png: png, pdf: pdf, examType: examType, examLabel: examLabel,
+            reportId: reportId, myomaContract: myomaContract
+        ) else { return false }
         do {
             let data = try await APIClient.shared.postRawJSON("/api/sala/push-schema", body: body)
             let s = String(data: data, encoding: .utf8) ?? ""
@@ -27,6 +23,26 @@ enum SalaSchemaUploader {
             log.error("upload de esquema falhou: \(error.localizedDescription)")
             return false
         }
+    }
+
+    static func makePayloadData(
+        png: Data, pdf: Data?, examType: String, examLabel: String, reportId: String?,
+        myomaContract: MyomaSchemeContract? = nil
+    ) throws -> Data {
+        var payload: [String: Any] = [
+            "examType": examType,
+            "examLabel": examLabel,
+            "png": png.base64EncodedString(),
+        ]
+        if let pdf { payload["pdf"] = pdf.base64EncodedString() }
+        if let reportId { payload["reportId"] = reportId }
+        if examType == MyomaSchemeContract.myomaExamType, let myomaContract {
+            let encoded = try JSONEncoder().encode(myomaContract)
+            let object = try JSONSerialization.jsonObject(with: encoded) as? [String: Any]
+            payload["contractVersion"] = object?["contractVersion"]
+            payload["findings"] = object?["findings"]
+        }
+        return try JSONSerialization.data(withJSONObject: payload)
     }
 
     /// Conveniência: lê os PNG/PDF de URLs temporárias (saída dos exporters).

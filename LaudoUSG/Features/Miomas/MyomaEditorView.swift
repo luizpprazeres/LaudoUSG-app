@@ -60,7 +60,12 @@ struct MyomaEditorScreen: View {
                 .foregroundStyle(.white)
                 .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color(hex: "0F9B6E")))
             }
-            .disabled(sending || myomas.isEmpty)
+            .disabled(sending || myomas.isEmpty || myomas.contains { $0.figo == nil })
+            if myomas.contains(where: { $0.figo == nil }) {
+                Text("Confirme a categoria FIGO de todos os nódulos antes de enviar.")
+                    .font(.footnote)
+                    .foregroundStyle(SemanticColor.warningText)
+            }
             if let r = sendResult {
                 Text(r).font(.footnote).foregroundStyle(.secondary)
             }
@@ -86,9 +91,9 @@ private struct MyomaRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Circle().fill(myoma.family.color).frame(width: 22, height: 22)
-                    .overlay(Text("\(myoma.figo)").font(.system(size: 12, weight: .bold)).foregroundStyle(.white))
-                Text(FigoCategory.all[myoma.figo].titulo)
+                Circle().fill(myoma.family?.color ?? Color.secondary).frame(width: 22, height: 22)
+                    .overlay(Text(myoma.figo.map(String.init) ?? "?").font(.system(size: 12, weight: .bold)).foregroundStyle(.white))
+                Text(myoma.figo.flatMap { value in FigoCategory.all.first(where: { $0.figo == value })?.titulo } ?? "Classificação pendente")
                     .font(.system(size: 14, weight: .semibold))
                 Spacer()
                 Button(role: .destructive, action: onDelete) {
@@ -98,8 +103,9 @@ private struct MyomaRow: View {
 
             // FIGO
             Picker("FIGO", selection: $myoma.figo) {
+                Text("Selecione a categoria FIGO").tag(Int?.none)
                 ForEach(FigoCategory.all) { c in
-                    Text("FIGO \(c.figo) — \(c.titulo)").tag(c.figo)
+                    Text("FIGO \(c.figo) — \(c.titulo)").tag(Int?.some(c.figo))
                 }
             }
             .pickerStyle(.menu)

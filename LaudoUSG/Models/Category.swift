@@ -28,8 +28,12 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
     case dopplerVenosoMmii = "DOPPLER_VENOSO_MMII"
     case dopplerVenosoMmiiMedidas = "DOPPLER_VENOSO_MMII_MEDIDAS"
     case dopplerArterialMmii = "DOPPLER_ARTERIAL_MMII"
+    case dopplerVenosoMmss = "DOPPLER_VENOSO_MMSS"
+    case dopplerArterialMmss = "DOPPLER_ARTERIAL_MMSS"
     case dopplerFistulaAv = "DOPPLER_FISTULA_AV"
     case dopplerRenal = "DOPPLER_RENAL"
+    case torax = "TORAX"
+    case quadrilInfantil = "QUADRIL_INFANTIL"
     case ocular = "OCULAR"
     /// Coringa: escreve com as regras gerais da casa, sem template de categoria.
     ///
@@ -43,11 +47,24 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
     /// Categorias aprovadas para iniciar um exame novo. Códigos legados seguem
     /// no enum para decodificar laudos já salvos, mesmo quando não são oferecidos.
     static var selectable: [ReportCategory] {
-        allCases.filter { !$0.isExperimental }
+        allCases.filter { !$0.isExperimental && !$0.isPendingClinicalActivation }
     }
 
     var isExperimental: Bool {
-        self == .abdomenTotalDoppler || self == .musculoesqueleticoRaras
+        self == .musculoesqueleticoRaras
+    }
+
+    /// Modelos aprovados clinicamente, mas ainda ocultos até Web, iOS, Android e
+    /// backend fecharem juntos os gates de integração. Os códigos permanecem no
+    /// enum para decodificar histórico e exercitar o contrato antes do lançamento.
+    var isPendingClinicalActivation: Bool {
+        switch self {
+        case .abdomenTotalDoppler, .dopplerVenosoMmss, .dopplerArterialMmss,
+             .torax, .quadrilInfantil:
+            return true
+        default:
+            return false
+        }
     }
 
     var label: String {
@@ -79,8 +96,12 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .dopplerVenosoMmii: return "Doppler Venoso MMII"
         case .dopplerVenosoMmiiMedidas: return "Doppler Venoso MMII (medidas)"
         case .dopplerArterialMmii: return "Doppler Arterial MMII"
+        case .dopplerVenosoMmss: return "Doppler Venoso MMSS"
+        case .dopplerArterialMmss: return "Doppler Arterial MMSS"
         case .dopplerFistulaAv: return "Doppler Fístula AV"
         case .dopplerRenal: return "Doppler Renal"
+        case .torax: return "Ultrassonografia de Tórax"
+        case .quadrilInfantil: return "Quadril infantil"
         case .ocular: return "Ocular"
         case .livre: return "Laudo Livre"
         }
@@ -115,8 +136,12 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .dopplerVenosoMmii: return "TVP/insuficiência"
         case .dopplerVenosoMmiiMedidas: return "Mapeamento venoso pré-op"
         case .dopplerArterialMmii: return "Doença arterial periférica"
+        case .dopplerVenosoMmss: return "Trombose, cateteres e refluxo quando testado"
+        case .dopplerArterialMmss: return "Estenoses e módulo de desfiladeiro torácico"
         case .dopplerFistulaAv: return "FAV para hemodiálise"
         case .dopplerRenal: return "Artérias renais"
+        case .torax: return "Pulmões, pleuras e derrames"
+        case .quadrilInfantil: return "Técnica de Graf · alerta fora de 0–6 meses"
         case .ocular: return "Globo ocular e órbita"
         case .livre: return "Qualquer exame, com as regras gerais da casa"
         }
@@ -134,8 +159,11 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .morfologico, .cervicometria: return "8B5CF6"
         case .musculoesqueletico, .musculoesqueleticoRaras: return "84CC16"
         case .escrotal, .regiaoInguinal, .paredeAbdominal, .partesMoles, .prostataTransretal, .prostataSuprapubica: return "10B981"
-        case .transfontanela, .ocular: return "6366F1"
-        case .dopplerCarotidas, .dopplerVenosoMmii, .dopplerVenosoMmiiMedidas, .dopplerArterialMmii, .dopplerFistulaAv, .dopplerRenal: return "F59E0B"
+        case .transfontanela, .quadrilInfantil, .ocular: return "6366F1"
+        case .dopplerCarotidas, .dopplerVenosoMmii, .dopplerVenosoMmiiMedidas,
+             .dopplerArterialMmii, .dopplerVenosoMmss, .dopplerArterialMmss,
+             .dopplerFistulaAv, .dopplerRenal: return "F59E0B"
+        case .torax: return "0EA5E9"
         case .livre: return "64748B"
         }
     }
@@ -155,9 +183,35 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .escrotal, .regiaoInguinal, .paredeAbdominal, .partesMoles: return "circle.dashed"
         case .prostataTransretal, .prostataSuprapubica: return "circle.grid.cross"
         case .transfontanela: return "brain.head.profile"
+        case .quadrilInfantil: return "figure.child"
+        case .torax: return "lungs"
         case .ocular: return "eye"
-        case .dopplerCarotidas, .dopplerVenosoMmii, .dopplerVenosoMmiiMedidas, .dopplerArterialMmii, .dopplerFistulaAv, .dopplerRenal: return "waveform.path.ecg"
+        case .dopplerCarotidas, .dopplerVenosoMmii, .dopplerVenosoMmiiMedidas,
+             .dopplerArterialMmii, .dopplerVenosoMmss, .dopplerArterialMmss,
+             .dopplerFistulaAv, .dopplerRenal: return "waveform.path.ecg"
         case .livre: return "text.badge.plus"
+        }
+    }
+
+    /// Linearts compartilhados com Web e Android. Categorias sem asset próprio
+    /// continuam usando o SF Symbol existente.
+    var lineartAssetName: String? {
+        switch self {
+        case .paredeAbdominal: return "CategoryParedeAbdominal"
+        case .prostataTransretal: return "CategoryProstataTransretal"
+        case .escrotal: return "CategoryEscrotal"
+        case .regiaoInguinal: return "CategoryRegiaoInguinal"
+        case .paratireoide: return "CategoryParatireoide"
+        case .glandulasSalivares: return "CategoryGlandulasSalivares"
+        case .dopplerVenosoMmii: return "CategoryDopplerVenosoMmii"
+        case .dopplerVenosoMmiiMedidas: return "CategoryDopplerVenosoMmiiMedidas"
+        case .dopplerArterialMmii: return "CategoryDopplerArterialMmii"
+        case .dopplerFistulaAv: return "CategoryDopplerFistulaAv"
+        case .dopplerRenal: return "CategoryDopplerRenal"
+        case .transfontanela: return "CategoryTransfontanela"
+        case .ocular: return "CategoryOcular"
+        case .livre: return "CategoryLivre"
+        default: return nil
         }
     }
 

@@ -117,10 +117,10 @@ enum MyomaCanvasRenderer {
     private static func drawMarker(_ ctx: GraphicsContext, _ f: MyomaFinding, _ center: CGPoint, _ s: CGFloat) {
         let r = (11 + (f.sizeMaxMm ?? 18) * 0.28) * s
         let rect = CGRect(x: center.x - r, y: center.y - r, width: 2 * r, height: 2 * r)
-        ctx.fill(Path(ellipseIn: rect), with: .color(f.family.color))
+        ctx.fill(Path(ellipseIn: rect), with: .color(f.family?.color ?? .gray))
         ctx.stroke(Path(ellipseIn: rect), with: .color(.white), lineWidth: 1.6 * s)
         ctx.draw(
-            Text("\(f.figo)").font(.system(size: r * 0.92, weight: .bold)).foregroundColor(.white),
+            Text(f.figo.map(String.init) ?? "?").font(.system(size: r * 0.92, weight: .bold)).foregroundColor(.white),
             at: center
         )
     }

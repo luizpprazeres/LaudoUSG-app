@@ -4,7 +4,7 @@ import Foundation
 /// gera o esquema automaticamente, igual mama/tireoide. O médico ajusta no editor.
 ///
 /// Estratégia: separa o laudo em blocos (frases) que descrevem um mioma; por
-/// bloco extrai FIGO (explícito "FIGO N" ou inferido do tipo), maior eixo,
+/// bloco extrai FIGO (explícito "FIGO N" ou anatomia totalmente unívoca), maior eixo,
 /// localização e ecotextura. Cruza FIGO da conclusão com a descrição por ordem.
 enum MyomaFindingsParser {
 
@@ -15,12 +15,12 @@ enum MyomaFindingsParser {
 
         var out: [MyomaFinding] = []
         for (i, b) in blocks.enumerated() {
-            let figo = figoInline(b) ?? figoFromType(b) ?? (i < explicit.count ? explicit[i] : 4)
+            let figo = figoInline(b) ?? (i < explicit.count ? explicit[i] : nil) ?? figoFromUnambiguousAnatomy(b)
             out.append(
                 MyomaFinding(
                     figo: figo,
                     sizeMaxMm: maxAxisMm(b),
-                    localizacao: location(b) ?? .anterior,
+                    localizacao: location(b) ?? .notInformed,
                     ecotextura: echo(b)
                 )
             )
@@ -84,15 +84,27 @@ enum MyomaFindingsParser {
         return nil
     }
 
-    /// Infere FIGO pelo tipo + modificadores (pediculado, ≥50%, contato endométrio).
-    private static func figoFromType(_ s: String) -> Int? {
+    /// Só converte uma descrição anatômica quando ela identifica uma categoria
+    /// FIGO sem ambiguidade. "Intramural", "submucoso" ou "subseroso" isolados
+    /// permanecem sem número até o médico confirmar no editor.
+    private static func figoFromUnambiguousAnatomy(_ s: String) -> Int? {
         let pediculado = match(#"pediculad"#, s)
-        let maior = match(#"≥\s*50|maior\s+que\s+50|>\s*50|predomin[âa]ncia\s+(extra|intra)"#, s)
         if match(#"cervical|do\s+colo"#, s) { return 8 }
-        if match(#"submucos"#, s) { return pediculado ? 0 : (maior ? 2 : 1) }
-        if match(#"subseros"#, s) { return pediculado ? 7 : (maior ? 5 : 6) }
+        if match(#"submucos"#, s) {
+            if pediculado { return 0 }
+            if match(#"(?:≥|>=|maior\s+(?:ou\s+igual\s+)?(?:a\s+)?|mais\s+de\s+)50\s*%\s*(?:do\s+componente\s+)?intramural"#, s) { return 2 }
+            if match(#"(?:<|menor\s+(?:que\s+)?|menos\s+de\s+)50\s*%\s*(?:do\s+componente\s+)?intramural"#, s) { return 1 }
+            return nil
+        }
+        if match(#"subseros"#, s) {
+            if pediculado { return 7 }
+            if match(#"(?:≥|>=|maior\s+(?:ou\s+igual\s+)?(?:a\s+)?|mais\s+de\s+)50\s*%\s*(?:do\s+componente\s+)?intramural"#, s) { return 5 }
+            if match(#"(?:<|menor\s+(?:que\s+)?|menos\s+de\s+)50\s*%\s*(?:do\s+componente\s+)?intramural"#, s) { return 6 }
+            return nil
+        }
         if match(#"intramural"#, s) {
-            return match(#"contato\s+com\s+(o\s+)?endom[ée]trio|toca\s+(a\s+)?cavidade|deformando\s+a\s+cavidade"#, s) ? 3 : 4
+            if match(#"100\s*%\s*intramural.*(?:contato\s+com\s+(?:o\s+)?endom[ée]trio|toca\s+(?:a\s+)?cavidade)"#, s) { return 3 }
+            if match(#"intramural\s+puro|sem\s+(?:contato\s+com\s+)?(?:endom[ée]trio|cavidade).*sem\s+(?:contato\s+com\s+)?serosa"#, s) { return 4 }
         }
         return nil
     }

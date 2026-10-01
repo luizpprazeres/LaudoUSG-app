@@ -109,14 +109,24 @@ struct CategorySheet: View {
             onDismiss()
         } label: {
             HStack(spacing: Spacing.sm) {
-                Image(systemName: category.iconSystemName)
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(category.tint)
-                    .frame(width: 40, height: 40)
-                    .background(
-                        RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
-                            .fill(category.tint.opacity(0.12))
-                    )
+                Group {
+                    if let assetName = category.lineartAssetName {
+                        Image(assetName)
+                            .renderingMode(.template)
+                            .resizable()
+                            .scaledToFit()
+                            .padding(5)
+                    } else {
+                        Image(systemName: category.iconSystemName)
+                            .font(.system(size: 18, weight: .semibold))
+                    }
+                }
+                .foregroundStyle(category.tint)
+                .frame(width: 40, height: 40)
+                .background(
+                    RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
+                        .fill(category.tint.opacity(0.08))
+                )
 
                 VStack(alignment: .leading, spacing: Spacing.xxs) {
                     Text(category.label)

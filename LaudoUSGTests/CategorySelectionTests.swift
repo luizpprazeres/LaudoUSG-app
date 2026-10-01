@@ -24,10 +24,41 @@ final class CategorySelectionTests: XCTestCase {
     }
 
     func testHiddenCodesStillDecodeForSavedReports() throws {
-        for category in [ReportCategory.abdomenTotalDoppler, .musculoesqueleticoRaras] {
+        for category in [
+            ReportCategory.abdomenTotalDoppler,
+            .dopplerVenosoMmss,
+            .dopplerArterialMmss,
+            .torax,
+            .quadrilInfantil,
+            .musculoesqueleticoRaras,
+        ] {
             XCTAssertEqual(ReportCategory(rawValue: category.rawValue), category)
             let decoded = try JSONDecoder().decode(ReportCategory.self, from: Data("\"\(category.rawValue)\"".utf8))
             XCTAssertEqual(decoded, category)
+        }
+    }
+
+    func testApprovedPendingModelsRemainHiddenUntilSimultaneousActivation() {
+        let pending = Set(ReportCategory.allCases.filter(\.isPendingClinicalActivation))
+        XCTAssertEqual(pending, PendingClinicalModelContracts.categories)
+        XCTAssertTrue(pending.isDisjoint(with: Set(ReportCategory.selectable)))
+        XCTAssertEqual(
+            Set(pending.map(\.rawValue)),
+            [
+                "ABDOMEN_TOTAL_DOPPLER",
+                "DOPPLER_VENOSO_MMSS",
+                "DOPPLER_ARTERIAL_MMSS",
+                "TORAX",
+                "QUADRIL_INFANTIL",
+            ]
+        )
+    }
+
+    func testPendingModelsEncodeCanonicalBackendCodes() throws {
+        for category in PendingClinicalModelContracts.categories {
+            let request = GenerateRequest(rawInput: "Caso sintético", categoryHint: category)
+            let json = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder.api.encode(request)) as? [String: Any])
+            XCTAssertEqual(json["category_hint"] as? String, category.rawValue)
         }
     }
 

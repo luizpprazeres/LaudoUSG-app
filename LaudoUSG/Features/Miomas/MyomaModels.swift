@@ -45,13 +45,15 @@ struct FigoCategory: Identifiable {
         .init(figo: 8, family: .outros,     titulo: "Localização atípica",       descricao: "Cervical, ligamento largo, parasitário"),
     ]
 
-    static func family(_ figo: Int) -> FigoFamily {
-        all.first { $0.figo == figo }?.family ?? .outros
+    static func family(_ figo: Int?) -> FigoFamily? {
+        guard let figo else { return nil }
+        return all.first { $0.figo == figo }?.family
     }
 }
 
 /// Localização do mioma na parede uterina.
 enum MyomaLocation: String, CaseIterable, Identifiable {
+    case notInformed = "Não informada"
     case anterior = "Anterior"
     case posterior = "Posterior"
     case lateralDireita = "Lateral direita"
@@ -63,6 +65,7 @@ enum MyomaLocation: String, CaseIterable, Identifiable {
     /// Posição canônica na visão TRANSVERSAL (ref 560×400).
     var axPoint: CGPoint {
         switch self {
+        case .notInformed:     return CGPoint(x: 280, y: 200)
         case .anterior:        return CGPoint(x: 280, y: 150)
         case .posterior:       return CGPoint(x: 280, y: 252)
         case .lateralDireita:  return CGPoint(x: 420, y: 188)
@@ -85,15 +88,18 @@ enum MyomaEcho: String, CaseIterable, Identifiable {
 /// Achado de mioma — modelo do editor (Step 2).
 struct MyomaFinding: Identifiable {
     let id = UUID()
-    var figo: Int = 4
-    var sizeMaxMm: Double? = 20
-    var localizacao: MyomaLocation = .anterior
+    /// `nil` é intencional: o editor não pode transformar "intramural" genérico
+    /// em FIGO 4. A classificação numérica só nasce de dado explícito ou da
+    /// confirmação manual do médico.
+    var figo: Int? = nil
+    var sizeMaxMm: Double? = nil
+    var localizacao: MyomaLocation = .notInformed
     var ecotextura: MyomaEcho? = nil
     /// Override explícito de posição (Step 3 = drag); senão usa o canônico.
     var sagPoint: CGPoint? = nil
     var axPoint: CGPoint? = nil
 
-    var family: FigoFamily { FigoCategory.family(figo) }
+    var family: FigoFamily? { FigoCategory.family(figo) }
 
     /// Posição na visão LONGITUDINAL — canônica por FIGO (ref 420×520, vertical).
     var canonicalSag: CGPoint { FigoLayout.sagPoint(figo) }
@@ -103,7 +109,7 @@ struct MyomaFinding: Identifiable {
 
 /// Posições canônicas dos FIGO 0–8 na visão longitudinal (coords do mockup).
 enum FigoLayout {
-    static func sagPoint(_ figo: Int) -> CGPoint {
+    static func sagPoint(_ figo: Int?) -> CGPoint {
         switch figo {
         case 0: return CGPoint(x: 208, y: 236)
         case 1: return CGPoint(x: 176, y: 250)
@@ -113,7 +119,8 @@ enum FigoLayout {
         case 5: return CGPoint(x: 120, y: 210)
         case 6: return CGPoint(x: 304, y: 168)
         case 7: return CGPoint(x: 360, y: 108)
-        default: return CGPoint(x: 232, y: 440)   // 8 — cervical
+        case 8: return CGPoint(x: 232, y: 440)
+        default: return CGPoint(x: 210, y: 286)   // classificação pendente
         }
     }
 }

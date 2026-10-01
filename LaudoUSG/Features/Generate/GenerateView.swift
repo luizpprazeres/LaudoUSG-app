@@ -70,7 +70,15 @@ struct GenerateView: View {
         }
     }
 
+    @ViewBuilder
     private var content: some View {
+        if vm.category.isPendingClinicalActivation {
+            ClinicalModelWorkspace(
+                category: vm.category,
+                writingStyleId: app.defaultWritingStyleId
+            )
+            .id(vm.category.rawValue)
+        } else {
         ZStack(alignment: .bottom) {
             AppSurface.background.ignoresSafeArea()
 
@@ -287,6 +295,7 @@ struct GenerateView: View {
                 )
                 .transition(.opacity)
             }
+        }
         }
     }
 

@@ -111,10 +111,13 @@ enum MyomaSchemaExporter {
 @MainActor
 enum MyomaSchemaSender {
     static func send(findings: [MyomaFinding], examLabel: String, reportId: String?) async -> Bool {
+        let contract = MyomaSchemeContract(editorFindings: findings)
+        guard !contract.findings.isEmpty, contract.activationIssues.isEmpty else { return false }
         guard let png = MyomaSchemaExporter.renderPNG(findings) else { return false }
         let pdf = MyomaSchemaExporter.renderPDF(findings)
         return await SalaSchemaUploader.upload(
-            png: png, pdf: pdf, examType: "MIOMAS", examLabel: examLabel, reportId: reportId
+            png: png, pdf: pdf, examType: "MIOMAS", examLabel: examLabel,
+            reportId: reportId, myomaContract: contract
         )
     }
 }
