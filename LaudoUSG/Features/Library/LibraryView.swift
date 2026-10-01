@@ -435,7 +435,8 @@ struct LibraryView: View {
     }
 
     private var rotuloAtual: String {
-        categorias.first(where: { $0.categoria == categoria })?.rotulo ?? categoria
+        categorias.first(where: { $0.categoria == categoria })?.rotulo
+            ?? ReportCategory.displayLabel(for: categoria)
     }
 
     private var conteudo: some View {

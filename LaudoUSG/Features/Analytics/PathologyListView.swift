@@ -89,7 +89,7 @@ struct PathologyListView: View {
     }
 
     private func categoryLabel(for code: String) -> String {
-        ReportCategory(rawValue: code)?.label ?? code
+        ReportCategory.displayLabel(for: code)
     }
 }
 

@@ -368,7 +368,7 @@ struct HistoryView: View {
 
             VStack(alignment: .leading, spacing: Spacing.xxs) {
                 HStack {
-                    Text(category?.label ?? report.categoryCode)
+                    Text(category?.label ?? ReportCategory.displayLabel(for: report.categoryCode))
                         .font(TextStyle.bodyLargeSemibold)
                         .foregroundStyle(AppSurface.textPrimary)
                     Spacer()

@@ -494,7 +494,7 @@ struct ReportDetailView: View {
 
     private var metaTab: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            row("Categoria", vm.report?.category?.label ?? vm.report?.categoryCode ?? "—")
+            row("Categoria", ReportCategory.displayLabel(for: vm.report?.categoryCode))
             row("Status", vm.report?.status.rawValue ?? "—")
             row("Criado", formatted(vm.report?.createdAt))
             row("Atualizado", formatted(vm.report?.updatedAt))

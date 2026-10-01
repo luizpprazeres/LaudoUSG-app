@@ -302,7 +302,7 @@ struct SettingsView: View {
     }
 
     private func categoryLabel(_ code: String) -> String {
-        ReportCategory(rawValue: code)?.label ?? code
+        ReportCategory.displayLabel(for: code)
     }
 
     private func variantRow(categoryCode: String, variants: [ReportTemplateVariantRecord]) -> some View {

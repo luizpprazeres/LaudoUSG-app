@@ -175,7 +175,7 @@ private struct DayData {
         case .viasUrinarias: return "Vias urin."
         case .musculoesqueletico, .musculoesqueleticoRaras: return "Músculo"
         case let category?: return category.label
-        case nil: return code
+        case nil: return ReportCategory.displayLabel(for: code)
         }
     }
 }

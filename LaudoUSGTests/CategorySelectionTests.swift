@@ -2,6 +2,16 @@ import XCTest
 @testable import LaudoUSG
 
 final class CategorySelectionTests: XCTestCase {
+    func testPersistedCodesAlwaysReceiveHumanLabels() {
+        XCTAssertEqual(ReportCategory.displayLabel(for: "PAREDE_ABDOMINAL"), "Parede abdominal")
+        XCTAssertEqual(
+            ReportCategory.displayLabel(for: "DOPPLER_VENOSO_MMSS"),
+            "Doppler venoso de membros superiores"
+        )
+        XCTAssertEqual(ReportCategory.displayLabel(for: "NOVA_CATEGORIA_MMII"), "Nova categoria MMII")
+        XCTAssertEqual(ReportCategory.displayLabel(for: nil), "Categoria não informada")
+    }
+
     func testSelectableCategoriesAreExactlyTheApprovedIOSSet() {
         let expected: Set<String> = [
             "ABDOMEN_TOTAL", "ABDOMEN_SUPERIOR", "VIAS_URINARIAS", "TIREOIDE",

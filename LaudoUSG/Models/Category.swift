@@ -69,42 +69,64 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
 
     var label: String {
         switch self {
-        case .abdomenTotal: return "Abdome Total"
-        case .abdomenTotalDoppler: return "Abdome Total c/ Doppler"
-        case .abdomenSuperior: return "Abdome Superior"
-        case .viasUrinarias: return "Vias Urinárias"
+        case .abdomenTotal: return "Abdome total"
+        case .abdomenTotalDoppler: return "Abdome total com Doppler"
+        case .abdomenSuperior: return "Abdome superior"
+        case .viasUrinarias: return "Vias urinárias"
         case .tireoide: return "Tireoide"
         case .paratireoide: return "Paratireoides"
         case .cervical: return "Cervical"
-        case .glandulasSalivares: return "Glândulas Salivares"
+        case .glandulasSalivares: return "Glândulas salivares"
         case .mamaria: return "Mamas e axilas"
-        case .pelveFeminina: return "Pelve Feminina"
+        case .pelveFeminina: return "Pelve feminina"
         case .obstetrica: return "Obstétrica"
-        case .dopplerObstetrico: return "Doppler Obstétrico"
+        case .dopplerObstetrico: return "Doppler obstétrico"
         case .morfologico: return "Morfológico"
         case .cervicometria: return "Cervicometria"
         case .musculoesqueletico: return "Musculoesquelético"
-        case .musculoesqueleticoRaras: return "Musculo raras"
+        case .musculoesqueleticoRaras: return "Musculoesquelético — raras"
         case .escrotal: return "Escrotal"
-        case .regiaoInguinal: return "Região Inguinal"
-        case .paredeAbdominal: return "Parede Abdominal"
-        case .partesMoles: return "Partes Moles"
-        case .prostataTransretal: return "Próstata Transretal"
-        case .prostataSuprapubica: return "Próstata Suprapúbica"
+        case .regiaoInguinal: return "Região inguinal"
+        case .paredeAbdominal: return "Parede abdominal"
+        case .partesMoles: return "Partes moles"
+        case .prostataTransretal: return "Próstata transretal"
+        case .prostataSuprapubica: return "Próstata suprapúbica"
         case .transfontanela: return "Transfontanela"
-        case .dopplerCarotidas: return "Doppler Carótidas"
-        case .dopplerVenosoMmii: return "Doppler Venoso MMII"
-        case .dopplerVenosoMmiiMedidas: return "Doppler Venoso MMII (medidas)"
-        case .dopplerArterialMmii: return "Doppler Arterial MMII"
-        case .dopplerVenosoMmss: return "Doppler Venoso MMSS"
-        case .dopplerArterialMmss: return "Doppler Arterial MMSS"
-        case .dopplerFistulaAv: return "Doppler Fístula AV"
-        case .dopplerRenal: return "Doppler Renal"
-        case .torax: return "Ultrassonografia de Tórax"
+        case .dopplerCarotidas: return "Doppler de carótidas e vertebrais"
+        case .dopplerVenosoMmii: return "Doppler venoso de membros inferiores"
+        case .dopplerVenosoMmiiMedidas: return "Doppler venoso de membros inferiores — completo"
+        case .dopplerArterialMmii: return "Doppler arterial de membros inferiores"
+        case .dopplerVenosoMmss: return "Doppler venoso de membros superiores"
+        case .dopplerArterialMmss: return "Doppler arterial de membros superiores"
+        case .dopplerFistulaAv: return "Doppler de fístula arteriovenosa"
+        case .dopplerRenal: return "Doppler renal"
+        case .torax: return "Ultrassonografia de tórax"
         case .quadrilInfantil: return "Quadril infantil"
         case .ocular: return "Ocular"
-        case .livre: return "Laudo Livre"
+        case .livre: return "Laudo livre"
         }
+    }
+
+    /// Converte o código persistido em texto de interface. Categorias antigas
+    /// ou recém-criadas também recebem um fallback legível, sem sublinhados.
+    static func displayLabel(for code: String?) -> String {
+        guard let normalized = code?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !normalized.isEmpty else { return "Categoria não informada" }
+        if let category = ReportCategory(rawValue: normalized) { return category.label }
+        if normalized == "ABDOMEN_TOTAL__PROSTATA_SUPRAPUBICA" {
+            return "Abdome total + Próstata suprapúbica"
+        }
+        if normalized == "MAMARIA__PELVE_FEMININA" {
+            return "Mamas e axilas + Pelve feminina"
+        }
+
+        let acronyms: Set<String> = ["AV", "MMII", "MMSS", "USG", "BI", "RADS"]
+        return normalized.split(separator: "_").enumerated().map { index, token in
+            let upper = token.uppercased()
+            if acronyms.contains(upper) { return upper }
+            let lower = token.lowercased()
+            return index == 0 ? lower.prefix(1).uppercased() + String(lower.dropFirst()) : lower
+        }.joined(separator: " ")
     }
 
     var subtitle: String {
