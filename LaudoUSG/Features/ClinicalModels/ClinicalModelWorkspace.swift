@@ -199,15 +199,11 @@ private struct AbdomenClinicalEditor: View {
                 get: { value.portalVein.flow },
                 set: { var copy = value; copy.portalVein.flow = $0; onChange(copy) }
             )) {
-                Text("Selecione").tag(AbdomenTotalDopplerDraft.FlowDirection?.none)
-                Text("Hepatopetal").tag(AbdomenTotalDopplerDraft.FlowDirection?.some(.hepatopetal))
-                Text("Hepatofugal").tag(AbdomenTotalDopplerDraft.FlowDirection?.some(.hepatofugal))
-                Text("Ausente").tag(AbdomenTotalDopplerDraft.FlowDirection?.some(.absent))
-                Text("Outro").tag(AbdomenTotalDopplerDraft.FlowDirection?.some(.other))
+                flowOptions(expected: .hepatopetal)
             }
             Picker("Situação portal", selection: Binding(
                 get: { value.portalPathology.status },
-                set: { var copy = value; copy.portalPathology.status = $0; onChange(copy) }
+                set: { var copy = value; copy.portalPathology = value.portalPathology.settingStatus($0); onChange(copy) }
             )) {
                 Text("Ausente").tag(AbdomenTotalDopplerDraft.PortalStatus.absent)
                 Text("Suspeita").tag(AbdomenTotalDopplerDraft.PortalStatus.suspected)
@@ -233,16 +229,16 @@ private struct AbdomenClinicalEditor: View {
                 ))
             }
             DisclosureGroup("Vasos opcionais") {
-                optionalVessel("Veias hepáticas", value.hepaticVeins) {
+                optionalVessel("Veias hepáticas", expected: .hepatofugal, value.hepaticVeins) {
                     var copy = value; copy.hepaticVeins = $0; onChange(copy)
                 }
-                optionalVessel("Veia esplênica", value.splenicVein) {
+                optionalVessel("Veia esplênica", expected: .hepatopetal, value.splenicVein) {
                     var copy = value; copy.splenicVein = $0; onChange(copy)
                 }
-                optionalVessel("Veia mesentérica superior", value.superiorMesentericVein) {
+                optionalVessel("Veia mesentérica superior", expected: .hepatopetal, value.superiorMesentericVein) {
                     var copy = value; copy.superiorMesentericVein = $0; onChange(copy)
                 }
-                optionalVessel("Artéria hepática comum", value.commonHepaticArtery) {
+                optionalVessel("Artéria hepática comum", expected: .hepatopetal, value.commonHepaticArtery) {
                     var copy = value; copy.commonHepaticArtery = $0; onChange(copy)
                 }
             }
@@ -251,6 +247,7 @@ private struct AbdomenClinicalEditor: View {
 
     private func optionalVessel(
         _ label: String,
+        expected: AbdomenTotalDopplerDraft.FlowDirection,
         _ vessel: AbdomenTotalDopplerDraft.OptionalVessel,
         change: @escaping (AbdomenTotalDopplerDraft.OptionalVessel) -> Void
     ) -> some View {
@@ -269,14 +266,22 @@ private struct AbdomenClinicalEditor: View {
                     get: { vessel.flow },
                     set: { var copy = vessel; copy.flow = $0; change(copy) }
                 )) {
-                    Text("Selecione").tag(AbdomenTotalDopplerDraft.FlowDirection?.none)
-                    Text("Hepatopetal").tag(AbdomenTotalDopplerDraft.FlowDirection?.some(.hepatopetal))
-                    Text("Hepatofugal").tag(AbdomenTotalDopplerDraft.FlowDirection?.some(.hepatofugal))
-                    Text("Ausente").tag(AbdomenTotalDopplerDraft.FlowDirection?.some(.absent))
-                    Text("Outro").tag(AbdomenTotalDopplerDraft.FlowDirection?.some(.other))
+                    flowOptions(expected: expected)
                 }
             }
         }
+    }
+
+    /// Sem valor pré-selecionado; a direção fisiológica do vaso fica indicada.
+    @ViewBuilder
+    private func flowOptions(expected: AbdomenTotalDopplerDraft.FlowDirection) -> some View {
+        Text("Selecione").tag(AbdomenTotalDopplerDraft.FlowDirection?.none)
+        Text(expected == .hepatopetal ? "Hepatopetal (fisiológico)" : "Hepatopetal")
+            .tag(AbdomenTotalDopplerDraft.FlowDirection?.some(.hepatopetal))
+        Text(expected == .hepatofugal ? "Hepatofugal (fisiológico)" : "Hepatofugal")
+            .tag(AbdomenTotalDopplerDraft.FlowDirection?.some(.hepatofugal))
+        Text("Ausente").tag(AbdomenTotalDopplerDraft.FlowDirection?.some(.absent))
+        Text("Outro").tag(AbdomenTotalDopplerDraft.FlowDirection?.some(.other))
     }
 
     private func binding(_ keyPath: WritableKeyPath<AbdomenTotalDopplerDraft, String>) -> Binding<String> {

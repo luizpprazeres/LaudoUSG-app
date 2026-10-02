@@ -70,6 +70,43 @@ final class ClinicalModelsSharedParityTests: XCTestCase {
         return "sem diferença"
     }
 
+    /// Conclusão normal (situação portal ausente) só com fluxo fisiológico:
+    /// veias hepáticas hepatofugais; porta, esplênica, mesentérica e artéria
+    /// hepática hepatopetais. Vale para a fixture do servidor e para o iOS.
+    func testNoNormalCaseAcceptsNonPhysiologicalFlow() throws {
+        let (fixture, inputs) = try loadFixture()
+        let expected = Dictionary(uniqueKeysWithValues: AbdomenTotalDopplerDraft.physiologicalFlow.map { ($0.field, $0.expected) })
+        XCTAssertEqual(expected["hepaticVeins"], .hepatofugal)
+        XCTAssertEqual(Set(expected.filter { $0.value == .hepatopetal }.keys), ["portalVein", "splenicVein", "superiorMesentericVein", "commonHepaticArtery"])
+
+        var sawPhysiologicalHepaticVeins = false
+        var sawHepatopetalHepaticVeinsBlocked = false
+        for (expectedCase, input) in zip(fixture.cases, inputs) {
+            let draft = try JSONDecoder().decode(ClinicalModelDraft.self, from: JSONSerialization.data(withJSONObject: input))
+            guard case .abdomen(let abdomen) = draft, abdomen.portalPathology.status == .absent else { continue }
+            let nonPhysiological = abdomen.evaluatedFlows.contains { field, flow in
+                flow != nil && flow != expected[field]
+            }
+            if nonPhysiological {
+                XCTAssertFalse(expectedCase.success, "\(expectedCase.name): o servidor aceitou fluxo não fisiológico como normal")
+                XCTAssertTrue(draft.previewIssues.contains { $0.code == "ABNORMAL_FLOW_WITHOUT_PORTAL_FINDING" }, expectedCase.name)
+            }
+            if expectedCase.success, abdomen.hepaticVeins.evaluated { sawPhysiologicalHepaticVeins = abdomen.hepaticVeins.flow == .hepatofugal }
+            if abdomen.hepaticVeins.evaluated, abdomen.hepaticVeins.flow == .hepatopetal { sawHepatopetalHepaticVeinsBlocked = !expectedCase.success }
+        }
+        XCTAssertTrue(sawPhysiologicalHepaticVeins, "a fixture precisa de um caso normal com veias hepáticas hepatofugais")
+        XCTAssertTrue(sawHepatopetalHepaticVeinsBlocked, "a fixture precisa de veias hepáticas hepatopetais bloqueadas")
+
+        for category in PendingClinicalModelContracts.categories {
+            guard case .abdomen(let abdomen)? = ClinicalModelDraft.empty(for: category) else { continue }
+            XCTAssertNil(abdomen.portalVein.flow, "o rascunho inicial não pré-seleciona direção de fluxo")
+            for vessel in [abdomen.hepaticVeins, abdomen.splenicVein, abdomen.superiorMesentericVein, abdomen.commonHepaticArtery] {
+                XCTAssertFalse(vessel.evaluated)
+                XCTAssertNil(vessel.flow)
+            }
+        }
+    }
+
     func testAbdomenBaseTextMatchesApprovedSharedDefault() throws {
         let (fixture, _) = try loadFixture()
         XCTAssertEqual(AbdomenTotalDopplerDraft.normalAbdomenReport, fixture.normalAbdomenReport)
@@ -169,6 +206,45 @@ final class ClinicalModelsIOSPreparationTests: XCTestCase {
         draft.right.alphaDeg = 63
         draft.ageDays = nil
         XCTAssertNil(draft.reconcilingGrafConfirmation().right.grafClassification)
+    }
+
+    func testPortalStatusBackToAbsentClearsHiddenFindingFields() {
+        let finding = AbdomenTotalDopplerDraft.PortalPathology(
+            status: .confirmed, kind: .portalThrombosis, evidence: "Material ecogênico intraluminal", physicianConfirmed: true
+        )
+        XCTAssertEqual(finding.settingStatus(.suspected).kind, .portalThrombosis)
+        XCTAssertEqual(finding.settingStatus(.suspected).evidence, "Material ecogênico intraluminal")
+        XCTAssertEqual(
+            finding.settingStatus(.absent),
+            .init(status: .absent, kind: nil, evidence: nil, physicianConfirmed: false)
+        )
+
+        guard case .abdomen(var abdomen)? = ClinicalModelDraft.empty(for: .abdomenTotalDoppler) else { return XCTFail() }
+        abdomen.portalVein = .init(caliberCm: 1.1, velocityCms: 22, flow: .hepatopetal)
+        abdomen.portalPathology = .init(status: .absent, kind: .portalThrombosis, evidence: nil, physicianConfirmed: false)
+        XCTAssertTrue(abdomen.activationIssues.contains { $0.code == "PORTAL_FINDING_STATUS_MISMATCH" })
+        abdomen.portalPathology = abdomen.portalPathology.settingStatus(.absent)
+        XCTAssertFalse(abdomen.activationIssues.contains { $0.code == "PORTAL_FINDING_STATUS_MISMATCH" })
+    }
+
+    func testStaleFlowOfUnevaluatedVesselDoesNotBlock() {
+        guard case .abdomen(var abdomen)? = ClinicalModelDraft.empty(for: .abdomenTotalDoppler) else { return XCTFail() }
+        abdomen.portalVein = .init(caliberCm: 1.1, velocityCms: 22, flow: .hepatopetal)
+        abdomen.hepaticVeins = .init(evaluated: false, caliberCm: nil, velocityCms: nil, flow: .hepatopetal)
+        XCTAssertFalse(abdomen.activationIssues.contains { $0.code == "ABNORMAL_FLOW_WITHOUT_PORTAL_FINDING" })
+        abdomen.hepaticVeins.evaluated = true
+        abdomen.hepaticVeins.caliberCm = 0.7
+        abdomen.hepaticVeins.velocityCms = 25
+        XCTAssertEqual(abdomen.activationIssues.filter { $0.code == "ABNORMAL_FLOW_WITHOUT_PORTAL_FINDING" }.map(\.field), ["hepaticVeins.flow"])
+        abdomen.hepaticVeins.flow = .hepatofugal
+        XCTAssertFalse(abdomen.activationIssues.contains { $0.code == "ABNORMAL_FLOW_WITHOUT_PORTAL_FINDING" })
+    }
+
+    func testSentenceKeepsSingleFinalPeriod() {
+        XCTAssertEqual(ClinicalModelReportRenderer.sentence("Fluxo monofásico."), "Fluxo monofásico.")
+        XCTAssertEqual(ClinicalModelReportRenderer.sentence(" Fluxo monofásico;  \n"), "Fluxo monofásico.")
+        XCTAssertEqual(ClinicalModelReportRenderer.sentence("reenchimento distal..."), "reenchimento distal.")
+        XCTAssertEqual(ClinicalModelReportRenderer.sentence("sem pontuação"), "sem pontuação.")
     }
 
     func testThrombosisPhaseClearsWhenThrombosisIsRemoved() {

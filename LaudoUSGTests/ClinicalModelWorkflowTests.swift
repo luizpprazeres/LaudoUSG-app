@@ -80,7 +80,7 @@ final class ClinicalModelWorkflowTests: XCTestCase {
               case .arterial(var arterial) = ClinicalModelDraft.empty(for: .dopplerArterialMmss) else {
             return XCTFail("Rascunhos ausentes")
         }
-        abdomen.hepaticVeins = .init(evaluated: false, caliberCm: 1, velocityCms: 2, flow: .hepatopetal)
+        abdomen.hepaticVeins = .init(evaluated: false, caliberCm: 1, velocityCms: 2, flow: .hepatofugal)
         arterial.right.thoracicOutlet = .init(
             evaluated: false, maneuvers: "Adson", positions: "Abdução",
             result: .positive, physicianConfirmed: true

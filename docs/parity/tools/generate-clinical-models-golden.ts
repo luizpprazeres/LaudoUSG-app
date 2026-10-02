@@ -28,7 +28,7 @@ const byName = (n: string) => clone(reviewCases.find((c: any) => c.name === n)!.
 const extra: { name: string; input: any }[] = [];
 
 { const a = byName("ABDOMEN_TOTAL_DOPPLER:normal");
-  a.hepaticVeins = { evaluated: true, caliberCm: 0.8, velocityCms: 30, flow: "hepatopetal" };
+  a.hepaticVeins = { evaluated: true, caliberCm: 0.8, velocityCms: 30, flow: "hepatofugal" };
   a.superiorMesentericVein = { evaluated: true, caliberCm: 0.9, velocityCms: 18.5, flow: "hepatopetal" };
   a.portalVein.flow = "ausente";
   a.portalPathology = { status: "confirmed", kind: "portal_thrombosis", evidence: "Material ecogênico intraluminal e ausência de fluxo ao Doppler", physicianConfirmed: true };
@@ -43,6 +43,49 @@ const extra: { name: string; input: any }[] = [];
   extra.push({ name: "ABDOMEN_TOTAL_DOPPLER:block-incomplete-vessels", input: a }); }
 { const a = byName("ABDOMEN_TOTAL_DOPPLER:altered"); a.portalPathology = { status: "suspected", kind: "portal_hypertension", physicianConfirmed: false };
   extra.push({ name: "ABDOMEN_TOTAL_DOPPLER:block-portal-unconfirmed", input: a }); }
+
+// Regras portais de 2399a23: fluxo anormal com situação ausente e status incoerente.
+// Fisiologia: veias hepáticas drenam para a cava (hepatofugal); demais vasos hepatopetais.
+const evaluatedVessel = (flow: string) => ({ evaluated: true, caliberCm: 0.6, velocityCms: 18, flow });
+for (const [key, flow] of [
+  ["portalVein", "ausente"], ["portalVein", "outro"], ["portalVein", "hepatofugal"],
+  ["hepaticVeins", "ausente"], ["hepaticVeins", "outro"],
+  ["splenicVein", "hepatofugal"], ["splenicVein", "ausente"],
+  ["superiorMesentericVein", "hepatofugal"], ["commonHepaticArtery", "hepatofugal"],
+] as const) {
+  const a = byName("ABDOMEN_TOTAL_DOPPLER:normal");
+  if (key === "portalVein") a.portalVein.flow = flow; else a[key] = evaluatedVessel(flow);
+  extra.push({ name: `ABDOMEN_TOTAL_DOPPLER:block-abnormal-${key}-${flow}`, input: a });
+  const resolved = clone(a);
+  resolved.portalPathology = { status: "suspected", kind: "other", evidence: "Alteração de fluxo descrita pelo médico", physicianConfirmed: true };
+  extra.push({ name: `ABDOMEN_TOTAL_DOPPLER:resolved-${key}-${flow}`, input: resolved });
+}
+{ const a = byName("ABDOMEN_TOTAL_DOPPLER:normal");
+  a.hepaticVeins = evaluatedVessel("hepatofugal");
+  a.splenicVein = evaluatedVessel("hepatopetal");
+  a.superiorMesentericVein = evaluatedVessel("hepatopetal");
+  a.commonHepaticArtery = evaluatedVessel("hepatopetal");
+  extra.push({ name: "ABDOMEN_TOTAL_DOPPLER:normal-all-vessels-physiological", input: a }); }
+{ const a = byName("ABDOMEN_TOTAL_DOPPLER:normal");
+  a.hepaticVeins = evaluatedVessel("hepatopetal");
+  extra.push({ name: "ABDOMEN_TOTAL_DOPPLER:hepatic-veins-hepatopetal-absent", input: a }); }
+{ const a = byName("ABDOMEN_TOTAL_DOPPLER:normal");
+  a.portalPathology = { status: "absent", kind: "portal_thrombosis", physicianConfirmed: false };
+  extra.push({ name: "ABDOMEN_TOTAL_DOPPLER:block-mismatch-kind", input: a }); }
+{ const a = byName("ABDOMEN_TOTAL_DOPPLER:normal");
+  a.portalPathology = { status: "absent", physicianConfirmed: true };
+  extra.push({ name: "ABDOMEN_TOTAL_DOPPLER:block-mismatch-confirmed", input: a }); }
+{ const a = byName("ABDOMEN_TOTAL_DOPPLER:normal");
+  a.portalPathology = { status: "absent", evidence: "Critério antigo", physicianConfirmed: false };
+  extra.push({ name: "ABDOMEN_TOTAL_DOPPLER:block-mismatch-evidence", input: a }); }
+{ const a = byName("ABDOMEN_TOTAL_DOPPLER:normal");
+  a.portalVein.flow = "outro";
+  a.portalPathology = { status: "suspected", kind: "other", evidence: "Fluxo portal monofásico, sem sinais de trombose.", physicianConfirmed: true };
+  extra.push({ name: "ABDOMEN_TOTAL_DOPPLER:suspected-other-evidence-period", input: a }); }
+{ const a = byName("ABDOMEN_TOTAL_DOPPLER:normal");
+  a.portalVein.flow = "ausente";
+  a.portalPathology = { status: "confirmed", kind: "other", evidence: "Ausência de fluxo detectável no tronco portal;  ", physicianConfirmed: true };
+  extra.push({ name: "ABDOMEN_TOTAL_DOPPLER:confirmed-other-evidence-punctuation", input: a }); }
 
 { const v = byName("DOPPLER_VENOSO_MMSS:normal");
   v.indication = "thrombosis_research";
@@ -69,6 +112,8 @@ const extra: { name: string; input: any }[] = [];
   extra.push({ name: "DOPPLER_ARTERIAL_MMSS:occlusion-other", input: a }); }
 { const a = byName("DOPPLER_ARTERIAL_MMSS:altered"); a.left.stenosisPercent = undefined; delete a.left.stenosisPercent; a.left.percentageDataSufficient = false; a.left.percentageConfirmed = false; a.left.thoracicOutlet = { evaluated: true, maneuvers: "abdução", positions: "neutra", result: "negative", physicianConfirmed: true };
   extra.push({ name: "DOPPLER_ARTERIAL_MMSS:stenosis-qualitative", input: a }); }
+{ const a = byName("DOPPLER_ARTERIAL_MMSS:altered"); a.left.distalPattern = "fluxo amortecido, com reenchimento distal.";
+  extra.push({ name: "DOPPLER_ARTERIAL_MMSS:distal-pattern-period", input: a }); }
 { const a = byName("DOPPLER_ARTERIAL_MMSS:altered"); a.left.percentageConfirmed = false;
   extra.push({ name: "DOPPLER_ARTERIAL_MMSS:block-percent-unconfirmed", input: a }); }
 { const a = byName("DOPPLER_ARTERIAL_MMSS:altered"); delete a.left.distalPattern;
@@ -83,6 +128,8 @@ const extra: { name: string; input: any }[] = [];
   t.right = { ...thoraxNormal, pneumothorax: "suspected", sliding: "absent" };
   t.limitation = "Janela acústica limitada por enfisema subcutâneo"; t.correlationSuggested = true;
   extra.push({ name: "TORAX:balik-eligible", input: t }); }
+{ const t = byName("TORAX:normal"); t.right.pleuralLine = "not_assessed"; t.limitation = "Janela acústica limitada pelo curativo.";
+  extra.push({ name: "TORAX:limitation-period", input: t }); }
 { const t = byName("TORAX:normal"); t.right.pleuralLine = "not_assessed";
   extra.push({ name: "TORAX:incomplete-assessment", input: t }); }
 { const t = byName("TORAX:normal"); t.correlationSuggested = true;
@@ -114,7 +161,10 @@ const cases = [...reviewCases, ...extra].map(({ name, input }: { name: string; i
   };
 });
 
-const sharedCommit = execSync(`git -C ${MONOREPO} rev-parse --short HEAD`).toString().trim();
+const head = execSync(`git -C ${MONOREPO} rev-parse --short HEAD`).toString().trim();
+// Fixture gerada de árvore com alterações não commitadas fica marcada como -dirty.
+const dirty = execSync(`git -C ${MONOREPO} status --porcelain -- packages/shared/src/clinicalModels`).toString().trim() !== "";
+const sharedCommit = dirty ? `${head}-dirty` : head;
 const defaults = Object.fromEntries(["ABDOMEN_TOTAL_DOPPLER", "DOPPLER_VENOSO_MMSS", "DOPPLER_ARTERIAL_MMSS", "TORAX", "QUADRIL_INFANTIL"].map((c) => [c, createInitialClinicalModelInput(c as any)]));
 process.stdout.write(JSON.stringify({ source: "@laudousg/shared clinicalModels v1", sharedCommit, generatedAt: new Date().toISOString().slice(0, 10), normalAbdomenReport: (defaults.ABDOMEN_TOTAL_DOPPLER as any).abdomenReport, cases }, null, 2) + "\n");
 }

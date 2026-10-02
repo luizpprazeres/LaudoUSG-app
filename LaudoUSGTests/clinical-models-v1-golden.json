@@ -1,6 +1,6 @@
 {
   "source": "@laudousg/shared clinicalModels v1",
-  "sharedCommit": "0129786",
+  "sharedCommit": "b58ab06-dirty",
   "generatedAt": "2026-10-02",
   "normalAbdomenReport": "Fígado de margens regulares, dimensões e ecotextura normais. Vasos intra-hepáticos bem visíveis e de calibre anatômico. Não há sinais de processo expansivo hepático. Vesícula biliar de topografia usual e parede fina, sem cálculos. Vias biliares sem dilatação. Pâncreas e baço sem alterações. Rins tópicos, com dimensões e diferenciação corticomedular preservadas. Aorta e veia cava inferior de calibres normais. Bexiga de paredes finas e conteúdo anecoico homogêneo.",
   "cases": [
@@ -430,7 +430,7 @@
           "evaluated": true,
           "caliberCm": 0.8,
           "velocityCms": 30,
-          "flow": "hepatopetal"
+          "flow": "hepatofugal"
         },
         "splenicVein": {
           "evaluated": false
@@ -454,7 +454,7 @@
       "success": true,
       "issueCodes": [],
       "warningCodes": [],
-      "report": "ULTRASSONOGRAFIA DO ABDOME TOTAL COM DOPPLER COLORIDO\n\nCOMENTÁRIOS:\nExame realizado com transdutor convexo multifrequencial, abrangendo todo o abdome. Foram realizados múltiplos cortes em planos ortogonais.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nFígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.\n\nDOPPLER DO SISTEMA ESPLÂNCNICO:\nTronco da veia porta com calibre de 1,1 cm, velocidade de 24 cm/s e fluxo ausente.\nVeias hepáticas com calibre de 0,8 cm, velocidade de 30 cm/s e fluxo hepatopetal.\nVeia mesentérica superior com calibre de 0,9 cm, velocidade de 18,5 cm/s e fluxo hepatopetal.\nMaterial ecogênico intraluminal e ausência de fluxo ao Doppler.\n\nCONCLUSÃO:\nSinais ultrassonográficos de trombose portal."
+      "report": "ULTRASSONOGRAFIA DO ABDOME TOTAL COM DOPPLER COLORIDO\n\nCOMENTÁRIOS:\nExame realizado com transdutor convexo multifrequencial, abrangendo todo o abdome. Foram realizados múltiplos cortes em planos ortogonais.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nFígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.\n\nDOPPLER DO SISTEMA ESPLÂNCNICO:\nTronco da veia porta com calibre de 1,1 cm, velocidade de 24 cm/s e fluxo ausente.\nVeias hepáticas com calibre de 0,8 cm, velocidade de 30 cm/s e fluxo hepatofugal.\nVeia mesentérica superior com calibre de 0,9 cm, velocidade de 18,5 cm/s e fluxo hepatopetal.\nMaterial ecogênico intraluminal e ausência de fluxo ao Doppler.\n\nCONCLUSÃO:\nSinais ultrassonográficos de trombose portal."
     },
     {
       "name": "ABDOMEN_TOTAL_DOPPLER:other-suspected",
@@ -491,7 +491,7 @@
       "success": true,
       "issueCodes": [],
       "warningCodes": [],
-      "report": "ULTRASSONOGRAFIA DO ABDOME TOTAL COM DOPPLER COLORIDO\n\nCOMENTÁRIOS:\nExame realizado com transdutor convexo multifrequencial, abrangendo todo o abdome. Foram realizados múltiplos cortes em planos ortogonais.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nFígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.\n\nDOPPLER DO SISTEMA ESPLÂNCNICO:\nTronco da veia porta com calibre de 1,1 cm, velocidade de 24 cm/s e fluxo com padrão descrito pelo médico.\nFluxo bidirecional no tronco portal.\n\nCONCLUSÃO:\nAlteração do sistema portal, conforme descrita acima."
+      "report": "ULTRASSONOGRAFIA DO ABDOME TOTAL COM DOPPLER COLORIDO\n\nCOMENTÁRIOS:\nExame realizado com transdutor convexo multifrequencial, abrangendo todo o abdome. Foram realizados múltiplos cortes em planos ortogonais.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nFígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.\n\nDOPPLER DO SISTEMA ESPLÂNCNICO:\nTronco da veia porta com calibre de 1,1 cm, velocidade de 24 cm/s e fluxo com padrão descrito pelo médico.\nFluxo bidirecional no tronco portal.\n\nCONCLUSÃO:\nAchados suspeitos de alteração do sistema portal, conforme descritos acima."
     },
     {
       "name": "ABDOMEN_TOTAL_DOPPLER:block-hepatofugal-absent",
@@ -531,6 +531,7 @@
       },
       "success": false,
       "issueCodes": [
+        "ABNORMAL_FLOW_WITHOUT_PORTAL_FINDING",
         "HEPATOFUGAL_FLOW_WITHOUT_PORTAL_FINDING"
       ],
       "warningCodes": [],
@@ -616,6 +617,983 @@
       ],
       "warningCodes": [],
       "report": null
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:block-abnormal-portalVein-ausente",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "ausente"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": false
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "absent",
+          "physicianConfirmed": false
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "ABNORMAL_FLOW_WITHOUT_PORTAL_FINDING"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:resolved-portalVein-ausente",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "ausente"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": false
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "suspected",
+          "kind": "other",
+          "evidence": "Alteração de fluxo descrita pelo médico",
+          "physicianConfirmed": true
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DO ABDOME TOTAL COM DOPPLER COLORIDO\n\nCOMENTÁRIOS:\nExame realizado com transdutor convexo multifrequencial, abrangendo todo o abdome. Foram realizados múltiplos cortes em planos ortogonais.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nFígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.\n\nDOPPLER DO SISTEMA ESPLÂNCNICO:\nTronco da veia porta com calibre de 1,1 cm, velocidade de 24 cm/s e fluxo ausente.\nAlteração de fluxo descrita pelo médico.\n\nCONCLUSÃO:\nAchados suspeitos de alteração do sistema portal, conforme descritos acima."
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:block-abnormal-portalVein-outro",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "outro"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": false
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "absent",
+          "physicianConfirmed": false
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "ABNORMAL_FLOW_WITHOUT_PORTAL_FINDING"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:resolved-portalVein-outro",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "outro"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": false
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "suspected",
+          "kind": "other",
+          "evidence": "Alteração de fluxo descrita pelo médico",
+          "physicianConfirmed": true
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DO ABDOME TOTAL COM DOPPLER COLORIDO\n\nCOMENTÁRIOS:\nExame realizado com transdutor convexo multifrequencial, abrangendo todo o abdome. Foram realizados múltiplos cortes em planos ortogonais.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nFígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.\n\nDOPPLER DO SISTEMA ESPLÂNCNICO:\nTronco da veia porta com calibre de 1,1 cm, velocidade de 24 cm/s e fluxo com padrão descrito pelo médico.\nAlteração de fluxo descrita pelo médico.\n\nCONCLUSÃO:\nAchados suspeitos de alteração do sistema portal, conforme descritos acima."
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:block-abnormal-portalVein-hepatofugal",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "hepatofugal"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": false
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "absent",
+          "physicianConfirmed": false
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "ABNORMAL_FLOW_WITHOUT_PORTAL_FINDING",
+        "HEPATOFUGAL_FLOW_WITHOUT_PORTAL_FINDING"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:resolved-portalVein-hepatofugal",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "hepatofugal"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": false
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "suspected",
+          "kind": "other",
+          "evidence": "Alteração de fluxo descrita pelo médico",
+          "physicianConfirmed": true
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DO ABDOME TOTAL COM DOPPLER COLORIDO\n\nCOMENTÁRIOS:\nExame realizado com transdutor convexo multifrequencial, abrangendo todo o abdome. Foram realizados múltiplos cortes em planos ortogonais.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nFígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.\n\nDOPPLER DO SISTEMA ESPLÂNCNICO:\nTronco da veia porta com calibre de 1,1 cm, velocidade de 24 cm/s e fluxo hepatofugal.\nAlteração de fluxo descrita pelo médico.\n\nCONCLUSÃO:\nAchados suspeitos de alteração do sistema portal, conforme descritos acima."
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:block-abnormal-hepaticVeins-ausente",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "hepatopetal"
+        },
+        "hepaticVeins": {
+          "evaluated": true,
+          "caliberCm": 0.6,
+          "velocityCms": 18,
+          "flow": "ausente"
+        },
+        "splenicVein": {
+          "evaluated": false
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "absent",
+          "physicianConfirmed": false
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "ABNORMAL_FLOW_WITHOUT_PORTAL_FINDING"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:resolved-hepaticVeins-ausente",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "hepatopetal"
+        },
+        "hepaticVeins": {
+          "evaluated": true,
+          "caliberCm": 0.6,
+          "velocityCms": 18,
+          "flow": "ausente"
+        },
+        "splenicVein": {
+          "evaluated": false
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "suspected",
+          "kind": "other",
+          "evidence": "Alteração de fluxo descrita pelo médico",
+          "physicianConfirmed": true
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DO ABDOME TOTAL COM DOPPLER COLORIDO\n\nCOMENTÁRIOS:\nExame realizado com transdutor convexo multifrequencial, abrangendo todo o abdome. Foram realizados múltiplos cortes em planos ortogonais.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nFígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.\n\nDOPPLER DO SISTEMA ESPLÂNCNICO:\nTronco da veia porta com calibre de 1,1 cm, velocidade de 24 cm/s e fluxo hepatopetal.\nVeias hepáticas com calibre de 0,6 cm, velocidade de 18 cm/s e fluxo ausente.\nAlteração de fluxo descrita pelo médico.\n\nCONCLUSÃO:\nAchados suspeitos de alteração do sistema portal, conforme descritos acima."
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:block-abnormal-hepaticVeins-outro",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "hepatopetal"
+        },
+        "hepaticVeins": {
+          "evaluated": true,
+          "caliberCm": 0.6,
+          "velocityCms": 18,
+          "flow": "outro"
+        },
+        "splenicVein": {
+          "evaluated": false
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "absent",
+          "physicianConfirmed": false
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "ABNORMAL_FLOW_WITHOUT_PORTAL_FINDING"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:resolved-hepaticVeins-outro",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "hepatopetal"
+        },
+        "hepaticVeins": {
+          "evaluated": true,
+          "caliberCm": 0.6,
+          "velocityCms": 18,
+          "flow": "outro"
+        },
+        "splenicVein": {
+          "evaluated": false
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "suspected",
+          "kind": "other",
+          "evidence": "Alteração de fluxo descrita pelo médico",
+          "physicianConfirmed": true
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DO ABDOME TOTAL COM DOPPLER COLORIDO\n\nCOMENTÁRIOS:\nExame realizado com transdutor convexo multifrequencial, abrangendo todo o abdome. Foram realizados múltiplos cortes em planos ortogonais.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nFígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.\n\nDOPPLER DO SISTEMA ESPLÂNCNICO:\nTronco da veia porta com calibre de 1,1 cm, velocidade de 24 cm/s e fluxo hepatopetal.\nVeias hepáticas com calibre de 0,6 cm, velocidade de 18 cm/s e fluxo com padrão descrito pelo médico.\nAlteração de fluxo descrita pelo médico.\n\nCONCLUSÃO:\nAchados suspeitos de alteração do sistema portal, conforme descritos acima."
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:block-abnormal-splenicVein-hepatofugal",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "hepatopetal"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": true,
+          "caliberCm": 0.6,
+          "velocityCms": 18,
+          "flow": "hepatofugal"
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "absent",
+          "physicianConfirmed": false
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "ABNORMAL_FLOW_WITHOUT_PORTAL_FINDING"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:resolved-splenicVein-hepatofugal",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "hepatopetal"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": true,
+          "caliberCm": 0.6,
+          "velocityCms": 18,
+          "flow": "hepatofugal"
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "suspected",
+          "kind": "other",
+          "evidence": "Alteração de fluxo descrita pelo médico",
+          "physicianConfirmed": true
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DO ABDOME TOTAL COM DOPPLER COLORIDO\n\nCOMENTÁRIOS:\nExame realizado com transdutor convexo multifrequencial, abrangendo todo o abdome. Foram realizados múltiplos cortes em planos ortogonais.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nFígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.\n\nDOPPLER DO SISTEMA ESPLÂNCNICO:\nTronco da veia porta com calibre de 1,1 cm, velocidade de 24 cm/s e fluxo hepatopetal.\nVeia esplênica com calibre de 0,6 cm, velocidade de 18 cm/s e fluxo hepatofugal.\nAlteração de fluxo descrita pelo médico.\n\nCONCLUSÃO:\nAchados suspeitos de alteração do sistema portal, conforme descritos acima."
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:block-abnormal-splenicVein-ausente",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "hepatopetal"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": true,
+          "caliberCm": 0.6,
+          "velocityCms": 18,
+          "flow": "ausente"
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "absent",
+          "physicianConfirmed": false
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "ABNORMAL_FLOW_WITHOUT_PORTAL_FINDING"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:resolved-splenicVein-ausente",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "hepatopetal"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": true,
+          "caliberCm": 0.6,
+          "velocityCms": 18,
+          "flow": "ausente"
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "suspected",
+          "kind": "other",
+          "evidence": "Alteração de fluxo descrita pelo médico",
+          "physicianConfirmed": true
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DO ABDOME TOTAL COM DOPPLER COLORIDO\n\nCOMENTÁRIOS:\nExame realizado com transdutor convexo multifrequencial, abrangendo todo o abdome. Foram realizados múltiplos cortes em planos ortogonais.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nFígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.\n\nDOPPLER DO SISTEMA ESPLÂNCNICO:\nTronco da veia porta com calibre de 1,1 cm, velocidade de 24 cm/s e fluxo hepatopetal.\nVeia esplênica com calibre de 0,6 cm, velocidade de 18 cm/s e fluxo ausente.\nAlteração de fluxo descrita pelo médico.\n\nCONCLUSÃO:\nAchados suspeitos de alteração do sistema portal, conforme descritos acima."
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:block-abnormal-superiorMesentericVein-hepatofugal",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "hepatopetal"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": false
+        },
+        "superiorMesentericVein": {
+          "evaluated": true,
+          "caliberCm": 0.6,
+          "velocityCms": 18,
+          "flow": "hepatofugal"
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "absent",
+          "physicianConfirmed": false
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "ABNORMAL_FLOW_WITHOUT_PORTAL_FINDING"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:resolved-superiorMesentericVein-hepatofugal",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "hepatopetal"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": false
+        },
+        "superiorMesentericVein": {
+          "evaluated": true,
+          "caliberCm": 0.6,
+          "velocityCms": 18,
+          "flow": "hepatofugal"
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "suspected",
+          "kind": "other",
+          "evidence": "Alteração de fluxo descrita pelo médico",
+          "physicianConfirmed": true
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DO ABDOME TOTAL COM DOPPLER COLORIDO\n\nCOMENTÁRIOS:\nExame realizado com transdutor convexo multifrequencial, abrangendo todo o abdome. Foram realizados múltiplos cortes em planos ortogonais.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nFígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.\n\nDOPPLER DO SISTEMA ESPLÂNCNICO:\nTronco da veia porta com calibre de 1,1 cm, velocidade de 24 cm/s e fluxo hepatopetal.\nVeia mesentérica superior com calibre de 0,6 cm, velocidade de 18 cm/s e fluxo hepatofugal.\nAlteração de fluxo descrita pelo médico.\n\nCONCLUSÃO:\nAchados suspeitos de alteração do sistema portal, conforme descritos acima."
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:block-abnormal-commonHepaticArtery-hepatofugal",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "hepatopetal"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": false
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": true,
+          "caliberCm": 0.6,
+          "velocityCms": 18,
+          "flow": "hepatofugal"
+        },
+        "portalPathology": {
+          "status": "absent",
+          "physicianConfirmed": false
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "ABNORMAL_FLOW_WITHOUT_PORTAL_FINDING"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:resolved-commonHepaticArtery-hepatofugal",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "hepatopetal"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": false
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": true,
+          "caliberCm": 0.6,
+          "velocityCms": 18,
+          "flow": "hepatofugal"
+        },
+        "portalPathology": {
+          "status": "suspected",
+          "kind": "other",
+          "evidence": "Alteração de fluxo descrita pelo médico",
+          "physicianConfirmed": true
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DO ABDOME TOTAL COM DOPPLER COLORIDO\n\nCOMENTÁRIOS:\nExame realizado com transdutor convexo multifrequencial, abrangendo todo o abdome. Foram realizados múltiplos cortes em planos ortogonais.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nFígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.\n\nDOPPLER DO SISTEMA ESPLÂNCNICO:\nTronco da veia porta com calibre de 1,1 cm, velocidade de 24 cm/s e fluxo hepatopetal.\nArtéria hepática comum com calibre de 0,6 cm, velocidade de 18 cm/s e fluxo hepatofugal.\nAlteração de fluxo descrita pelo médico.\n\nCONCLUSÃO:\nAchados suspeitos de alteração do sistema portal, conforme descritos acima."
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:normal-all-vessels-physiological",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "hepatopetal"
+        },
+        "hepaticVeins": {
+          "evaluated": true,
+          "caliberCm": 0.6,
+          "velocityCms": 18,
+          "flow": "hepatofugal"
+        },
+        "splenicVein": {
+          "evaluated": true,
+          "caliberCm": 0.6,
+          "velocityCms": 18,
+          "flow": "hepatopetal"
+        },
+        "superiorMesentericVein": {
+          "evaluated": true,
+          "caliberCm": 0.6,
+          "velocityCms": 18,
+          "flow": "hepatopetal"
+        },
+        "commonHepaticArtery": {
+          "evaluated": true,
+          "caliberCm": 0.6,
+          "velocityCms": 18,
+          "flow": "hepatopetal"
+        },
+        "portalPathology": {
+          "status": "absent",
+          "physicianConfirmed": false
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DO ABDOME TOTAL COM DOPPLER COLORIDO\n\nCOMENTÁRIOS:\nExame realizado com transdutor convexo multifrequencial, abrangendo todo o abdome. Foram realizados múltiplos cortes em planos ortogonais.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nFígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.\n\nDOPPLER DO SISTEMA ESPLÂNCNICO:\nTronco da veia porta com calibre de 1,1 cm, velocidade de 24 cm/s e fluxo hepatopetal.\nVeias hepáticas com calibre de 0,6 cm, velocidade de 18 cm/s e fluxo hepatofugal.\nVeia esplênica com calibre de 0,6 cm, velocidade de 18 cm/s e fluxo hepatopetal.\nVeia mesentérica superior com calibre de 0,6 cm, velocidade de 18 cm/s e fluxo hepatopetal.\nArtéria hepática comum com calibre de 0,6 cm, velocidade de 18 cm/s e fluxo hepatopetal.\n\nCONCLUSÃO:\nEstudo Doppler do sistema esplâncnico sem alterações nos parâmetros informados."
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:hepatic-veins-hepatopetal-absent",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "hepatopetal"
+        },
+        "hepaticVeins": {
+          "evaluated": true,
+          "caliberCm": 0.6,
+          "velocityCms": 18,
+          "flow": "hepatopetal"
+        },
+        "splenicVein": {
+          "evaluated": false
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "absent",
+          "physicianConfirmed": false
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "ABNORMAL_FLOW_WITHOUT_PORTAL_FINDING"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:block-mismatch-kind",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "hepatopetal"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": false
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "absent",
+          "kind": "portal_thrombosis",
+          "physicianConfirmed": false
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "PORTAL_FINDING_STATUS_MISMATCH"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:block-mismatch-confirmed",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "hepatopetal"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": false
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "absent",
+          "physicianConfirmed": true
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "PORTAL_FINDING_STATUS_MISMATCH"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:block-mismatch-evidence",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "hepatopetal"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": false
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "absent",
+          "evidence": "Critério antigo",
+          "physicianConfirmed": false
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "PORTAL_FINDING_STATUS_MISMATCH"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:suspected-other-evidence-period",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "outro"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": false
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "suspected",
+          "kind": "other",
+          "evidence": "Fluxo portal monofásico, sem sinais de trombose.",
+          "physicianConfirmed": true
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DO ABDOME TOTAL COM DOPPLER COLORIDO\n\nCOMENTÁRIOS:\nExame realizado com transdutor convexo multifrequencial, abrangendo todo o abdome. Foram realizados múltiplos cortes em planos ortogonais.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nFígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.\n\nDOPPLER DO SISTEMA ESPLÂNCNICO:\nTronco da veia porta com calibre de 1,1 cm, velocidade de 24 cm/s e fluxo com padrão descrito pelo médico.\nFluxo portal monofásico, sem sinais de trombose.\n\nCONCLUSÃO:\nAchados suspeitos de alteração do sistema portal, conforme descritos acima."
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:confirmed-other-evidence-punctuation",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "ausente"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": false
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "confirmed",
+          "kind": "other",
+          "evidence": "Ausência de fluxo detectável no tronco portal;  ",
+          "physicianConfirmed": true
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DO ABDOME TOTAL COM DOPPLER COLORIDO\n\nCOMENTÁRIOS:\nExame realizado com transdutor convexo multifrequencial, abrangendo todo o abdome. Foram realizados múltiplos cortes em planos ortogonais.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nFígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.\n\nDOPPLER DO SISTEMA ESPLÂNCNICO:\nTronco da veia porta com calibre de 1,1 cm, velocidade de 24 cm/s e fluxo ausente.\nAusência de fluxo detectável no tronco portal.\n\nCONCLUSÃO:\nAlteração do sistema portal, conforme descrita acima."
     },
     {
       "name": "DOPPLER_VENOSO_MMSS:jugular-reflux",
@@ -996,6 +1974,48 @@
       "report": "DOPPLER ARTERIAL DE MEMBRO SUPERIOR\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, análise espectral e mapeamento com Doppler colorido.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nMembro superior esquerdo:\nEstenose em artéria subclávia esquerda.\nartéria subclávia esquerda: velocidade de pico sistólico de 286 cm/s.\nPadrão distal: fluxo amortecido nas artérias radial e ulnar, com reenchimento distal.\nDesfiladeiro torácico: manobras abdução; posições neutra; resultado negativo.\n\nCONCLUSÃO:\nEstenose de artéria subclávia esquerda, no membro superior esquerdo. Manobras posicionais negativas para compressão arterial no desfiladeiro torácico."
     },
     {
+      "name": "DOPPLER_ARTERIAL_MMSS:distal-pattern-period",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "DOPPLER_ARTERIAL_MMSS",
+        "physicianReviewed": false,
+        "laterality": "left",
+        "right": {
+          "examined": false,
+          "status": "normal",
+          "psvCms": {},
+          "percentageDataSufficient": false,
+          "percentageConfirmed": false,
+          "thoracicOutlet": {
+            "evaluated": false
+          }
+        },
+        "left": {
+          "examined": true,
+          "status": "stenosis",
+          "affectedVessel": "artéria subclávia esquerda",
+          "psvCms": {
+            "artéria subclávia esquerda": 286
+          },
+          "stenosisPercent": 70,
+          "percentageDataSufficient": true,
+          "percentageConfirmed": true,
+          "distalPattern": "fluxo amortecido, com reenchimento distal.",
+          "thoracicOutlet": {
+            "evaluated": true,
+            "maneuvers": "abdução sustentada e rotação externa",
+            "positions": "posição neutra e abdução a 90 graus",
+            "result": "positive",
+            "physicianConfirmed": true
+          }
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "DOPPLER ARTERIAL DE MEMBRO SUPERIOR\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, análise espectral e mapeamento com Doppler colorido.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nMembro superior esquerdo:\nEstenose em artéria subclávia esquerda.\nartéria subclávia esquerda: velocidade de pico sistólico de 286 cm/s.\nEstenose estimada em 70%.\nPadrão distal: fluxo amortecido, com reenchimento distal.\nDesfiladeiro torácico: manobras abdução sustentada e rotação externa; posições posição neutra e abdução a 90 graus; resultado positivo.\n\nCONCLUSÃO:\nEstenose de artéria subclávia esquerda, estimada em 70%, no membro superior esquerdo. Manobras posicionais positivas para compressão arterial no desfiladeiro torácico."
+    },
+    {
       "name": "DOPPLER_ARTERIAL_MMSS:block-percent-unconfirmed",
       "input": {
         "schemaVersion": 1,
@@ -1217,6 +2237,48 @@
       "issueCodes": [],
       "warningCodes": [],
       "report": "ULTRASSONOGRAFIA DE TÓRAX\n\nCOMENTÁRIOS:\nExame realizado com transdutores convexo e linear, com avaliação bilateral das regiões anterior, lateral e posterior do tórax.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nHemitórax direito:\nLinha pleural regular; deslizamento pleural ausente.\nNão foram registradas linhas B.\nNão se identifica derrame pleural.\nConsolidação não identificada. Atelectasia não identificada. Sinais de pneumotórax: suspeita.\n\nHemitórax esquerdo:\nLinha pleural regular; deslizamento pleural presente.\n3 linhas B, com distribuição multifocal.\nDerrame pleural com separação máxima de 22,5 mm e volume estimado de 450 mL pelo método de Balik.\nConsolidação não identificada. Atelectasia confirmada. Sinais de pneumotórax: não identificada.\n\nLimitação: Janela acústica limitada por enfisema subcutâneo.\n\nNOTA DA ESTIMATIVA:\nV (mL) = 20 × Sep (mm); Adulto sob ventilação mecânica, em decúbito supino com tronco a 15°; Separação máxima no fim da expiração, na linha axilar posterior. DOI 10.1007/s00134-005-0024-2. Erro absoluto médio aproximado de 158 mL; a estimativa não determina conduta automaticamente.\n\nCONCLUSÃO:\nHemitórax direito: ausência de deslizamento pleural, pneumotórax suspeita.\nHemitórax esquerdo: derrame pleural estimado em 450 mL, 3 linhas B de distribuição multifocal, atelectasia confirmada.\nSugere-se correlação clínica."
+    },
+    {
+      "name": "TORAX:limitation-period",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "TORAX",
+        "physicianReviewed": false,
+        "right": {
+          "pleuralLine": "not_assessed",
+          "sliding": "present",
+          "linesB": {
+            "count": 0,
+            "distribution": "none"
+          },
+          "effusion": {
+            "present": false
+          },
+          "consolidation": "not_seen",
+          "atelectasis": "not_seen",
+          "pneumothorax": "not_seen"
+        },
+        "left": {
+          "pleuralLine": "regular",
+          "sliding": "present",
+          "linesB": {
+            "count": 0,
+            "distribution": "none"
+          },
+          "effusion": {
+            "present": false
+          },
+          "consolidation": "not_seen",
+          "atelectasis": "not_seen",
+          "pneumothorax": "not_seen"
+        },
+        "correlationSuggested": false,
+        "limitation": "Janela acústica limitada pelo curativo."
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DE TÓRAX\n\nCOMENTÁRIOS:\nExame realizado com transdutores convexo e linear, com avaliação bilateral das regiões anterior, lateral e posterior do tórax.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nHemitórax direito:\nLinha pleural não avaliada; deslizamento pleural presente.\nNão foram registradas linhas B.\nNão se identifica derrame pleural.\nConsolidação não identificada. Atelectasia não identificada. Sinais de pneumotórax: não identificada.\n\nHemitórax esquerdo:\nLinha pleural regular; deslizamento pleural presente.\nNão foram registradas linhas B.\nNão se identifica derrame pleural.\nConsolidação não identificada. Atelectasia não identificada. Sinais de pneumotórax: não identificada.\n\nLimitação: Janela acústica limitada pelo curativo.\n\nCONCLUSÃO:\nHemitórax direito com avaliação pleural incompleta.\nHemitórax esquerdo sem alterações ecográficas significativas."
     },
     {
       "name": "TORAX:incomplete-assessment",

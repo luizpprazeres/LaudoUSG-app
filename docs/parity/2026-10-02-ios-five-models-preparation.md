@@ -21,11 +21,22 @@ Para a liberação conjunta: trocar o `#else false` de `isRolloutEnabled`, atual
 - **Campos numéricos.** O campo antigo reformatava cada tecla ("1" virava "1,0"), o que impedia digitar decimais.
 - **Ordem das VPS.** O envio usa chaves ordenadas para que o texto do servidor liste as VPS na mesma ordem da prévia.
 
+## Rodada 2 — regras portais e fisiologia venosa hepática
+
+Base: branch de backend `claude/five-models-parity` (`2399a23`/`b58ab06`) **mais alterações ainda não commitadas** daquele worktree. Por isso a fixture registra `sharedCommit: b58ab06-dirty`, e precisa ser regerada quando o backend commitar.
+
+- `PORTAL_FINDING_STATUS_MISMATCH`: situação portal "ausente" com tipo, critérios ou confirmação preenchidos bloqueia. Ao voltar a situação para "ausente", a UI limpa esses campos (`PortalPathology.settingStatus`), que ficam ocultos e, mantidos, bloqueariam sem caminho de correção.
+- `ABNORMAL_FLOW_WITHOUT_PORTAL_FINDING`: com situação portal "ausente", qualquer vaso avaliado com fluxo ausente, "outro" ou de direção não fisiológica bloqueia, porque a conclusão afirmaria normalidade.
+- Fisiologia (`AbdomenTotalDopplerDraft.physiologicalFlow`, espelho de `PHYSIOLOGICAL_FLOW_DIRECTION`): **veias hepáticas hepatofugais**; tronco portal, esplênica, mesentérica superior e artéria hepática comum hepatopetais. Os seletores marcam a direção fisiológica do vaso, sem pré-selecionar valor.
+- Renderer: texto livre (critérios portais, padrão distal, limitação do tórax) termina com um único ponto, como `sentence()` do shared; suspeita de alteração portal "outra" vira "Achados suspeitos de alteração do sistema portal, conforme descritos acima."
+- Fixture: 68 casos. Nenhum caso aceito como normal tem fluxo fora da fisiologia (teste `testNoNormalCaseAcceptsNonPhysiologicalFlow`). O caso alterado que usava veias hepáticas hepatopetais passou a usar o fluxo fisiológico. Os rascunhos iniciais não pré-selecionam direção de fluxo.
+
 ## Regenerar a fixture
 
 ```bash
 (cd ~/laudousgmobile-def/packages/shared && tsx "$OLDPWD/docs/parity/tools/generate-clinical-models-golden.ts") \
   > LaudoUSGTests/clinical-models-v1-golden.json
+# Para gerar de outro worktree do backend: MONOREPO=/caminho/do/worktree antes do tsx.
 ```
 
 ## Lacunas da API (não resolvidas no iOS)
@@ -41,6 +52,6 @@ Para a liberação conjunta: trocar o `#else false` de `isRolloutEnabled`, atual
 
 ## Validação
 
-- `xcodebuild test` (iPhone 17, iOS Simulator): 148 testes, 0 falhas, 3 ignorados já existentes (tabela OMS do Hadlock).
-- Build Release para o Simulator: sucesso.
+- Rodada 1: `xcodebuild test` (iPhone 17, iOS Simulator), 148 testes, 0 falhas, 3 ignorados já existentes (tabela OMS do Hadlock); build Release para o Simulator com sucesso.
+- Rodada 2: 152 testes, 0 falhas, os mesmos 3 ignorados; golden parity com 68 casos; build Release para o Simulator e para dispositivo genérico (sem assinatura) com sucesso.
 - Sem teste em dispositivo físico, sem teste E2E contra o servidor com o gate ligado e sem revisão clínica nova.

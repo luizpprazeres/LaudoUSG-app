@@ -13,6 +13,17 @@ enum ClinicalModelReportRenderer {
         formatter.string(from: NSNumber(value: value)) ?? String(value)
     }
 
+    /// Igual a `sentence()` do shared: texto livre vira uma frase com um único
+    /// ponto final (remove `.;,:` e espaços do fim antes de pontuar).
+    static func sentence(_ text: String) -> String {
+        var value = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        while let last = value.unicodeScalars.last,
+              ".;,:".unicodeScalars.contains(last) || CharacterSet.whitespacesAndNewlines.contains(last) {
+            value.unicodeScalars.removeLast()
+        }
+        return value + "."
+    }
+
     private static func sideName(_ side: ExamLaterality) -> String {
         side == .right ? "direito" : "esquerdo"
     }
@@ -67,7 +78,7 @@ enum ClinicalModelReportRenderer {
                 : nil
         }
         if data.portalPathology.status != .absent, let evidence = data.portalPathology.evidence {
-            lines.append("\(evidence).")
+            lines.append(sentence(evidence))
         }
 
         let prefix = data.portalPathology.status == .suspected
@@ -81,6 +92,8 @@ enum ClinicalModelReportRenderer {
             conclusion = "\(prefix) trombose portal."
         case (_, .portalHypertension):
             conclusion = "\(prefix) hipertensão portal."
+        case (.suspected, _):
+            conclusion = "Achados suspeitos de alteração do sistema portal, conforme descritos acima."
         default:
             conclusion = "Alteração do sistema portal, conforme descrita acima."
         }
@@ -189,7 +202,7 @@ enum ClinicalModelReportRenderer {
                 "\($0.key): velocidade de pico sistólico de \(pt($0.value)) cm/s."
             }
             if let percent = value.stenosisPercent { lines.append("Estenose estimada em \(pt(percent))%.") }
-            if let distal = value.distalPattern { lines.append("Padrão distal: \(distal).") }
+            if let distal = value.distalPattern, !distal.isEmpty { lines.append("Padrão distal: \(sentence(distal))") }
             let outlet = value.thoracicOutlet
             if outlet.evaluated, let result = outlet.result {
                 lines.append("Desfiladeiro torácico: manobras \(outlet.maneuvers ?? ""); posições \(outlet.positions ?? ""); resultado \(outletLabel[result]!).")
@@ -274,7 +287,7 @@ enum ClinicalModelReportRenderer {
         let method = [data.right, data.left].contains { $0.effusion.estimatedVolumeMl != nil }
             ? "\n\nNOTA DA ESTIMATIVA:\n\(BalikPleuralEffusionMethod.formula); \(BalikPleuralEffusionMethod.population); \(BalikPleuralEffusionMethod.measurement). DOI \(BalikPleuralEffusionMethod.doi). Erro absoluto médio aproximado de \(BalikPleuralEffusionMethod.meanAbsoluteErrorMl) mL; a estimativa não determina conduta automaticamente."
             : ""
-        let limitation = data.limitation.flatMap { $0.isEmpty ? nil : "\nLimitação: \($0)." } ?? ""
+        let limitation = data.limitation.flatMap { $0.isEmpty ? nil : "\nLimitação: \(sentence($0))" } ?? ""
         let correlation = data.correlationSuggested ? "\nSugere-se correlação clínica." : ""
         // A quebra extra após o hemitórax esquerdo replica o template do shared.
         return "ULTRASSONOGRAFIA DE TÓRAX\n\nCOMENTÁRIOS:\nExame realizado com transdutores convexo e linear, com avaliação bilateral das regiões anterior, lateral e posterior do tórax.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\n\(side(.right, data.right))\n\n\(side(.left, data.left))\n\(limitation)\(method)\n\nCONCLUSÃO:\n\(conclusion(.right, data.right))\n\(conclusion(.left, data.left))\(correlation)"

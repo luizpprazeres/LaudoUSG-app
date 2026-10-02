@@ -104,6 +104,43 @@ struct AbdomenTotalDopplerDraft: Codable, Equatable, Sendable {
         var kind: PortalPathologyKind?
         var evidence: String?
         var physicianConfirmed: Bool
+
+        /// Voltar para "ausente" descarta tipo, critérios e confirmação: esses
+        /// campos somem da tela e, mantidos, cairiam em
+        /// PORTAL_FINDING_STATUS_MISMATCH sem caminho de correção.
+        func settingStatus(_ newValue: PortalStatus) -> Self {
+            newValue == .absent
+                ? .init(status: .absent, kind: nil, evidence: nil, physicianConfirmed: false)
+                : .init(status: newValue, kind: kind, evidence: evidence, physicianConfirmed: physicianConfirmed)
+        }
+    }
+
+    /// Direção fisiológica por vaso. Veias hepáticas drenam o fígado para a
+    /// veia cava inferior: o fluxo normal é hepatofugal (padrão fásico); os
+    /// vasos do sistema portal e a artéria hepática são hepatopetais.
+    static let physiologicalFlow: [(field: String, label: String, expected: FlowDirection)] = [
+        ("portalVein", "Tronco da veia porta", .hepatopetal),
+        ("hepaticVeins", "Veias hepáticas", .hepatofugal),
+        ("splenicVein", "Veia esplênica", .hepatopetal),
+        ("superiorMesentericVein", "Veia mesentérica superior", .hepatopetal),
+        ("commonHepaticArtery", "Artéria hepática comum", .hepatopetal),
+    ]
+
+    static func isAbnormalFlow(_ flow: FlowDirection?, expected: FlowDirection) -> Bool {
+        guard let flow else { return false }
+        switch flow {
+        case .absent, .other: return true
+        case .hepatopetal, .hepatofugal: return flow != expected
+        }
+    }
+
+    /// Fluxos informados por vaso; opcionais só contam quando avaliados.
+    var evaluatedFlows: [String: FlowDirection?] {
+        var flows: [String: FlowDirection?] = ["portalVein": portalVein.flow]
+        for (field, vessel) in [("hepaticVeins", hepaticVeins), ("splenicVein", splenicVein), ("superiorMesentericVein", superiorMesentericVein), ("commonHepaticArtery", commonHepaticArtery)] where vessel.evaluated {
+            flows[field] = vessel.flow
+        }
+        return flows
     }
 
     /// Igual a `NORMAL_ABDOMEN_REPORT` de `@laudousg/shared`, já com a frase
@@ -145,6 +182,19 @@ struct AbdomenTotalDopplerDraft: Codable, Equatable, Sendable {
         }
         if portalVein.flow == .hepatofugal && portalPathology.status == .absent {
             issues.append(.init("HEPATOFUGAL_FLOW_WITHOUT_PORTAL_FINDING", field: "portalPathology.status", message: "Fluxo hepatofugal exige registrar a suspeita ou alteração portal e os critérios revisados."))
+        }
+        if portalPathology.status == .absent {
+            let hasEvidence = portalPathology.evidence?.isEmpty == false
+            if portalPathology.kind != nil || hasEvidence || portalPathology.physicianConfirmed {
+                issues.append(.init("PORTAL_FINDING_STATUS_MISMATCH", field: "portalPathology.status", message: "Tipo, critérios ou confirmação de alteração portal exigem situação marcada como suspeita ou confirmada."))
+            }
+            // Situação portal ausente faz a conclusão afirmar normalidade; fluxo
+            // ausente, não descrito ou contrário à fisiologia do vaso a contradiz.
+            let flows = evaluatedFlows
+            for vessel in Self.physiologicalFlow {
+                guard let flow = flows[vessel.field], Self.isAbnormalFlow(flow, expected: vessel.expected) else { continue }
+                issues.append(.init("ABNORMAL_FLOW_WITHOUT_PORTAL_FINDING", field: "\(vessel.field).flow", message: "Fluxo ausente, de direção não fisiológica ou com padrão não descrito exige registrar a suspeita ou alteração e os critérios revisados; a conclusão não pode afirmar normalidade."))
+            }
         }
         return issues
     }
