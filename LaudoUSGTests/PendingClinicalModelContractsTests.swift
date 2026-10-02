@@ -17,7 +17,7 @@ final class PendingClinicalModelContractsTests: XCTestCase {
 
         XCTAssertEqual(
             Set(draft.activationIssues.map(\.code)),
-            ["MODEL_NOT_REVIEWED", "VESSEL_CALIBER_REQUIRED", "VESSEL_VELOCITY_REQUIRED", "VESSEL_FLOW_REQUIRED", "PORTAL_CONCLUSION_INCOMPLETE"]
+            ["MODEL_NOT_REVIEWED", "PORTAL_VEIN_REQUIRED", "PORTAL_CONCLUSION_INCOMPLETE"]
         )
     }
 

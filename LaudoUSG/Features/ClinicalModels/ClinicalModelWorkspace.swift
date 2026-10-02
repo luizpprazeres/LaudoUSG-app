@@ -111,7 +111,7 @@ struct ClinicalModelWorkspace: View {
                         throw ClinicalModelWorkflowError.remoteMismatch
                     }
                     let report = try await ClinicalReportService.create(
-                        draft: state.draft,
+                        draft: state.submissionDraft,
                         writingStyleId: writingStyleId
                     )
                     try state.acceptCreatedReport(report)
@@ -191,16 +191,10 @@ private struct AbdomenClinicalEditor: View {
             }
             TextEditor(text: binding(\.abdomenReport))
                 .frame(minHeight: 110)
-            TextField("Calibre da veia porta (cm)", text: numberBinding(
-                get: { value.portalVein.caliberCm },
-                set: { var copy = value; copy.portalVein.caliberCm = $0; onChange(copy) }
-            ))
-            .keyboardType(.decimalPad)
-            TextField("Velocidade da veia porta (cm/s)", text: numberBinding(
-                get: { value.portalVein.velocityCms },
-                set: { var copy = value; copy.portalVein.velocityCms = $0; onChange(copy) }
-            ))
-            .keyboardType(.decimalPad)
+            ClinicalNumberField("Calibre da veia porta (cm)", get: { value.portalVein.caliberCm },
+                set: { var copy = value; copy.portalVein.caliberCm = $0; onChange(copy) })
+            ClinicalNumberField("Velocidade da veia porta (cm/s)", get: { value.portalVein.velocityCms },
+                set: { var copy = value; copy.portalVein.velocityCms = $0; onChange(copy) })
             Picker("Fluxo portal", selection: Binding(
                 get: { value.portalVein.flow },
                 set: { var copy = value; copy.portalVein.flow = $0; onChange(copy) }
@@ -267,14 +261,10 @@ private struct AbdomenClinicalEditor: View {
                 change(copy)
             }))
             if vessel.evaluated {
-                TextField("Calibre (cm)", text: numberBinding(
-                    get: { vessel.caliberCm },
-                    set: { var copy = vessel; copy.caliberCm = $0; change(copy) }
-                )).keyboardType(.decimalPad)
-                TextField("Velocidade (cm/s)", text: numberBinding(
-                    get: { vessel.velocityCms },
-                    set: { var copy = vessel; copy.velocityCms = $0; change(copy) }
-                )).keyboardType(.decimalPad)
+                ClinicalNumberField("Calibre (cm)", get: { vessel.caliberCm },
+                    set: { var copy = vessel; copy.caliberCm = $0; change(copy) })
+                ClinicalNumberField("Velocidade (cm/s)", get: { vessel.velocityCms },
+                    set: { var copy = vessel; copy.velocityCms = $0; change(copy) })
                 Picker("Fluxo", selection: Binding(
                     get: { vessel.flow },
                     set: { var copy = vessel; copy.flow = $0; change(copy) }
@@ -312,20 +302,19 @@ private struct VenousClinicalEditor: View {
             }
             Picker("Lateralidade", selection: Binding(
                 get: { value.laterality },
-                set: {
-                    var copy = value; copy.laterality = $0
-                    copy.right.examined = $0 != .left
-                    copy.left.examined = $0 != .right
-                    onChange(copy)
-                }
+                set: { onChange(value.applyingLaterality($0)) }
             )) {
                 Text("Direito").tag(ExamLaterality.right)
                 Text("Esquerdo").tag(ExamLaterality.left)
                 Text("Bilateral").tag(ExamLaterality.bilateral)
             }
         }
-        venousSide("Direito", side: value.right) { var copy = value; copy.right = $0; onChange(copy) }
-        venousSide("Esquerdo", side: value.left) { var copy = value; copy.left = $0; onChange(copy) }
+        if value.right.examined {
+            venousSide("Membro superior direito", side: value.right) { var copy = value; copy.right = $0.reconcilingThrombosisPhase(); onChange(copy) }
+        }
+        if value.left.examined {
+            venousSide("Membro superior esquerdo", side: value.left) { var copy = value; copy.left = $0.reconcilingThrombosisPhase(); onChange(copy) }
+        }
     }
 
     private func venousSide(
@@ -334,9 +323,6 @@ private struct VenousClinicalEditor: View {
         change: @escaping (DopplerVenosoMmssDraft.Side) -> Void
     ) -> some View {
         Section(label) {
-            Toggle("Examinado", isOn: Binding(get: { side.examined }, set: {
-                var copy = side; copy.examined = $0; change(copy)
-            }))
             if side.examined {
                 statusPicker("Sistema profundo", side.deepSystem) {
                     var copy = side; copy.deepSystem = $0; change(copy)
@@ -365,13 +351,18 @@ private struct VenousClinicalEditor: View {
                         get: { side.reflux },
                         set: { var copy = side; copy.reflux = $0; change(copy) }
                     )) {
+                        Text("Selecione").tag(DopplerVenosoMmssDraft.Reflux.notAssessed)
                         Text("Ausente").tag(DopplerVenosoMmssDraft.Reflux.absent)
                         Text("Presente").tag(DopplerVenosoMmssDraft.Reflux.present)
                     }
                 }
                 Toggle("Cateter presente", isOn: Binding(
                     get: { side.catheter.present },
-                    set: { var copy = side; copy.catheter.present = $0; change(copy) }
+                    set: {
+                        var copy = side; copy.catheter.present = $0
+                        if !$0 { copy.catheter.relation = nil; copy.catheter.segment = nil }
+                        change(copy)
+                    }
                 ))
                 if side.catheter.present {
                     TextField("Segmento do cateter", text: optionalBinding(
@@ -431,20 +422,19 @@ private struct ArterialClinicalEditor: View {
         Section("Escopo") {
             Picker("Lateralidade", selection: Binding(
                 get: { value.laterality },
-                set: {
-                    var copy = value; copy.laterality = $0
-                    copy.right.examined = $0 != .left
-                    copy.left.examined = $0 != .right
-                    onChange(copy)
-                }
+                set: { onChange(value.applyingLaterality($0)) }
             )) {
                 Text("Direito").tag(ExamLaterality.right)
                 Text("Esquerdo").tag(ExamLaterality.left)
                 Text("Bilateral").tag(ExamLaterality.bilateral)
             }
         }
-        arterialSide("Direito", side: value.right) { var copy = value; copy.right = $0; onChange(copy) }
-        arterialSide("Esquerdo", side: value.left) { var copy = value; copy.left = $0; onChange(copy) }
+        if value.right.examined {
+            arterialSide("Membro superior direito", side: value.right) { var copy = value; copy.right = $0; onChange(copy) }
+        }
+        if value.left.examined {
+            arterialSide("Membro superior esquerdo", side: value.left) { var copy = value; copy.left = $0; onChange(copy) }
+        }
     }
 
     private func arterialSide(
@@ -453,14 +443,15 @@ private struct ArterialClinicalEditor: View {
         change: @escaping (DopplerArterialMmssDraft.Side) -> Void
     ) -> some View {
         Section(label) {
-            Toggle("Examinado", isOn: Binding(get: { side.examined }, set: {
-                var copy = side; copy.examined = $0; change(copy)
-            }))
             if side.examined {
                 Picker("Resultado", selection: Binding(
                     get: { side.status },
                     set: {
                         var copy = side; copy.status = $0
+                        if $0 == .normal {
+                            copy = copy.renamingAffectedVessel(to: nil)
+                            copy.distalPattern = nil
+                        }
                         if $0 != .stenosis {
                             copy.stenosisPercent = nil
                             copy.percentageDataSufficient = false
@@ -477,28 +468,23 @@ private struct ArterialClinicalEditor: View {
                 if side.status != .normal {
                     TextField("Vaso afetado", text: optionalBinding(
                         get: { side.affectedVessel },
-                        set: { var copy = side; copy.affectedVessel = $0; change(copy) }
+                        set: { change(side.renamingAffectedVessel(to: $0)) }
                     ))
-                    TextField("VPS no vaso afetado (cm/s)", text: numberBinding(
-                        get: { side.affectedVessel.flatMap { side.psvCms[$0] } },
+                    ClinicalNumberField("VPS no vaso afetado (cm/s)", get: { side.affectedVessel.flatMap { side.psvCms[$0] } },
                         set: { newValue in
                             var copy = side
                             if let vessel = copy.affectedVessel, !vessel.isEmpty {
                                 if let newValue { copy.psvCms[vessel] = newValue } else { copy.psvCms.removeValue(forKey: vessel) }
                             }
                             change(copy)
-                        }
-                    ))
-                    .keyboardType(.decimalPad)
+                        })
                     TextField("Padrão distal", text: optionalBinding(
                         get: { side.distalPattern },
                         set: { var copy = side; copy.distalPattern = $0; change(copy) }
                     ))
                     if side.status == .stenosis {
-                        TextField("Percentual de estenose", text: numberBinding(
-                            get: { side.stenosisPercent },
-                            set: { var copy = side; copy.stenosisPercent = $0; change(copy) }
-                        )).keyboardType(.decimalPad)
+                        ClinicalNumberField("Percentual de estenose", get: { side.stenosisPercent },
+                            set: { var copy = side; copy.stenosisPercent = $0; change(copy) })
                         Toggle("Dados suficientes para percentual", isOn: Binding(
                             get: { side.percentageDataSufficient },
                             set: { var copy = side; copy.percentageDataSufficient = $0; change(copy) }
@@ -510,11 +496,9 @@ private struct ArterialClinicalEditor: View {
                     }
                 }
                 DisclosureGroup("Velocidades de pico sistólico") {
-                    psvField("Artéria subclávia", side: side, change: change)
-                    psvField("Artéria axilar", side: side, change: change)
-                    psvField("Artéria braquial", side: side, change: change)
-                    psvField("Artéria radial", side: side, change: change)
-                    psvField("Artéria ulnar", side: side, change: change)
+                    ForEach(DopplerArterialMmssDraft.standardPsvVessels, id: \.self) { vessel in
+                        psvField(vessel, side: side, change: change)
+                    }
                 }
                 Toggle("Avaliar desfiladeiro torácico", isOn: Binding(
                     get: { side.thoracicOutlet.evaluated },
@@ -561,15 +545,13 @@ private struct ArterialClinicalEditor: View {
         side: DopplerArterialMmssDraft.Side,
         change: @escaping (DopplerArterialMmssDraft.Side) -> Void
     ) -> some View {
-        TextField("\(vessel) (cm/s)", text: numberBinding(
-            get: { side.psvCms[vessel] },
+        ClinicalNumberField("\(vessel) (cm/s)", get: { side.psvCms[vessel] },
             set: { newValue in
                 var copy = side
                 if let newValue { copy.psvCms[vessel] = newValue }
                 else { copy.psvCms.removeValue(forKey: vessel) }
                 change(copy)
-            }
-        )).keyboardType(.decimalPad)
+            })
     }
 }
 
@@ -644,11 +626,8 @@ private struct ThoraxClinicalEditor: View {
                 }
             ))
             if side.effusion.present {
-                TextField("Separação máxima (mm)", text: numberBinding(
-                    get: { side.effusion.separationMm },
-                    set: { var copy = side; copy.effusion.separationMm = $0; change(copy) }
-                ))
-                .keyboardType(.decimalPad)
+                ClinicalNumberField("Separação máxima (mm)", get: { side.effusion.separationMm },
+                    set: { var copy = side; copy.effusion.separationMm = $0; change(copy) })
                 Text("O volume só será calculado quando todos os critérios de Balik forem confirmados.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -706,17 +685,14 @@ private struct HipClinicalEditor: View {
 
     var body: some View {
         Section("Paciente") {
-            TextField("Idade em dias", text: intBinding(
-                get: { value.ageDays },
-                set: { var copy = value; copy.ageDays = $0; updateSuggestions(&copy); onChange(copy) }
-            ))
-            .keyboardType(.numberPad)
+            ClinicalIntegerField("Idade em dias", get: { value.ageDays },
+                set: { var copy = value; copy.ageDays = $0; onChange(copy.reconcilingGrafConfirmation()) })
         }
         hipSide("Quadril direito", laterality: .right, side: value.right) {
-            var copy = value; copy.right = $0; updateSuggestions(&copy); onChange(copy)
+            var copy = value; copy.right = $0; onChange(copy.reconcilingGrafConfirmation())
         }
         hipSide("Quadril esquerdo", laterality: .left, side: value.left) {
-            var copy = value; copy.left = $0; updateSuggestions(&copy); onChange(copy)
+            var copy = value; copy.left = $0; onChange(copy.reconcilingGrafConfirmation())
         }
         Section("Conduta") {
             TextField("Controle ou encaminhamento", text: optionalBinding(
@@ -747,16 +723,10 @@ private struct HipClinicalEditor: View {
                     change(copy)
                 }
             ))
-            TextField("Ângulo alfa", text: numberBinding(
-                get: { side.alphaDeg },
-                set: { var copy = side; copy.alphaDeg = $0; change(copy) }
-            ))
-            .keyboardType(.decimalPad)
-            TextField("Ângulo beta", text: numberBinding(
-                get: { side.betaDeg },
-                set: { var copy = side; copy.betaDeg = $0; change(copy) }
-            ))
-            .keyboardType(.decimalPad)
+            ClinicalNumberField("Ângulo alfa", get: { side.alphaDeg },
+                set: { var copy = side; copy.alphaDeg = $0; change(copy) })
+            ClinicalNumberField("Ângulo beta", get: { side.betaDeg },
+                set: { var copy = side; copy.betaDeg = $0; change(copy) })
             Picker("Teto ósseo", selection: Binding(
                 get: { side.bonyRoof },
                 set: { var copy = side; copy.bonyRoof = $0; change(copy) }
@@ -792,11 +762,8 @@ private struct HipClinicalEditor: View {
                 Text("Evertido").tag(QuadrilInfantilDraft.LabrumPosition.everted)
                 Text("Interposto").tag(QuadrilInfantilDraft.LabrumPosition.interposed)
             }
-            TextField("Cobertura da cabeça femoral (%)", text: numberBinding(
-                get: { side.coveragePercent },
-                set: { var copy = side; copy.coveragePercent = $0; change(copy) }
-            ))
-            .keyboardType(.decimalPad)
+            ClinicalNumberField("Cobertura da cabeça femoral (%)", get: { side.coveragePercent },
+                set: { var copy = side; copy.coveragePercent = $0; change(copy) })
             if let suggestion = value.suggestedGrafClassification(for: laterality) {
                 Toggle("Confirmar Graf \(suggestion.rawValue)", isOn: Binding(
                     get: { side.classificationConfirmed && side.grafClassification == suggestion },
@@ -810,27 +777,72 @@ private struct HipClinicalEditor: View {
             }
         }
     }
-
-    private func updateSuggestions(_ draft: inout QuadrilInfantilDraft) {
-        for side in [ExamLaterality.right, .left] {
-            guard let suggestion = draft.suggestedGrafClassification(for: side) else { continue }
-            if side == .right, draft.right.classificationConfirmed { draft.right.grafClassification = suggestion }
-            if side == .left, draft.left.classificationConfirmed { draft.left.grafClassification = suggestion }
-        }
-    }
 }
 
 private func optionalBinding(get: @escaping () -> String?, set: @escaping (String?) -> Void) -> Binding<String> {
     Binding(get: { get() ?? "" }, set: { set($0.isEmpty ? nil : $0) })
 }
 
-private func numberBinding(get: @escaping () -> Double?, set: @escaping (Double?) -> Void) -> Binding<String> {
-    Binding(
-        get: { get().map { String($0).replacingOccurrences(of: ".", with: ",") } ?? "" },
-        set: { set(Double($0.replacingOccurrences(of: ",", with: "."))) }
-    )
+/// Mantém o texto digitado como estado local. Um `Binding` calculado
+/// reformatava cada tecla ("1" virava "1,0"), impedindo digitar decimais.
+struct ClinicalNumberField: View {
+    let title: String
+    let get: () -> Double?
+    let set: (Double?) -> Void
+    var keyboard: UIKeyboardType = .decimalPad
+    @State private var text = ""
+
+    init(_ title: String, get: @escaping () -> Double?, set: @escaping (Double?) -> Void) {
+        self.title = title
+        self.get = get
+        self.set = set
+    }
+
+    var body: some View {
+        TextField(title, text: $text)
+            .keyboardType(keyboard)
+            .onAppear { text = Self.format(get()) }
+            .onChange(of: text) { _, newText in
+                let parsed = Self.parse(newText)
+                if parsed != get() { set(parsed) }
+            }
+            .onChange(of: get()) { _, newValue in
+                if Self.parse(text) != newValue { text = Self.format(newValue) }
+            }
+    }
+
+    static func parse(_ text: String) -> Double? {
+        let normalized = text.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: ",", with: ".")
+        guard !normalized.isEmpty, let value = Double(normalized), value.isFinite else { return nil }
+        return value
+    }
+
+    static func format(_ value: Double?) -> String {
+        guard let value else { return "" }
+        let formatter = NumberFormatter()
+        formatter.locale = Locale(identifier: "pt_BR")
+        formatter.usesGroupingSeparator = false
+        formatter.maximumFractionDigits = 4
+        return formatter.string(from: NSNumber(value: value)) ?? ""
+    }
 }
 
-private func intBinding(get: @escaping () -> Int?, set: @escaping (Int?) -> Void) -> Binding<String> {
-    Binding(get: { get().map(String.init) ?? "" }, set: { set(Int($0)) })
+struct ClinicalIntegerField: View {
+    let title: String
+    let get: () -> Int?
+    let set: (Int?) -> Void
+
+    init(_ title: String, get: @escaping () -> Int?, set: @escaping (Int?) -> Void) {
+        self.title = title
+        self.get = get
+        self.set = set
+    }
+
+    var body: some View {
+        var field = ClinicalNumberField(title, get: { get().map(Double.init) }, set: { value in
+            set(value.flatMap { Int(exactly: $0) })
+        })
+        field.keyboard = .numberPad
+        return field
+    }
 }

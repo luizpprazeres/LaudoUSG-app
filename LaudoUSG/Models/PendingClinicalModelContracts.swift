@@ -12,6 +12,18 @@ enum PendingClinicalModelContracts {
         .torax,
         .quadrilInfantil,
     ]
+
+    /// Gate de liberação conjunta (Web, iOS, Android e `RENDERER_CATEGORIES`
+    /// do backend). Em Release fica sempre OFF. Em Debug, só abre com
+    /// `-ClinicalModelsV1Preview YES` nos argumentos do scheme, para QA local;
+    /// o servidor continua respondendo 404 enquanto o gate dele estiver OFF.
+    static var isRolloutEnabled: Bool {
+        #if DEBUG
+        UserDefaults.standard.bool(forKey: "ClinicalModelsV1Preview")
+        #else
+        false
+        #endif
+    }
 }
 
 struct ClinicalContractIssue: Codable, Equatable, Sendable {
@@ -94,6 +106,10 @@ struct AbdomenTotalDopplerDraft: Codable, Equatable, Sendable {
         var physicianConfirmed: Bool
     }
 
+    /// Igual a `NORMAL_ABDOMEN_REPORT` de `@laudousg/shared`, já com a frase
+    /// aprovada em 02/10/2026 ("Não há sinais de processo expansivo hepático.").
+    static let normalAbdomenReport = "Fígado de margens regulares, dimensões e ecotextura normais. Vasos intra-hepáticos bem visíveis e de calibre anatômico. Não há sinais de processo expansivo hepático. Vesícula biliar de topografia usual e parede fina, sem cálculos. Vias biliares sem dilatação. Pâncreas e baço sem alterações. Rins tópicos, com dimensões e diferenciação corticomedular preservadas. Aorta e veia cava inferior de calibres normais. Bexiga de paredes finas e conteúdo anecoico homogêneo."
+
     var schemaVersion = PendingClinicalModelContracts.schemaVersion
     var categoryCode = ReportCategory.abdomenTotalDoppler.rawValue
     var physicianReviewed = false
@@ -111,12 +127,19 @@ struct AbdomenTotalDopplerDraft: Codable, Equatable, Sendable {
         if abdomenReport.trimmingCharacters(in: .whitespacesAndNewlines).count < 80 {
             issues.append(.init("ABDOMEN_REPORT_INVALID", field: "abdomenReport", message: "O modelo-base do abdome precisa estar completo antes de liberar o laudo."))
         }
-        issues += vesselIssues(portalVein, field: "portalVein")
+        issues += vesselIssues(
+            portalVein, field: "portalVein", incompleteCode: "PORTAL_VEIN_REQUIRED",
+            incompleteMessage: "Veia porta exige calibre, velocidade e direção do fluxo informados pelo médico."
+        )
         for (field, vessel) in [("hepaticVeins", hepaticVeins), ("splenicVein", splenicVein), ("superiorMesentericVein", superiorMesentericVein), ("commonHepaticArtery", commonHepaticArtery)] where vessel.evaluated {
-            issues += vesselIssues(.init(caliberCm: vessel.caliberCm, velocityCms: vessel.velocityCms, flow: vessel.flow), field: field)
+            issues += vesselIssues(
+                .init(caliberCm: vessel.caliberCm, velocityCms: vessel.velocityCms, flow: vessel.flow),
+                field: field, incompleteCode: "OPTIONAL_VESSEL_INCOMPLETE",
+                incompleteMessage: "Vaso marcado como avaliado exige calibre, velocidade e direção do fluxo."
+            )
         }
         if portalPathology.status != .absent {
-            if portalPathology.kind == nil || portalPathology.evidence?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty != false || !portalPathology.physicianConfirmed {
+            if portalPathology.kind == nil || (portalPathology.evidence?.trimmingCharacters(in: .whitespacesAndNewlines).count ?? 0) < 3 || !portalPathology.physicianConfirmed {
                 issues.append(.init("PORTAL_CONCLUSION_INCOMPLETE", field: "portalPathology", message: "Hipertensão ou trombose portal exige tipo, critérios descritos e confirmação médica."))
             }
         }
@@ -126,13 +149,20 @@ struct AbdomenTotalDopplerDraft: Codable, Equatable, Sendable {
         return issues
     }
 
-    private func vesselIssues(_ vessel: RequiredVessel, field: String) -> [ClinicalContractIssue] {
+    /// Mesmos códigos de `validateClinicalModelInput`; o servidor continua sendo
+    /// a autoridade e devolve 422 se este espelho divergir.
+    private func vesselIssues(
+        _ vessel: RequiredVessel,
+        field: String,
+        incompleteCode: String,
+        incompleteMessage: String
+    ) -> [ClinicalContractIssue] {
         var issues: [ClinicalContractIssue] = []
-        if vessel.caliberCm == nil { issues.append(.init("VESSEL_CALIBER_REQUIRED", field: "\(field).caliberCm", message: "Informe o calibre.")) }
-        else if vessel.caliberCm.map({ !$0.isFinite || $0 <= 0 }) == true { issues.append(.init("VESSEL_CALIBER_INVALID", field: "\(field).caliberCm", message: "O calibre deve ser positivo.")) }
-        if vessel.velocityCms == nil { issues.append(.init("VESSEL_VELOCITY_REQUIRED", field: "\(field).velocityCms", message: "Informe a velocidade.")) }
-        else if vessel.velocityCms.map({ !$0.isFinite || $0 <= 0 }) == true { issues.append(.init("VESSEL_VELOCITY_INVALID", field: "\(field).velocityCms", message: "A velocidade deve ser positiva.")) }
-        if vessel.flow == nil { issues.append(.init("VESSEL_FLOW_REQUIRED", field: "\(field).flow", message: "Informe o sentido do fluxo.")) }
+        if vessel.caliberCm == nil || vessel.velocityCms == nil || vessel.flow == nil {
+            issues.append(.init(incompleteCode, field: field, message: incompleteMessage))
+        }
+        if vessel.caliberCm.map({ !$0.isFinite || $0 <= 0 }) == true { issues.append(.init("VESSEL_CALIBER_INVALID", field: "\(field).caliberCm", message: "O calibre deve ser positivo.")) }
+        if vessel.velocityCms.map({ !$0.isFinite || $0 <= 0 }) == true { issues.append(.init("VESSEL_VELOCITY_INVALID", field: "\(field).velocityCms", message: "A velocidade deve ser positiva.")) }
         return issues
     }
 }
@@ -163,6 +193,19 @@ struct DopplerVenosoMmssDraft: Codable, Equatable, Sendable {
         var catheter: Catheter
         var thrombosisPhase: ThrombosisPhase
         var phaseConfirmed: Bool
+
+        var hasThrombosis: Bool {
+            deepSystem == .thrombosis || superficialSystem == .thrombosis || internalJugular == .thrombosis
+        }
+
+        /// Sem trombose descrita, a fase sai junto (o seletor some da tela e o
+        /// valor antigo bloquearia o laudo sem caminho de correção).
+        func reconcilingThrombosisPhase() -> Self {
+            var copy = self
+            if !hasThrombosis { copy.thrombosisPhase = .notApplicable }
+            if [.notApplicable, .indeterminate].contains(copy.thrombosisPhase) { copy.phaseConfirmed = false }
+            return copy
+        }
     }
 
     var schemaVersion = PendingClinicalModelContracts.schemaVersion
@@ -180,6 +223,9 @@ struct DopplerVenosoMmssDraft: Codable, Equatable, Sendable {
             let field = side.rawValue
             if sideRequired(side), !value.examined {
                 issues.append(.init("SIDE_NOT_EXAMINED", field: field, message: "O lado solicitado precisa ser marcado como examinado."))
+            }
+            if !sideRequired(side), value.examined {
+                issues.append(.init("SIDE_OUTSIDE_LATERALITY", field: field, message: "O lado examinado não foi solicitado. Ajuste a lateralidade antes de gerar o laudo."))
             }
             if value.examined && value.competenceTested && value.reflux == .notAssessed {
                 issues.append(.init("COMPETENCE_WITHOUT_RESULT", field: "\(field).reflux", message: "Informe o resultado da pesquisa de refluxo."))
@@ -205,6 +251,30 @@ struct DopplerVenosoMmssDraft: Codable, Equatable, Sendable {
     }
 
     private func sideRequired(_ side: ExamLaterality) -> Bool { laterality == .bilateral || laterality == side }
+
+    static let unexaminedSide = Side(
+        examined: false, deepSystem: .notAssessed, superficialSystem: .notAssessed,
+        competenceTested: false, reflux: .notAssessed, internalJugular: .notAssessed,
+        catheter: .init(present: false, relation: nil, segment: nil),
+        thrombosisPhase: .notApplicable, phaseConfirmed: false
+    )
+
+    /// Decisão de 30/09: exame bilateral gera um único laudo com seções direita
+    /// e esquerda. Lado fora do pedido volta ao estado neutro para que achados
+    /// antigos não entrem no texto nem bloqueiem a validação do servidor.
+    func applyingLaterality(_ newValue: ExamLaterality) -> Self {
+        var copy = self
+        copy.laterality = newValue
+        copy.right = copy.sideRequired(.right) ? Self.examined(right) : Self.unexaminedSide
+        copy.left = copy.sideRequired(.left) ? Self.examined(left) : Self.unexaminedSide
+        return copy
+    }
+
+    private static func examined(_ side: Side) -> Side {
+        var copy = side
+        copy.examined = true
+        return copy
+    }
 }
 
 // MARK: - Doppler arterial de membro superior
@@ -242,7 +312,26 @@ struct DopplerArterialMmssDraft: Codable, Equatable, Sendable {
         var percentageConfirmed: Bool
         var distalPattern: String?
         var thoracicOutlet: ThoracicOutlet
+
+        /// A VPS do vaso afetado é guardada sob o nome digitado; ao renomear,
+        /// a medida acompanha o novo nome em vez de deixar uma chave órfã que
+        /// entraria no laudo com o nome antigo.
+        func renamingAffectedVessel(to newName: String?) -> Self {
+            var copy = self
+            if let oldName = affectedVessel,
+               !DopplerArterialMmssDraft.standardPsvVessels.contains(oldName),
+               let measurement = copy.psvCms.removeValue(forKey: oldName),
+               let newName, !newName.isEmpty, copy.psvCms[newName] == nil {
+                copy.psvCms[newName] = measurement
+            }
+            copy.affectedVessel = newName
+            return copy
+        }
     }
+
+    static let standardPsvVessels = [
+        "Artéria subclávia", "Artéria axilar", "Artéria braquial", "Artéria radial", "Artéria ulnar",
+    ]
 
     var schemaVersion = PendingClinicalModelContracts.schemaVersion
     var categoryCode = ReportCategory.dopplerArterialMmss.rawValue
@@ -265,6 +354,9 @@ struct DopplerArterialMmssDraft: Codable, Equatable, Sendable {
             if value.psvCms.values.contains(where: { !$0.isFinite || $0 <= 0 }) {
                 issues.append(.init("ARTERIAL_PSV_INVALID", field: "\(field).psvCms", message: "As velocidades de pico sistólico devem ser positivas."))
             }
+            if value.psvCms.keys.contains(where: { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) {
+                issues.append(.init("ARTERIAL_PSV_VESSEL_REQUIRED", field: "\(field).psvCms", message: "Cada velocidade de pico sistólico precisa do nome do vaso."))
+            }
             if [.stenosis, .occlusion].contains(value.status) && value.distalPattern?.isEmpty != false {
                 issues.append(.init("DISTAL_PATTERN_REQUIRED", field: "\(field).distalPattern", message: "Estenose ou oclusão exige padrão/amortecimento/reenchimento distal."))
             }
@@ -280,8 +372,12 @@ struct DopplerArterialMmssDraft: Codable, Equatable, Sendable {
             if value.stenosisPercent.map({ !$0.isFinite || !(1...100).contains($0) }) == true {
                 issues.append(.init("STENOSIS_PERCENT_INVALID", field: "\(field).stenosisPercent", message: "O percentual de estenose deve estar entre 1 e 100%."))
             }
+            if !sideRequired(side), value.examined {
+                issues.append(.init("SIDE_OUTSIDE_LATERALITY", field: field, message: "O lado examinado não foi solicitado. Ajuste a lateralidade antes de gerar o laudo."))
+            }
             if value.thoracicOutlet.evaluated {
-                if value.thoracicOutlet.maneuvers?.isEmpty != false || value.thoracicOutlet.positions?.isEmpty != false || value.thoracicOutlet.result == nil || value.thoracicOutlet.physicianConfirmed != true {
+                let textTooShort = { (text: String?) in (text?.trimmingCharacters(in: .whitespacesAndNewlines).count ?? 0) < 3 }
+                if textTooShort(value.thoracicOutlet.maneuvers) || textTooShort(value.thoracicOutlet.positions) || value.thoracicOutlet.result == nil || value.thoracicOutlet.physicianConfirmed != true {
                     issues.append(.init("THORACIC_OUTLET_UNCONFIRMED", field: "\(field).thoracicOutlet", message: "Desfiladeiro torácico exige manobras, posições, resultado e confirmação médica."))
                 }
             }
@@ -290,6 +386,28 @@ struct DopplerArterialMmssDraft: Codable, Equatable, Sendable {
     }
 
     private func sideRequired(_ side: ExamLaterality) -> Bool { laterality == .bilateral || laterality == side }
+
+    static let unexaminedSide = Side(
+        examined: false, status: .normal, affectedVessel: nil, psvCms: [:],
+        stenosisPercent: nil, percentageDataSufficient: false, percentageConfirmed: false,
+        distalPattern: nil,
+        thoracicOutlet: .init(evaluated: false, maneuvers: nil, positions: nil, result: nil, physicianConfirmed: nil)
+    )
+
+    /// Mesma regra do venoso: um laudo, seções apenas dos lados solicitados.
+    func applyingLaterality(_ newValue: ExamLaterality) -> Self {
+        var copy = self
+        copy.laterality = newValue
+        copy.right = copy.sideRequired(.right) ? Self.examined(right) : Self.unexaminedSide
+        copy.left = copy.sideRequired(.left) ? Self.examined(left) : Self.unexaminedSide
+        return copy
+    }
+
+    private static func examined(_ side: Side) -> Side {
+        var copy = side
+        copy.examined = true
+        return copy
+    }
 }
 
 // MARK: - Ultrassonografia de tórax
@@ -453,6 +571,24 @@ struct QuadrilInfantilDraft: Codable, Equatable, Sendable {
         if side.labrumPosition == .everted { return .typeIII }
         if side.labrumPosition == .interposed { return .typeIV }
         return nil
+    }
+
+    /// Uma confirmação vale só para a classificação que o médico viu. Se idade,
+    /// ângulos ou morfologia mudarem a sugestão, a classificação e a confirmação
+    /// são descartadas e precisam ser refeitas.
+    func reconcilingGrafConfirmation() -> Self {
+        var copy = self
+        for laterality in [ExamLaterality.right, .left] {
+            let suggestion = copy.suggestedGrafClassification(for: laterality)
+            var side = laterality == .right ? copy.right : copy.left
+            if side.grafClassification != nil && side.grafClassification != suggestion {
+                side.grafClassification = nil
+                side.classificationConfirmed = false
+            }
+            if side.grafClassification == nil { side.classificationConfirmed = false }
+            if laterality == .right { copy.right = side } else { copy.left = side }
+        }
+        return copy
     }
 
     func validatedGrafClassification(for laterality: ExamLaterality) -> GrafClassification? {

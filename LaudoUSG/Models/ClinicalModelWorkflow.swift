@@ -61,6 +61,35 @@ enum ClinicalModelDraft: Codable, Equatable, Sendable {
         activationIssues.filter { $0.code != "MODEL_NOT_REVIEWED" }
     }
 
+    /// Forma que o servidor persiste: ramos falsos sem campos órfãos (o encode
+    /// os omite) e textos/chaves com o mesmo `trim()` aplicado pelo Zod. A
+    /// edição continua livre; validação, prévia, envio e conferência da
+    /// resposta usam esta forma.
+    var normalizedForSubmission: Self {
+        guard let encoded = try? JSONEncoder().encode(self),
+              let object = try? JSONSerialization.jsonObject(with: encoded),
+              let trimmed = try? JSONSerialization.data(withJSONObject: Self.trimmingStrings(in: object)),
+              let decoded = try? JSONDecoder().decode(Self.self, from: trimmed) else {
+            return self
+        }
+        return decoded
+    }
+
+    private static func trimmingStrings(in value: Any) -> Any {
+        switch value {
+        case let text as String:
+            return text.trimmingCharacters(in: .whitespacesAndNewlines)
+        case let object as [String: Any]:
+            return object.reduce(into: [String: Any]()) { result, entry in
+                result[entry.key.trimmingCharacters(in: .whitespacesAndNewlines)] = trimmingStrings(in: entry.value)
+            }
+        case let array as [Any]:
+            return array.map { trimmingStrings(in: $0) }
+        default:
+            return value
+        }
+    }
+
     var physicianReviewed: Bool {
         switch self {
         case .abdomen(let value): value.physicianReviewed
@@ -85,21 +114,6 @@ enum ClinicalModelDraft: Codable, Equatable, Sendable {
         let vessel = AbdomenTotalDopplerDraft.OptionalVessel(
             evaluated: false, caliberCm: nil, velocityCms: nil, flow: nil
         )
-        let venousSide = DopplerVenosoMmssDraft.Side(
-            examined: false, deepSystem: .notAssessed, superficialSystem: .notAssessed,
-            competenceTested: false, reflux: .notAssessed, internalJugular: .notAssessed,
-            catheter: .init(present: false, relation: nil, segment: nil),
-            thrombosisPhase: .notApplicable, phaseConfirmed: false
-        )
-        let arterialSide = DopplerArterialMmssDraft.Side(
-            examined: false, status: .normal, affectedVessel: nil, psvCms: [:],
-            stenosisPercent: nil, percentageDataSufficient: false, percentageConfirmed: false,
-            distalPattern: nil,
-            thoracicOutlet: .init(
-                evaluated: false, maneuvers: nil, positions: nil,
-                result: nil, physicianConfirmed: nil
-            )
-        )
         let thoraxSide = ThoraxDraft.Side(
             pleuralLine: .regular, sliding: .present,
             linesB: .init(count: 0, distribution: .none),
@@ -117,7 +131,7 @@ enum ClinicalModelDraft: Codable, Equatable, Sendable {
         case .abdomenTotalDoppler:
             return .abdomen(.init(
                 documentationPhoto: .include,
-                abdomenReport: "Fígado de margens regulares, dimensões e ecotextura normais. Vasos intra-hepáticos bem visíveis e de calibre anatômico. Vesícula biliar de topografia usual e parede fina, sem cálculos. Vias biliares sem dilatação. Pâncreas e baço sem alterações. Rins tópicos, com dimensões e diferenciação corticomedular preservadas. Aorta e veia cava inferior de calibres normais. Bexiga de paredes finas e conteúdo anecoico homogêneo.",
+                abdomenReport: AbdomenTotalDopplerDraft.normalAbdomenReport,
                 portalVein: .init(caliberCm: nil, velocityCms: nil, flow: nil),
                 hepaticVeins: vessel, splenicVein: vessel,
                 superiorMesentericVein: vessel, commonHepaticArtery: vessel,
@@ -126,13 +140,15 @@ enum ClinicalModelDraft: Codable, Equatable, Sendable {
                 )
             ))
         case .dopplerVenosoMmss:
-            var right = venousSide; right.examined = true
-            return .venous(.init(
-                indication: .elective, laterality: .right, right: right, left: venousSide
-            ))
+            let side = DopplerVenosoMmssDraft.unexaminedSide
+            return .venous(DopplerVenosoMmssDraft(
+                indication: .elective, laterality: .right, right: side, left: side
+            ).applyingLaterality(.right))
         case .dopplerArterialMmss:
-            var right = arterialSide; right.examined = true
-            return .arterial(.init(laterality: .right, right: right, left: arterialSide))
+            let side = DopplerArterialMmssDraft.unexaminedSide
+            return .arterial(DopplerArterialMmssDraft(
+                laterality: .right, right: side, left: side
+            ).applyingLaterality(.right))
         case .torax:
             return .thorax(.init(
                 right: thoraxSide, left: thoraxSide,
@@ -173,12 +189,16 @@ struct ClinicalModelWorkspaceState: Codable, Equatable, Sendable {
         self.remoteReport = remoteReport
     }
 
+    var submissionDraft: ClinicalModelDraft {
+        draft.normalizedForSubmission.settingPhysicianReviewed(false)
+    }
+
     var warnings: [ClinicalContractIssue] {
-        draft.previewIssues.filter { $0.severity == .warning }
+        submissionDraft.previewIssues.filter { $0.severity == .warning }
     }
 
     var blockingIssues: [ClinicalContractIssue] {
-        draft.previewIssues.filter { $0.severity == .error }
+        submissionDraft.previewIssues.filter { $0.severity == .error }
     }
 
     var canCopyOrSendToSala: Bool {
@@ -206,7 +226,7 @@ struct ClinicalModelWorkspaceState: Codable, Equatable, Sendable {
         guard blockingIssues.isEmpty else {
             throw ClinicalModelWorkflowError.validation(blockingIssues)
         }
-        let rendered = try ClinicalModelReportRenderer.render(draft)
+        let rendered = try ClinicalModelReportRenderer.render(submissionDraft)
         previewText = rendered
         remoteReport = nil
         draft = draft.settingPhysicianReviewed(false)
@@ -215,7 +235,7 @@ struct ClinicalModelWorkspaceState: Codable, Equatable, Sendable {
 
     mutating func acceptCreatedReport(_ report: ClinicalReportService.Report) throws {
         guard report.categoryCode == draft.category.rawValue,
-              report.contract.settingPhysicianReviewed(false) == draft.settingPhysicianReviewed(false) else {
+              report.contract.settingPhysicianReviewed(false) == submissionDraft else {
             throw ClinicalModelWorkflowError.remoteMismatch
         }
         draft = draft.settingPhysicianReviewed(false)

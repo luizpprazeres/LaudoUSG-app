@@ -90,6 +90,10 @@ enum FeedbackState: Equatable {
 final class GenerateViewModel {
     var category: ReportCategory = .abdomenTotal {
         didSet {
+            if category.isPendingClinicalActivation && !PendingClinicalModelContracts.isRolloutEnabled {
+                category = oldValue
+                return
+            }
             if category != oldValue { dopplerOnly = false }
         }
     }

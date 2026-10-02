@@ -47,7 +47,10 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
     /// Categorias aprovadas para iniciar um exame novo. Códigos legados seguem
     /// no enum para decodificar laudos já salvos, mesmo quando não são oferecidos.
     static var selectable: [ReportCategory] {
-        allCases.filter { !$0.isExperimental && !$0.isPendingClinicalActivation }
+        allCases.filter {
+            !$0.isExperimental
+                && (!$0.isPendingClinicalActivation || PendingClinicalModelContracts.isRolloutEnabled)
+        }
     }
 
     var isExperimental: Bool {

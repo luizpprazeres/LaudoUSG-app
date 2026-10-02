@@ -111,6 +111,9 @@ enum ClinicalModelReportRenderer {
             .thrombosisResearch: "pesquisa de trombose",
             .catheter: "avaliação relacionada a cateter",
         ]
+        let phase: [DopplerVenosoMmssDraft.ThrombosisPhase: String] = [
+            .acute: "aguda", .subacute: "subaguda", .chronic: "crônica", .indeterminate: "indeterminada",
+        ]
 
         func block(_ laterality: ExamLaterality, _ value: DopplerVenosoMmssDraft.Side) -> (String, String)? {
             guard value.examined else { return nil }
@@ -140,7 +143,10 @@ enum ClinicalModelReportRenderer {
                 case .occlusive: relation = "oclusiva"
                 default: relation = "não informada"
                 }
-                lines.append("Cateter no segmento \(value.catheter.segment!), com relação \(relation).")
+                lines.append("Cateter no segmento \(value.catheter.segment ?? ""), com relação \(relation).")
+            }
+            if value.hasThrombosis, let label = phase[value.thrombosisPhase] {
+                lines.append("Aspecto temporal da trombose: \(label).")
             }
             let territories = [
                 value.deepSystem == .thrombosis ? "sistema venoso profundo" : nil,
@@ -156,50 +162,37 @@ enum ClinicalModelReportRenderer {
             return (lines.joined(separator: "\n"), conclusion)
         }
 
-        let blocks = [
-            block(.right, data.right),
-            block(.left, data.left),
-        ].compactMap { $0 }
-
-        return """
-        DOPPLER VENOSO DE MEMBRO SUPERIOR
-
-        COMENTÁRIOS:
-        Exame realizado com transdutor linear de alta frequência, análise espectral, Doppler colorido e manobras de compressão seriada. Indicação: \(indication[data.indication]!).
-
-        OS SEGUINTES ASPECTOS FORAM OBSERVADOS:
-        \(blocks.map(\.0).joined(separator: "\n\n"))
-
-        CONCLUSÃO:
-        \(blocks.map(\.1).joined(separator: "\n"))
-        """
+        let blocks = [block(.right, data.right), block(.left, data.left)].compactMap { $0 }
+        return "DOPPLER VENOSO DE MEMBRO SUPERIOR\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, análise espectral, Doppler colorido e manobras de compressão seriada. Indicação: \(indication[data.indication]!).\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\n\(blocks.map(\.0).joined(separator: "\n\n"))\n\nCONCLUSÃO:\n\(blocks.map(\.1).joined(separator: "\n"))"
     }
 
     private static func renderArterial(_ data: DopplerArterialMmssDraft) -> String {
+        let statusLabel: [DopplerArterialMmssDraft.ArterialStatus: String] = [
+            .stenosis: "Estenose", .occlusion: "Oclusão", .other: "Outra alteração",
+        ]
+        let outletLabel: [DopplerArterialMmssDraft.OutletResult: String] = [
+            .negative: "negativo", .positive: "positivo", .indeterminate: "indeterminado",
+        ]
+
         func block(_ laterality: ExamLaterality, _ value: DopplerArterialMmssDraft.Side) -> (String, String)? {
             guard value.examined else { return nil }
-            let statusLine: String
-            switch value.status {
-            case .normal: statusLine = "Artérias avaliadas pérvias, com padrão espectral preservado."
-            case .stenosis: statusLine = "Estenose em \(value.affectedVessel!)."
-            case .occlusion: statusLine = "Oclusão em \(value.affectedVessel!)."
-            case .other: statusLine = "Outra alteração em \(value.affectedVessel!)."
-            }
-            var lines = ["Membro superior \(sideName(laterality)):", statusLine]
+            let vessel = value.affectedVessel ?? ""
+            var lines = [
+                "Membro superior \(sideName(laterality)):",
+                value.status == .normal
+                    ? "Artérias avaliadas pérvias, com padrão espectral preservado."
+                    : "\(statusLabel[value.status]!) em \(vessel).",
+            ]
+            // O envio usa chaves ordenadas; o servidor percorre o objeto na
+            // mesma ordem, então a prévia lista as VPS igual ao texto final.
             lines += value.psvCms.sorted(by: { $0.key < $1.key }).map {
                 "\($0.key): velocidade de pico sistólico de \(pt($0.value)) cm/s."
             }
-            if let percent = value.stenosisPercent {
-                lines.append("Estenose estimada em \(pt(percent))%.")
-            }
-            if let distal = value.distalPattern {
-                lines.append("Padrão distal: \(distal).")
-            }
-            if value.thoracicOutlet.evaluated {
-                let result = value.thoracicOutlet.result == .positive
-                    ? "positivo"
-                    : value.thoracicOutlet.result == .negative ? "negativo" : "indeterminado"
-                lines.append("Desfiladeiro torácico: manobras \(value.thoracicOutlet.maneuvers!); posições \(value.thoracicOutlet.positions!); resultado \(result).")
+            if let percent = value.stenosisPercent { lines.append("Estenose estimada em \(pt(percent))%.") }
+            if let distal = value.distalPattern { lines.append("Padrão distal: \(distal).") }
+            let outlet = value.thoracicOutlet
+            if outlet.evaluated, let result = outlet.result {
+                lines.append("Desfiladeiro torácico: manobras \(outlet.maneuvers ?? ""); posições \(outlet.positions ?? ""); resultado \(outletLabel[result]!).")
             }
 
             var conclusion: String
@@ -208,138 +201,98 @@ enum ClinicalModelReportRenderer {
                 conclusion = "Estudo arterial do membro superior \(sideName(laterality)) sem alterações hemodinâmicas significativas."
             case .stenosis:
                 let percent = value.stenosisPercent.map { ", estimada em \(pt($0))%" } ?? ""
-                conclusion = "Estenose de \(value.affectedVessel!)\(percent), no membro superior \(sideName(laterality))."
+                conclusion = "Estenose de \(vessel)\(percent), no membro superior \(sideName(laterality))."
             case .occlusion:
-                conclusion = "Oclusão de \(value.affectedVessel!) no membro superior \(sideName(laterality))."
+                conclusion = "Oclusão de \(vessel) no membro superior \(sideName(laterality))."
             case .other:
-                conclusion = "Alteração de \(value.affectedVessel!) no membro superior \(sideName(laterality)), conforme descrita acima."
+                conclusion = "Alteração de \(vessel) no membro superior \(sideName(laterality)), conforme descrita acima."
             }
-            if value.thoracicOutlet.evaluated {
-                let result = value.thoracicOutlet.result == .positive
-                    ? "positivo"
-                    : value.thoracicOutlet.result == .negative ? "negativo" : "indeterminado"
-                conclusion += " Avaliação do desfiladeiro torácico com resultado \(result)."
+            if outlet.evaluated {
+                switch outlet.result {
+                case .positive: conclusion += " Manobras posicionais positivas para compressão arterial no desfiladeiro torácico."
+                case .negative: conclusion += " Manobras posicionais negativas para compressão arterial no desfiladeiro torácico."
+                default: conclusion += " Avaliação do desfiladeiro torácico com resultado indeterminado."
+                }
             }
             return (lines.joined(separator: "\n"), conclusion)
         }
 
-        let blocks = [
-            block(.right, data.right),
-            block(.left, data.left),
-        ].compactMap { $0 }
-
-        return """
-        DOPPLER ARTERIAL DE MEMBRO SUPERIOR
-
-        COMENTÁRIOS:
-        Exame realizado com transdutor linear de alta frequência, análise espectral e mapeamento com Doppler colorido.
-
-        OS SEGUINTES ASPECTOS FORAM OBSERVADOS:
-        \(blocks.map(\.0).joined(separator: "\n\n"))
-
-        CONCLUSÃO:
-        \(blocks.map(\.1).joined(separator: "\n"))
-        """
+        let blocks = [block(.right, data.right), block(.left, data.left)].compactMap { $0 }
+        return "DOPPLER ARTERIAL DE MEMBRO SUPERIOR\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, análise espectral e mapeamento com Doppler colorido.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\n\(blocks.map(\.0).joined(separator: "\n\n"))\n\nCONCLUSÃO:\n\(blocks.map(\.1).joined(separator: "\n"))"
     }
 
     private static func renderThorax(_ data: ThoraxDraft) -> String {
-        func block(_ laterality: ExamLaterality, _ value: ThoraxDraft.Side) -> (String, String) {
-            let pleural = value.pleuralLine == .regular
-                ? "regular" : value.pleuralLine == .irregular ? "irregular" : "não avaliada"
-            let sliding = value.sliding == .present
-                ? "presente" : value.sliding == .absent ? "ausente" : "não avaliado"
-            let distribution: [ThoraxDraft.BLineDistribution: String] = [
-                .none: "ausente", .focal: "focal", .multifocal: "multifocal", .diffuse: "difusa",
-            ]
-            var lines = [
-                "Hemitórax \(sideName(laterality)):",
-                "Linha pleural \(pleural); deslizamento pleural \(sliding).",
-                value.linesB.count == 0
-                    ? "Não foram registradas linhas B."
-                    : "\(value.linesB.count) linhas B, com distribuição \(distribution[value.linesB.distribution]!).",
-            ]
-            if value.effusion.present, let separation = value.effusion.separationMm {
-                lines.append(value.effusion.estimatedVolumeMl.map {
-                    "Derrame pleural com separação máxima de \(pt(separation)) mm e volume estimado de \(pt($0)) mL pelo método de Balik."
-                } ?? "Derrame pleural com separação máxima de \(pt(separation)) mm; volume não calculado fora do domínio validado do método de Balik.")
-            } else {
-                lines.append("Não se identifica derrame pleural.")
-            }
+        let pleuralLabel: [ThoraxDraft.PleuralLine: String] = [.regular: "regular", .irregular: "irregular", .notAssessed: "não avaliada"]
+        let slidingLabel: [ThoraxDraft.Sliding: String] = [.present: "presente", .absent: "ausente", .notAssessed: "não avaliado"]
+        let distributionLabel: [ThoraxDraft.BLineDistribution: String] = [.none: "ausente", .focal: "focal", .multifocal: "multifocal", .diffuse: "difusa"]
+        // Mesmos rótulos do shared, inclusive a concordância de "pneumotórax"
+        // (ver relatório de paridade); a prévia precisa ser idêntica ao servidor.
+        let findingLabel: [ThoraxDraft.FindingStatus: String] = [.notSeen: "não identificada", .suspected: "suspeita", .confirmed: "confirmada"]
 
+        func side(_ laterality: ExamLaterality, _ value: ThoraxDraft.Side) -> String {
+            let effusion: String
+            if value.effusion.present, let separation = value.effusion.separationMm {
+                effusion = value.effusion.estimatedVolumeMl.map {
+                    "Derrame pleural com separação máxima de \(pt(separation)) mm e volume estimado de \(pt($0)) mL pelo método de Balik."
+                } ?? "Derrame pleural com separação máxima de \(pt(separation)) mm; volume não calculado fora do domínio validado do método de Balik."
+            } else {
+                effusion = "Não se identifica derrame pleural."
+            }
+            return [
+                "Hemitórax \(sideName(laterality)):",
+                "Linha pleural \(pleuralLabel[value.pleuralLine]!); deslizamento pleural \(slidingLabel[value.sliding]!).",
+                value.linesB.count > 0
+                    ? "\(value.linesB.count) linhas B, com distribuição \(distributionLabel[value.linesB.distribution]!)."
+                    : "Não foram registradas linhas B.",
+                effusion,
+                "Consolidação \(findingLabel[value.consolidation]!). Atelectasia \(findingLabel[value.atelectasis]!). Sinais de pneumotórax: \(findingLabel[value.pneumothorax]!).",
+            ].joined(separator: "\n")
+        }
+
+        func conclusion(_ laterality: ExamLaterality, _ value: ThoraxDraft.Side) -> String {
             var findings: [String] = []
             if value.pleuralLine == .irregular { findings.append("irregularidade da linha pleural") }
             if value.sliding == .absent { findings.append("ausência de deslizamento pleural") }
-            if value.effusion.present {
+            if value.effusion.present, let separation = value.effusion.separationMm {
                 findings.append(value.effusion.estimatedVolumeMl.map {
                     "derrame pleural estimado em \(pt($0)) mL"
-                } ?? "derrame pleural sem estimativa volumétrica")
+                } ?? "derrame pleural com separação máxima de \(pt(separation)) mm, sem estimativa volumétrica")
             }
-            if value.linesB.count > 0 { findings.append("\(value.linesB.count) linhas B") }
-            if value.consolidation != .notSeen {
-                findings.append("consolidação \(value.consolidation == .confirmed ? "confirmada" : "suspeita")")
+            if value.linesB.count > 0 {
+                findings.append("\(value.linesB.count) linhas B de distribuição \(distributionLabel[value.linesB.distribution]!)")
             }
-            if value.atelectasis != .notSeen {
-                findings.append("atelectasia \(value.atelectasis == .confirmed ? "confirmada" : "suspeita")")
+            if value.consolidation != .notSeen { findings.append("consolidação \(findingLabel[value.consolidation]!)") }
+            if value.atelectasis != .notSeen { findings.append("atelectasia \(findingLabel[value.atelectasis]!)") }
+            if value.pneumothorax != .notSeen { findings.append("pneumotórax \(findingLabel[value.pneumothorax]!)") }
+            if !findings.isEmpty { return "Hemitórax \(sideName(laterality)): \(findings.joined(separator: ", "))." }
+            if value.pleuralLine == .notAssessed || value.sliding == .notAssessed {
+                return "Hemitórax \(sideName(laterality)) com avaliação pleural incompleta."
             }
-            if value.pneumothorax != .notSeen {
-                findings.append("pneumotórax \(value.pneumothorax == .confirmed ? "confirmado" : "suspeito")")
-            }
-
-            let conclusion: String
-            if !findings.isEmpty {
-                conclusion = "Hemitórax \(sideName(laterality)): \(findings.joined(separator: ", "))."
-            } else if value.pleuralLine == .notAssessed || value.sliding == .notAssessed {
-                conclusion = "Hemitórax \(sideName(laterality)) com avaliação pleural incompleta."
-            } else {
-                conclusion = "Hemitórax \(sideName(laterality)) sem alterações ecográficas significativas."
-            }
-            return (lines.joined(separator: "\n"), conclusion)
+            return "Hemitórax \(sideName(laterality)) sem alterações ecográficas significativas."
         }
 
-        let blocks = [block(.right, data.right), block(.left, data.left)]
         let method = [data.right, data.left].contains { $0.effusion.estimatedVolumeMl != nil }
             ? "\n\nNOTA DA ESTIMATIVA:\n\(BalikPleuralEffusionMethod.formula); \(BalikPleuralEffusionMethod.population); \(BalikPleuralEffusionMethod.measurement). DOI \(BalikPleuralEffusionMethod.doi). Erro absoluto médio aproximado de \(BalikPleuralEffusionMethod.meanAbsoluteErrorMl) mL; a estimativa não determina conduta automaticamente."
             : ""
-        let limitation = data.limitation.map { "\nLimitação: \($0)." } ?? ""
+        let limitation = data.limitation.flatMap { $0.isEmpty ? nil : "\nLimitação: \($0)." } ?? ""
         let correlation = data.correlationSuggested ? "\nSugere-se correlação clínica." : ""
-
-        return """
-        ULTRASSONOGRAFIA DE TÓRAX
-
-        COMENTÁRIOS:
-        Exame realizado com transdutores convexo e linear, com avaliação bilateral das regiões anterior, lateral e posterior do tórax.
-
-        OS SEGUINTES ASPECTOS FORAM OBSERVADOS:
-        \(blocks.map(\.0).joined(separator: "\n\n"))\(limitation)\(method)
-
-        CONCLUSÃO:
-        \(blocks.map(\.1).joined(separator: "\n"))\(correlation)
-        """
+        // A quebra extra após o hemitórax esquerdo replica o template do shared.
+        return "ULTRASSONOGRAFIA DE TÓRAX\n\nCOMENTÁRIOS:\nExame realizado com transdutores convexo e linear, com avaliação bilateral das regiões anterior, lateral e posterior do tórax.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\n\(side(.right, data.right))\n\n\(side(.left, data.left))\n\(limitation)\(method)\n\nCONCLUSÃO:\n\(conclusion(.right, data.right))\n\(conclusion(.left, data.left))\(correlation)"
     }
 
     private static func renderHip(_ data: QuadrilInfantilDraft) -> String {
+        let roofLabel: [QuadrilInfantilDraft.BonyRoof: String] = [.normal: "bem formado", .rounded: "arredondado", .deficient: "deficiente", .notAssessed: "não avaliado"]
+        let cartilageLabel: [QuadrilInfantilDraft.CartilaginousRoof: String] = [.normal: "preservado", .displaced: "deslocado", .notAssessed: "não avaliado"]
+        let headLabel: [QuadrilInfantilDraft.FemoralHead: String] = [.centered: "centrada", .decentered: "descentrada", .dislocated: "luxada", .notAssessed: "não avaliada"]
+
         func block(_ laterality: ExamLaterality, _ value: QuadrilInfantilDraft.Side) -> String {
             guard value.adequateStandardPlane else {
                 return "Quadril \(sideName(laterality)): corte padrão inadequado; classificação não emitida."
             }
             let coverage = value.coveragePercent.map { " e cobertura de \(pt($0))%" } ?? ""
-            return "Quadril \(sideName(laterality)): ângulo alfa de \(pt(value.alphaDeg!))°, ângulo beta de \(pt(value.betaDeg!))°\(coverage). Classificação de Graf \(value.grafClassification!.rawValue)."
+            return "Quadril \(sideName(laterality)): teto ósseo \(roofLabel[value.bonyRoof]!), teto cartilaginoso \(cartilageLabel[value.cartilaginousRoof]!), cabeça femoral \(headLabel[value.femoralHead]!), ângulo alfa de \(pt(value.alphaDeg ?? 0))°, ângulo beta de \(pt(value.betaDeg ?? 0))°\(coverage). Classificação de Graf \(value.grafClassification?.rawValue ?? "")."
         }
-        let recommendation = data.recommendation.map { "\n\($0)" } ?? ""
-
-        return """
-        ULTRASSONOGRAFIA DOS QUADRIS DO LACTENTE
-
-        COMENTÁRIOS:
-        Exame realizado com transdutor linear de alta frequência, utilizando cortes coronais padronizados segundo a técnica de Graf. Idade: \(data.ageDays!) dias.
-
-        OS SEGUINTES ASPECTOS FORAM OBSERVADOS:
-        \(block(.right, data.right))
-        \(block(.left, data.left))
-
-        CONCLUSÃO:
-        Quadril direito classificado como Graf \(data.right.grafClassification!.rawValue).
-        Quadril esquerdo classificado como Graf \(data.left.grafClassification!.rawValue).\(recommendation)
-        """
+        let recommendation = data.recommendation.flatMap { $0.isEmpty ? nil : "\n\($0)" } ?? ""
+        return "ULTRASSONOGRAFIA DOS QUADRIS DO LACTENTE\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, utilizando cortes coronais padronizados segundo a técnica de Graf. Idade: \(data.ageDays ?? 0) dias.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\n\(block(.right, data.right))\n\(block(.left, data.left))\n\nCONCLUSÃO:\nQuadril direito classificado como Graf \(data.right.grafClassification?.rawValue ?? "").\nQuadril esquerdo classificado como Graf \(data.left.grafClassification?.rawValue ?? "").\(recommendation)"
     }
 }

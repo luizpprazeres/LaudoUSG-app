@@ -1,0 +1,1687 @@
+{
+  "source": "@laudousg/shared clinicalModels v1",
+  "sharedCommit": "0129786",
+  "generatedAt": "2026-10-02",
+  "normalAbdomenReport": "Fígado de margens regulares, dimensões e ecotextura normais. Vasos intra-hepáticos bem visíveis e de calibre anatômico. Não há sinais de processo expansivo hepático. Vesícula biliar de topografia usual e parede fina, sem cálculos. Vias biliares sem dilatação. Pâncreas e baço sem alterações. Rins tópicos, com dimensões e diferenciação corticomedular preservadas. Aorta e veia cava inferior de calibres normais. Bexiga de paredes finas e conteúdo anecoico homogêneo.",
+  "cases": [
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:normal",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "hepatopetal"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": false
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "absent",
+          "physicianConfirmed": false
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DO ABDOME TOTAL COM DOPPLER COLORIDO\n\nCOMENTÁRIOS:\nExame realizado com transdutor convexo multifrequencial, abrangendo todo o abdome. Foram realizados múltiplos cortes em planos ortogonais.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nFígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.\n\nDOPPLER DO SISTEMA ESPLÂNCNICO:\nTronco da veia porta com calibre de 1,1 cm, velocidade de 24 cm/s e fluxo hepatopetal.\n\nCONCLUSÃO:\nEstudo Doppler do sistema esplâncnico sem alterações nos parâmetros informados."
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:altered",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "include",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares, com discreto aumento difuso da ecogenicidade parenquimatosa. Vesícula biliar de paredes finas e conteúdo anecoico. Vias biliares sem dilatação. Pâncreas sem alterações ecográficas. Baço discretamente aumentado. Rins tópicos, sem dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.3,
+          "velocityCms": 13,
+          "flow": "hepatofugal"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": true,
+          "caliberCm": 1.1,
+          "velocityCms": 16,
+          "flow": "hepatopetal"
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": true,
+          "caliberCm": 0.4,
+          "velocityCms": 78,
+          "flow": "hepatopetal"
+        },
+        "portalPathology": {
+          "status": "suspected",
+          "kind": "portal_hypertension",
+          "evidence": "Fluxo portal hepatofugal e circulação colateral periportal",
+          "physicianConfirmed": true
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DO ABDOME TOTAL COM DOPPLER COLORIDO\n\nCOMENTÁRIOS:\nExame realizado com transdutor convexo multifrequencial, abrangendo todo o abdome. Foram realizados múltiplos cortes em planos ortogonais. A documentação fotográfica foi realizada conforme a preferência configurada.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nFígado de dimensões normais, contornos regulares, com discreto aumento difuso da ecogenicidade parenquimatosa. Vesícula biliar de paredes finas e conteúdo anecoico. Vias biliares sem dilatação. Pâncreas sem alterações ecográficas. Baço discretamente aumentado. Rins tópicos, sem dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.\n\nDOPPLER DO SISTEMA ESPLÂNCNICO:\nTronco da veia porta com calibre de 1,3 cm, velocidade de 13 cm/s e fluxo hepatofugal.\nVeia esplênica com calibre de 1,1 cm, velocidade de 16 cm/s e fluxo hepatopetal.\nArtéria hepática comum com calibre de 0,4 cm, velocidade de 78 cm/s e fluxo hepatopetal.\nFluxo portal hepatofugal e circulação colateral periportal.\n\nCONCLUSÃO:\nAchados suspeitos de hipertensão portal."
+    },
+    {
+      "name": "DOPPLER_VENOSO_MMSS:normal",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "DOPPLER_VENOSO_MMSS",
+        "physicianReviewed": false,
+        "indication": "elective",
+        "laterality": "bilateral",
+        "right": {
+          "examined": true,
+          "deepSystem": "patent",
+          "superficialSystem": "patent",
+          "competenceTested": false,
+          "reflux": "not_assessed",
+          "internalJugular": "not_assessed",
+          "catheter": {
+            "present": false
+          },
+          "thrombosisPhase": "not_applicable",
+          "phaseConfirmed": false
+        },
+        "left": {
+          "examined": true,
+          "deepSystem": "patent",
+          "superficialSystem": "patent",
+          "competenceTested": false,
+          "reflux": "not_assessed",
+          "internalJugular": "not_assessed",
+          "catheter": {
+            "present": false
+          },
+          "thrombosisPhase": "not_applicable",
+          "phaseConfirmed": false
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "DOPPLER VENOSO DE MEMBRO SUPERIOR\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, análise espectral, Doppler colorido e manobras de compressão seriada. Indicação: avaliação eletiva.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nMembro superior direito:\nSistema venoso profundo pérvio nos segmentos avaliados.\nSistema venoso superficial pérvio nos segmentos avaliados.\n\nMembro superior esquerdo:\nSistema venoso profundo pérvio nos segmentos avaliados.\nSistema venoso superficial pérvio nos segmentos avaliados.\n\nCONCLUSÃO:\nNão se identificam sinais de trombose nos segmentos venosos avaliados do membro superior direito.\nNão se identificam sinais de trombose nos segmentos venosos avaliados do membro superior esquerdo."
+    },
+    {
+      "name": "DOPPLER_VENOSO_MMSS:altered",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "DOPPLER_VENOSO_MMSS",
+        "physicianReviewed": false,
+        "indication": "catheter",
+        "laterality": "right",
+        "right": {
+          "examined": true,
+          "deepSystem": "thrombosis",
+          "superficialSystem": "patent",
+          "competenceTested": false,
+          "reflux": "not_assessed",
+          "internalJugular": "not_assessed",
+          "catheter": {
+            "present": true,
+            "relation": "around_catheter",
+            "segment": "veia axilar direita"
+          },
+          "thrombosisPhase": "acute",
+          "phaseConfirmed": true
+        },
+        "left": {
+          "examined": false,
+          "deepSystem": "not_assessed",
+          "superficialSystem": "not_assessed",
+          "competenceTested": false,
+          "reflux": "not_assessed",
+          "internalJugular": "not_assessed",
+          "catheter": {
+            "present": false
+          },
+          "thrombosisPhase": "not_applicable",
+          "phaseConfirmed": false
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "DOPPLER VENOSO DE MEMBRO SUPERIOR\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, análise espectral, Doppler colorido e manobras de compressão seriada. Indicação: avaliação relacionada a cateter.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nMembro superior direito:\nSistema venoso profundo com sinais de trombose.\nSistema venoso superficial pérvio nos segmentos avaliados.\nCateter no segmento veia axilar direita, com relação ao redor do cateter.\nAspecto temporal da trombose: aguda.\n\nCONCLUSÃO:\nTrombose no sistema venoso profundo do membro superior direito."
+    },
+    {
+      "name": "DOPPLER_ARTERIAL_MMSS:normal",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "DOPPLER_ARTERIAL_MMSS",
+        "physicianReviewed": false,
+        "laterality": "bilateral",
+        "right": {
+          "examined": true,
+          "status": "normal",
+          "psvCms": {},
+          "percentageDataSufficient": false,
+          "percentageConfirmed": false,
+          "thoracicOutlet": {
+            "evaluated": false
+          }
+        },
+        "left": {
+          "examined": true,
+          "status": "normal",
+          "psvCms": {},
+          "percentageDataSufficient": false,
+          "percentageConfirmed": false,
+          "thoracicOutlet": {
+            "evaluated": false
+          }
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "DOPPLER ARTERIAL DE MEMBRO SUPERIOR\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, análise espectral e mapeamento com Doppler colorido.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nMembro superior direito:\nArtérias avaliadas pérvias, com padrão espectral preservado.\n\nMembro superior esquerdo:\nArtérias avaliadas pérvias, com padrão espectral preservado.\n\nCONCLUSÃO:\nEstudo arterial do membro superior direito sem alterações hemodinâmicas significativas.\nEstudo arterial do membro superior esquerdo sem alterações hemodinâmicas significativas."
+    },
+    {
+      "name": "DOPPLER_ARTERIAL_MMSS:altered",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "DOPPLER_ARTERIAL_MMSS",
+        "physicianReviewed": false,
+        "laterality": "left",
+        "right": {
+          "examined": false,
+          "status": "normal",
+          "psvCms": {},
+          "percentageDataSufficient": false,
+          "percentageConfirmed": false,
+          "thoracicOutlet": {
+            "evaluated": false
+          }
+        },
+        "left": {
+          "examined": true,
+          "status": "stenosis",
+          "affectedVessel": "artéria subclávia esquerda",
+          "psvCms": {
+            "artéria subclávia esquerda": 286
+          },
+          "stenosisPercent": 70,
+          "percentageDataSufficient": true,
+          "percentageConfirmed": true,
+          "distalPattern": "fluxo amortecido nas artérias radial e ulnar, com reenchimento distal",
+          "thoracicOutlet": {
+            "evaluated": true,
+            "maneuvers": "abdução sustentada e rotação externa",
+            "positions": "posição neutra e abdução a 90 graus",
+            "result": "positive",
+            "physicianConfirmed": true
+          }
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "DOPPLER ARTERIAL DE MEMBRO SUPERIOR\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, análise espectral e mapeamento com Doppler colorido.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nMembro superior esquerdo:\nEstenose em artéria subclávia esquerda.\nartéria subclávia esquerda: velocidade de pico sistólico de 286 cm/s.\nEstenose estimada em 70%.\nPadrão distal: fluxo amortecido nas artérias radial e ulnar, com reenchimento distal.\nDesfiladeiro torácico: manobras abdução sustentada e rotação externa; posições posição neutra e abdução a 90 graus; resultado positivo.\n\nCONCLUSÃO:\nEstenose de artéria subclávia esquerda, estimada em 70%, no membro superior esquerdo. Manobras posicionais positivas para compressão arterial no desfiladeiro torácico."
+    },
+    {
+      "name": "TORAX:normal",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "TORAX",
+        "physicianReviewed": false,
+        "right": {
+          "pleuralLine": "regular",
+          "sliding": "present",
+          "linesB": {
+            "count": 0,
+            "distribution": "none"
+          },
+          "effusion": {
+            "present": false
+          },
+          "consolidation": "not_seen",
+          "atelectasis": "not_seen",
+          "pneumothorax": "not_seen"
+        },
+        "left": {
+          "pleuralLine": "regular",
+          "sliding": "present",
+          "linesB": {
+            "count": 0,
+            "distribution": "none"
+          },
+          "effusion": {
+            "present": false
+          },
+          "consolidation": "not_seen",
+          "atelectasis": "not_seen",
+          "pneumothorax": "not_seen"
+        },
+        "correlationSuggested": false
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DE TÓRAX\n\nCOMENTÁRIOS:\nExame realizado com transdutores convexo e linear, com avaliação bilateral das regiões anterior, lateral e posterior do tórax.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nHemitórax direito:\nLinha pleural regular; deslizamento pleural presente.\nNão foram registradas linhas B.\nNão se identifica derrame pleural.\nConsolidação não identificada. Atelectasia não identificada. Sinais de pneumotórax: não identificada.\n\nHemitórax esquerdo:\nLinha pleural regular; deslizamento pleural presente.\nNão foram registradas linhas B.\nNão se identifica derrame pleural.\nConsolidação não identificada. Atelectasia não identificada. Sinais de pneumotórax: não identificada.\n\n\nCONCLUSÃO:\nHemitórax direito sem alterações ecográficas significativas.\nHemitórax esquerdo sem alterações ecográficas significativas."
+    },
+    {
+      "name": "TORAX:altered",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "TORAX",
+        "physicianReviewed": false,
+        "right": {
+          "pleuralLine": "irregular",
+          "sliding": "absent",
+          "linesB": {
+            "count": 5,
+            "distribution": "focal"
+          },
+          "effusion": {
+            "present": true,
+            "separationMm": 15,
+            "context": {
+              "adult": true,
+              "mechanicallyVentilated": false,
+              "supineTorso15Deg": true,
+              "endExpirationPosteriorAxillary": true,
+              "physicianConfirmed": true
+            }
+          },
+          "consolidation": "suspected",
+          "atelectasis": "not_seen",
+          "pneumothorax": "not_seen"
+        },
+        "left": {
+          "pleuralLine": "regular",
+          "sliding": "present",
+          "linesB": {
+            "count": 0,
+            "distribution": "none"
+          },
+          "effusion": {
+            "present": false
+          },
+          "consolidation": "not_seen",
+          "atelectasis": "not_seen",
+          "pneumothorax": "not_seen"
+        },
+        "correlationSuggested": true
+      },
+      "success": true,
+      "issueCodes": [
+        "EFFUSION_BALIK_CONTEXT_UNSUPPORTED"
+      ],
+      "warningCodes": [
+        "EFFUSION_BALIK_CONTEXT_UNSUPPORTED"
+      ],
+      "report": "ULTRASSONOGRAFIA DE TÓRAX\n\nCOMENTÁRIOS:\nExame realizado com transdutores convexo e linear, com avaliação bilateral das regiões anterior, lateral e posterior do tórax.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nHemitórax direito:\nLinha pleural irregular; deslizamento pleural ausente.\n5 linhas B, com distribuição focal.\nDerrame pleural com separação máxima de 15 mm; volume não calculado fora do domínio validado do método de Balik.\nConsolidação suspeita. Atelectasia não identificada. Sinais de pneumotórax: não identificada.\n\nHemitórax esquerdo:\nLinha pleural regular; deslizamento pleural presente.\nNão foram registradas linhas B.\nNão se identifica derrame pleural.\nConsolidação não identificada. Atelectasia não identificada. Sinais de pneumotórax: não identificada.\n\n\nCONCLUSÃO:\nHemitórax direito: irregularidade da linha pleural, ausência de deslizamento pleural, derrame pleural com separação máxima de 15 mm, sem estimativa volumétrica, 5 linhas B de distribuição focal, consolidação suspeita.\nHemitórax esquerdo sem alterações ecográficas significativas.\nSugere-se correlação clínica."
+    },
+    {
+      "name": "QUADRIL_INFANTIL:normal",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "QUADRIL_INFANTIL",
+        "physicianReviewed": false,
+        "ageDays": 60,
+        "right": {
+          "adequateStandardPlane": true,
+          "alphaDeg": 63,
+          "betaDeg": 47,
+          "bonyRoof": "normal",
+          "cartilaginousRoof": "normal",
+          "femoralHead": "centered",
+          "labrumPosition": "normal",
+          "coveragePercent": 56,
+          "grafClassification": "I",
+          "classificationConfirmed": true
+        },
+        "left": {
+          "adequateStandardPlane": true,
+          "alphaDeg": 63,
+          "betaDeg": 47,
+          "bonyRoof": "normal",
+          "cartilaginousRoof": "normal",
+          "femoralHead": "centered",
+          "labrumPosition": "normal",
+          "coveragePercent": 56,
+          "grafClassification": "I",
+          "classificationConfirmed": true
+        },
+        "recommendationConfirmed": false
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DOS QUADRIS DO LACTENTE\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, utilizando cortes coronais padronizados segundo a técnica de Graf. Idade: 60 dias.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nQuadril direito: teto ósseo bem formado, teto cartilaginoso preservado, cabeça femoral centrada, ângulo alfa de 63°, ângulo beta de 47° e cobertura de 56%. Classificação de Graf I.\nQuadril esquerdo: teto ósseo bem formado, teto cartilaginoso preservado, cabeça femoral centrada, ângulo alfa de 63°, ângulo beta de 47° e cobertura de 56%. Classificação de Graf I.\n\nCONCLUSÃO:\nQuadril direito classificado como Graf I.\nQuadril esquerdo classificado como Graf I."
+    },
+    {
+      "name": "QUADRIL_INFANTIL:altered",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "QUADRIL_INFANTIL",
+        "physicianReviewed": false,
+        "ageDays": 200,
+        "right": {
+          "adequateStandardPlane": true,
+          "alphaDeg": 55,
+          "betaDeg": 65,
+          "bonyRoof": "rounded",
+          "cartilaginousRoof": "normal",
+          "femoralHead": "centered",
+          "labrumPosition": "normal",
+          "grafClassification": "IIB",
+          "classificationConfirmed": true
+        },
+        "left": {
+          "adequateStandardPlane": true,
+          "alphaDeg": 63,
+          "betaDeg": 47,
+          "bonyRoof": "normal",
+          "cartilaginousRoof": "normal",
+          "femoralHead": "centered",
+          "labrumPosition": "normal",
+          "coveragePercent": 56,
+          "grafClassification": "I",
+          "classificationConfirmed": true
+        },
+        "recommendation": "Sugere-se correlação com avaliação ortopédica, a critério clínico",
+        "recommendationConfirmed": true
+      },
+      "success": true,
+      "issueCodes": [
+        "AGE_OUTSIDE_TARGET"
+      ],
+      "warningCodes": [
+        "AGE_OUTSIDE_TARGET"
+      ],
+      "report": "ULTRASSONOGRAFIA DOS QUADRIS DO LACTENTE\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, utilizando cortes coronais padronizados segundo a técnica de Graf. Idade: 200 dias.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nQuadril direito: teto ósseo arredondado, teto cartilaginoso preservado, cabeça femoral centrada, ângulo alfa de 55°, ângulo beta de 65°. Classificação de Graf IIB.\nQuadril esquerdo: teto ósseo bem formado, teto cartilaginoso preservado, cabeça femoral centrada, ângulo alfa de 63°, ângulo beta de 47° e cobertura de 56%. Classificação de Graf I.\n\nCONCLUSÃO:\nQuadril direito classificado como Graf IIB.\nQuadril esquerdo classificado como Graf I.\nSugere-se correlação com avaliação ortopédica, a critério clínico"
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:thrombosis-confirmed",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "ausente"
+        },
+        "hepaticVeins": {
+          "evaluated": true,
+          "caliberCm": 0.8,
+          "velocityCms": 30,
+          "flow": "hepatopetal"
+        },
+        "splenicVein": {
+          "evaluated": false
+        },
+        "superiorMesentericVein": {
+          "evaluated": true,
+          "caliberCm": 0.9,
+          "velocityCms": 18.5,
+          "flow": "hepatopetal"
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "confirmed",
+          "kind": "portal_thrombosis",
+          "evidence": "Material ecogênico intraluminal e ausência de fluxo ao Doppler",
+          "physicianConfirmed": true
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DO ABDOME TOTAL COM DOPPLER COLORIDO\n\nCOMENTÁRIOS:\nExame realizado com transdutor convexo multifrequencial, abrangendo todo o abdome. Foram realizados múltiplos cortes em planos ortogonais.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nFígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.\n\nDOPPLER DO SISTEMA ESPLÂNCNICO:\nTronco da veia porta com calibre de 1,1 cm, velocidade de 24 cm/s e fluxo ausente.\nVeias hepáticas com calibre de 0,8 cm, velocidade de 30 cm/s e fluxo hepatopetal.\nVeia mesentérica superior com calibre de 0,9 cm, velocidade de 18,5 cm/s e fluxo hepatopetal.\nMaterial ecogênico intraluminal e ausência de fluxo ao Doppler.\n\nCONCLUSÃO:\nSinais ultrassonográficos de trombose portal."
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:other-suspected",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1,
+          "velocityCms": 24,
+          "flow": "outro"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": false
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "suspected",
+          "kind": "other",
+          "evidence": "Fluxo bidirecional no tronco portal",
+          "physicianConfirmed": true
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DO ABDOME TOTAL COM DOPPLER COLORIDO\n\nCOMENTÁRIOS:\nExame realizado com transdutor convexo multifrequencial, abrangendo todo o abdome. Foram realizados múltiplos cortes em planos ortogonais.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nFígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.\n\nDOPPLER DO SISTEMA ESPLÂNCNICO:\nTronco da veia porta com calibre de 1,1 cm, velocidade de 24 cm/s e fluxo com padrão descrito pelo médico.\nFluxo bidirecional no tronco portal.\n\nCONCLUSÃO:\nAlteração do sistema portal, conforme descrita acima."
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:block-hepatofugal-absent",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "include",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares, com discreto aumento difuso da ecogenicidade parenquimatosa. Vesícula biliar de paredes finas e conteúdo anecoico. Vias biliares sem dilatação. Pâncreas sem alterações ecográficas. Baço discretamente aumentado. Rins tópicos, sem dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.3,
+          "velocityCms": 13,
+          "flow": "hepatofugal"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": true,
+          "caliberCm": 1.1,
+          "velocityCms": 16,
+          "flow": "hepatopetal"
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": true,
+          "caliberCm": 0.4,
+          "velocityCms": 78,
+          "flow": "hepatopetal"
+        },
+        "portalPathology": {
+          "status": "absent",
+          "physicianConfirmed": false
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "HEPATOFUGAL_FLOW_WITHOUT_PORTAL_FINDING"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:block-incomplete-vessels",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "omit",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares e ecotextura homogênea. Vesícula biliar normodistendida, de paredes finas e conteúdo anecoico. Vias biliares intra e extra-hepáticas sem dilatação. Pâncreas e baço sem alterações ecográficas. Rins tópicos, de dimensões normais, sem litíase ou dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.1
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": true,
+          "caliberCm": 1
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": false
+        },
+        "portalPathology": {
+          "status": "absent",
+          "physicianConfirmed": false
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "OPTIONAL_VESSEL_INCOMPLETE",
+        "PORTAL_VEIN_REQUIRED"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "ABDOMEN_TOTAL_DOPPLER:block-portal-unconfirmed",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "ABDOMEN_TOTAL_DOPPLER",
+        "physicianReviewed": false,
+        "documentationPhoto": "include",
+        "abdomenReport": "Fígado de dimensões normais, contornos regulares, com discreto aumento difuso da ecogenicidade parenquimatosa. Vesícula biliar de paredes finas e conteúdo anecoico. Vias biliares sem dilatação. Pâncreas sem alterações ecográficas. Baço discretamente aumentado. Rins tópicos, sem dilatação pielocalicial. Aorta de calibre preservado. Bexiga com paredes finas e conteúdo anecoico.",
+        "portalVein": {
+          "caliberCm": 1.3,
+          "velocityCms": 13,
+          "flow": "hepatofugal"
+        },
+        "hepaticVeins": {
+          "evaluated": false
+        },
+        "splenicVein": {
+          "evaluated": true,
+          "caliberCm": 1.1,
+          "velocityCms": 16,
+          "flow": "hepatopetal"
+        },
+        "superiorMesentericVein": {
+          "evaluated": false
+        },
+        "commonHepaticArtery": {
+          "evaluated": true,
+          "caliberCm": 0.4,
+          "velocityCms": 78,
+          "flow": "hepatopetal"
+        },
+        "portalPathology": {
+          "status": "suspected",
+          "kind": "portal_hypertension",
+          "physicianConfirmed": false
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "PORTAL_CONCLUSION_INCOMPLETE"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "DOPPLER_VENOSO_MMSS:jugular-reflux",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "DOPPLER_VENOSO_MMSS",
+        "physicianReviewed": false,
+        "indication": "thrombosis_research",
+        "laterality": "bilateral",
+        "right": {
+          "examined": true,
+          "deepSystem": "patent",
+          "superficialSystem": "patent",
+          "competenceTested": false,
+          "reflux": "not_assessed",
+          "internalJugular": "not_assessed",
+          "catheter": {
+            "present": false
+          },
+          "thrombosisPhase": "not_applicable",
+          "phaseConfirmed": false
+        },
+        "left": {
+          "examined": true,
+          "deepSystem": "patent",
+          "superficialSystem": "not_assessed",
+          "competenceTested": true,
+          "reflux": "present",
+          "internalJugular": "patent",
+          "catheter": {
+            "present": false
+          },
+          "thrombosisPhase": "not_applicable",
+          "phaseConfirmed": false
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "DOPPLER VENOSO DE MEMBRO SUPERIOR\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, análise espectral, Doppler colorido e manobras de compressão seriada. Indicação: pesquisa de trombose.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nMembro superior direito:\nSistema venoso profundo pérvio nos segmentos avaliados.\nSistema venoso superficial pérvio nos segmentos avaliados.\n\nMembro superior esquerdo:\nSistema venoso profundo pérvio nos segmentos avaliados.\nSistema venoso superficial não avaliado por completo.\nVeia jugular interna pérvia.\nPesquisa de refluxo positiva.\n\nCONCLUSÃO:\nNão se identificam sinais de trombose nos segmentos venosos avaliados do membro superior direito.\nNão se identificam sinais de trombose nos segmentos venosos avaliados do membro superior esquerdo. Refluxo venoso detectado."
+    },
+    {
+      "name": "DOPPLER_VENOSO_MMSS:bilateral-mixed",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "DOPPLER_VENOSO_MMSS",
+        "physicianReviewed": false,
+        "indication": "catheter",
+        "laterality": "bilateral",
+        "right": {
+          "examined": true,
+          "deepSystem": "thrombosis",
+          "superficialSystem": "patent",
+          "competenceTested": false,
+          "reflux": "not_assessed",
+          "internalJugular": "not_assessed",
+          "catheter": {
+            "present": true,
+            "relation": "around_catheter",
+            "segment": "veia axilar direita"
+          },
+          "thrombosisPhase": "chronic",
+          "phaseConfirmed": true
+        },
+        "left": {
+          "examined": true,
+          "deepSystem": "not_assessed",
+          "superficialSystem": "thrombosis",
+          "competenceTested": false,
+          "reflux": "not_assessed",
+          "internalJugular": "not_assessed",
+          "catheter": {
+            "present": false
+          },
+          "thrombosisPhase": "indeterminate",
+          "phaseConfirmed": false
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "DOPPLER VENOSO DE MEMBRO SUPERIOR\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, análise espectral, Doppler colorido e manobras de compressão seriada. Indicação: avaliação relacionada a cateter.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nMembro superior direito:\nSistema venoso profundo com sinais de trombose.\nSistema venoso superficial pérvio nos segmentos avaliados.\nCateter no segmento veia axilar direita, com relação ao redor do cateter.\nAspecto temporal da trombose: crônica.\n\nMembro superior esquerdo:\nSistema venoso profundo não avaliado por completo.\nSistema venoso superficial com sinais de trombose.\nAspecto temporal da trombose: indeterminada.\n\nCONCLUSÃO:\nTrombose no sistema venoso profundo do membro superior direito.\nTrombose no sistema venoso superficial do membro superior esquerdo."
+    },
+    {
+      "name": "DOPPLER_VENOSO_MMSS:right-only",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "DOPPLER_VENOSO_MMSS",
+        "physicianReviewed": false,
+        "indication": "elective",
+        "laterality": "right",
+        "right": {
+          "examined": true,
+          "deepSystem": "patent",
+          "superficialSystem": "not_assessed",
+          "competenceTested": false,
+          "reflux": "not_assessed",
+          "internalJugular": "not_assessed",
+          "catheter": {
+            "present": false
+          },
+          "thrombosisPhase": "not_applicable",
+          "phaseConfirmed": false
+        },
+        "left": {
+          "examined": false,
+          "deepSystem": "not_assessed",
+          "superficialSystem": "not_assessed",
+          "competenceTested": false,
+          "reflux": "not_assessed",
+          "internalJugular": "not_assessed",
+          "catheter": {
+            "present": false
+          },
+          "thrombosisPhase": "not_applicable",
+          "phaseConfirmed": false
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "DOPPLER VENOSO DE MEMBRO SUPERIOR\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, análise espectral, Doppler colorido e manobras de compressão seriada. Indicação: avaliação eletiva.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nMembro superior direito:\nSistema venoso profundo pérvio nos segmentos avaliados.\nSistema venoso superficial não avaliado por completo.\n\nCONCLUSÃO:\nNão se identificam sinais de trombose nos segmentos venosos avaliados do membro superior direito."
+    },
+    {
+      "name": "DOPPLER_VENOSO_MMSS:block-bilateral-left-not-examined",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "DOPPLER_VENOSO_MMSS",
+        "physicianReviewed": false,
+        "indication": "elective",
+        "laterality": "bilateral",
+        "right": {
+          "examined": true,
+          "deepSystem": "patent",
+          "superficialSystem": "patent",
+          "competenceTested": false,
+          "reflux": "not_assessed",
+          "internalJugular": "not_assessed",
+          "catheter": {
+            "present": false
+          },
+          "thrombosisPhase": "not_applicable",
+          "phaseConfirmed": false
+        },
+        "left": {
+          "examined": false,
+          "deepSystem": "patent",
+          "superficialSystem": "patent",
+          "competenceTested": false,
+          "reflux": "not_assessed",
+          "internalJugular": "not_assessed",
+          "catheter": {
+            "present": false
+          },
+          "thrombosisPhase": "not_applicable",
+          "phaseConfirmed": false
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "SIDE_NOT_EXAMINED"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "DOPPLER_VENOSO_MMSS:block-phase-unconfirmed",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "DOPPLER_VENOSO_MMSS",
+        "physicianReviewed": false,
+        "indication": "catheter",
+        "laterality": "right",
+        "right": {
+          "examined": true,
+          "deepSystem": "thrombosis",
+          "superficialSystem": "patent",
+          "competenceTested": false,
+          "reflux": "not_assessed",
+          "internalJugular": "not_assessed",
+          "catheter": {
+            "present": true,
+            "relation": "around_catheter",
+            "segment": "veia axilar direita"
+          },
+          "thrombosisPhase": "acute",
+          "phaseConfirmed": false
+        },
+        "left": {
+          "examined": false,
+          "deepSystem": "not_assessed",
+          "superficialSystem": "not_assessed",
+          "competenceTested": false,
+          "reflux": "not_assessed",
+          "internalJugular": "not_assessed",
+          "catheter": {
+            "present": false
+          },
+          "thrombosisPhase": "not_applicable",
+          "phaseConfirmed": false
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "THROMBOSIS_PHASE_UNCONFIRMED"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "DOPPLER_VENOSO_MMSS:block-reflux-not-tested",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "DOPPLER_VENOSO_MMSS",
+        "physicianReviewed": false,
+        "indication": "elective",
+        "laterality": "bilateral",
+        "right": {
+          "examined": true,
+          "deepSystem": "patent",
+          "superficialSystem": "patent",
+          "competenceTested": false,
+          "reflux": "absent",
+          "internalJugular": "not_assessed",
+          "catheter": {
+            "present": false
+          },
+          "thrombosisPhase": "not_applicable",
+          "phaseConfirmed": false
+        },
+        "left": {
+          "examined": true,
+          "deepSystem": "patent",
+          "superficialSystem": "patent",
+          "competenceTested": false,
+          "reflux": "not_assessed",
+          "internalJugular": "not_assessed",
+          "catheter": {
+            "present": false
+          },
+          "thrombosisPhase": "not_applicable",
+          "phaseConfirmed": false
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "REFLUX_NOT_TESTED"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "DOPPLER_VENOSO_MMSS:block-catheter-segment",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "DOPPLER_VENOSO_MMSS",
+        "physicianReviewed": false,
+        "indication": "catheter",
+        "laterality": "right",
+        "right": {
+          "examined": true,
+          "deepSystem": "thrombosis",
+          "superficialSystem": "patent",
+          "competenceTested": false,
+          "reflux": "not_assessed",
+          "internalJugular": "not_assessed",
+          "catheter": {
+            "present": true,
+            "relation": "adjacent"
+          },
+          "thrombosisPhase": "acute",
+          "phaseConfirmed": true
+        },
+        "left": {
+          "examined": false,
+          "deepSystem": "not_assessed",
+          "superficialSystem": "not_assessed",
+          "competenceTested": false,
+          "reflux": "not_assessed",
+          "internalJugular": "not_assessed",
+          "catheter": {
+            "present": false
+          },
+          "thrombosisPhase": "not_applicable",
+          "phaseConfirmed": false
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "CATHETER_RELATION_INCOMPLETE"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "DOPPLER_ARTERIAL_MMSS:occlusion-other",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "DOPPLER_ARTERIAL_MMSS",
+        "physicianReviewed": false,
+        "laterality": "bilateral",
+        "right": {
+          "examined": true,
+          "status": "occlusion",
+          "psvCms": {
+            "artéria braquial direita": 62.5
+          },
+          "percentageDataSufficient": false,
+          "percentageConfirmed": false,
+          "thoracicOutlet": {
+            "evaluated": false
+          },
+          "affectedVessel": "artéria radial direita",
+          "distalPattern": "reenchimento distal por colaterais"
+        },
+        "left": {
+          "examined": true,
+          "status": "other",
+          "psvCms": {
+            "artéria ulnar esquerda": 140
+          },
+          "percentageDataSufficient": false,
+          "percentageConfirmed": false,
+          "thoracicOutlet": {
+            "evaluated": true,
+            "maneuvers": "manobra de Adson",
+            "positions": "posição neutra",
+            "result": "indeterminate",
+            "physicianConfirmed": true
+          },
+          "affectedVessel": "artéria ulnar esquerda"
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "DOPPLER ARTERIAL DE MEMBRO SUPERIOR\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, análise espectral e mapeamento com Doppler colorido.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nMembro superior direito:\nOclusão em artéria radial direita.\nartéria braquial direita: velocidade de pico sistólico de 62,5 cm/s.\nPadrão distal: reenchimento distal por colaterais.\n\nMembro superior esquerdo:\nOutra alteração em artéria ulnar esquerda.\nartéria ulnar esquerda: velocidade de pico sistólico de 140 cm/s.\nDesfiladeiro torácico: manobras manobra de Adson; posições posição neutra; resultado indeterminado.\n\nCONCLUSÃO:\nOclusão de artéria radial direita no membro superior direito.\nAlteração de artéria ulnar esquerda no membro superior esquerdo, conforme descrita acima. Avaliação do desfiladeiro torácico com resultado indeterminado."
+    },
+    {
+      "name": "DOPPLER_ARTERIAL_MMSS:stenosis-qualitative",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "DOPPLER_ARTERIAL_MMSS",
+        "physicianReviewed": false,
+        "laterality": "left",
+        "right": {
+          "examined": false,
+          "status": "normal",
+          "psvCms": {},
+          "percentageDataSufficient": false,
+          "percentageConfirmed": false,
+          "thoracicOutlet": {
+            "evaluated": false
+          }
+        },
+        "left": {
+          "examined": true,
+          "status": "stenosis",
+          "affectedVessel": "artéria subclávia esquerda",
+          "psvCms": {
+            "artéria subclávia esquerda": 286
+          },
+          "percentageDataSufficient": false,
+          "percentageConfirmed": false,
+          "distalPattern": "fluxo amortecido nas artérias radial e ulnar, com reenchimento distal",
+          "thoracicOutlet": {
+            "evaluated": true,
+            "maneuvers": "abdução",
+            "positions": "neutra",
+            "result": "negative",
+            "physicianConfirmed": true
+          }
+        }
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "DOPPLER ARTERIAL DE MEMBRO SUPERIOR\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, análise espectral e mapeamento com Doppler colorido.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nMembro superior esquerdo:\nEstenose em artéria subclávia esquerda.\nartéria subclávia esquerda: velocidade de pico sistólico de 286 cm/s.\nPadrão distal: fluxo amortecido nas artérias radial e ulnar, com reenchimento distal.\nDesfiladeiro torácico: manobras abdução; posições neutra; resultado negativo.\n\nCONCLUSÃO:\nEstenose de artéria subclávia esquerda, no membro superior esquerdo. Manobras posicionais negativas para compressão arterial no desfiladeiro torácico."
+    },
+    {
+      "name": "DOPPLER_ARTERIAL_MMSS:block-percent-unconfirmed",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "DOPPLER_ARTERIAL_MMSS",
+        "physicianReviewed": false,
+        "laterality": "left",
+        "right": {
+          "examined": false,
+          "status": "normal",
+          "psvCms": {},
+          "percentageDataSufficient": false,
+          "percentageConfirmed": false,
+          "thoracicOutlet": {
+            "evaluated": false
+          }
+        },
+        "left": {
+          "examined": true,
+          "status": "stenosis",
+          "affectedVessel": "artéria subclávia esquerda",
+          "psvCms": {
+            "artéria subclávia esquerda": 286
+          },
+          "stenosisPercent": 70,
+          "percentageDataSufficient": true,
+          "percentageConfirmed": false,
+          "distalPattern": "fluxo amortecido nas artérias radial e ulnar, com reenchimento distal",
+          "thoracicOutlet": {
+            "evaluated": true,
+            "maneuvers": "abdução sustentada e rotação externa",
+            "positions": "posição neutra e abdução a 90 graus",
+            "result": "positive",
+            "physicianConfirmed": true
+          }
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "STENOSIS_PERCENT_UNSUPPORTED"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "DOPPLER_ARTERIAL_MMSS:block-distal-pattern",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "DOPPLER_ARTERIAL_MMSS",
+        "physicianReviewed": false,
+        "laterality": "left",
+        "right": {
+          "examined": false,
+          "status": "normal",
+          "psvCms": {},
+          "percentageDataSufficient": false,
+          "percentageConfirmed": false,
+          "thoracicOutlet": {
+            "evaluated": false
+          }
+        },
+        "left": {
+          "examined": true,
+          "status": "stenosis",
+          "affectedVessel": "artéria subclávia esquerda",
+          "psvCms": {
+            "artéria subclávia esquerda": 286
+          },
+          "stenosisPercent": 70,
+          "percentageDataSufficient": true,
+          "percentageConfirmed": true,
+          "thoracicOutlet": {
+            "evaluated": true,
+            "maneuvers": "abdução sustentada e rotação externa",
+            "positions": "posição neutra e abdução a 90 graus",
+            "result": "positive",
+            "physicianConfirmed": true
+          }
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "DISTAL_PATTERN_REQUIRED"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "DOPPLER_ARTERIAL_MMSS:block-missing-psv",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "DOPPLER_ARTERIAL_MMSS",
+        "physicianReviewed": false,
+        "laterality": "left",
+        "right": {
+          "examined": false,
+          "status": "normal",
+          "psvCms": {},
+          "percentageDataSufficient": false,
+          "percentageConfirmed": false,
+          "thoracicOutlet": {
+            "evaluated": false
+          }
+        },
+        "left": {
+          "examined": true,
+          "status": "stenosis",
+          "affectedVessel": "artéria subclávia esquerda",
+          "psvCms": {},
+          "stenosisPercent": 70,
+          "percentageDataSufficient": true,
+          "percentageConfirmed": true,
+          "distalPattern": "fluxo amortecido nas artérias radial e ulnar, com reenchimento distal",
+          "thoracicOutlet": {
+            "evaluated": true,
+            "maneuvers": "abdução sustentada e rotação externa",
+            "positions": "posição neutra e abdução a 90 graus",
+            "result": "positive",
+            "physicianConfirmed": true
+          }
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "ALTERED_ARTERIAL_MEASUREMENTS_REQUIRED"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "DOPPLER_ARTERIAL_MMSS:block-outlet-unconfirmed",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "DOPPLER_ARTERIAL_MMSS",
+        "physicianReviewed": false,
+        "laterality": "left",
+        "right": {
+          "examined": false,
+          "status": "normal",
+          "psvCms": {},
+          "percentageDataSufficient": false,
+          "percentageConfirmed": false,
+          "thoracicOutlet": {
+            "evaluated": false
+          }
+        },
+        "left": {
+          "examined": true,
+          "status": "stenosis",
+          "affectedVessel": "artéria subclávia esquerda",
+          "psvCms": {
+            "artéria subclávia esquerda": 286
+          },
+          "stenosisPercent": 70,
+          "percentageDataSufficient": true,
+          "percentageConfirmed": true,
+          "distalPattern": "fluxo amortecido nas artérias radial e ulnar, com reenchimento distal",
+          "thoracicOutlet": {
+            "evaluated": true,
+            "maneuvers": "abdução sustentada e rotação externa",
+            "positions": "posição neutra e abdução a 90 graus",
+            "result": "positive",
+            "physicianConfirmed": false
+          }
+        }
+      },
+      "success": false,
+      "issueCodes": [
+        "THORACIC_OUTLET_UNCONFIRMED"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "TORAX:balik-eligible",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "TORAX",
+        "physicianReviewed": false,
+        "right": {
+          "pleuralLine": "regular",
+          "sliding": "absent",
+          "linesB": {
+            "count": 0,
+            "distribution": "none"
+          },
+          "effusion": {
+            "present": false
+          },
+          "consolidation": "not_seen",
+          "atelectasis": "not_seen",
+          "pneumothorax": "suspected"
+        },
+        "left": {
+          "pleuralLine": "regular",
+          "sliding": "present",
+          "linesB": {
+            "count": 3,
+            "distribution": "multifocal"
+          },
+          "effusion": {
+            "present": true,
+            "separationMm": 22.5,
+            "context": {
+              "adult": true,
+              "mechanicallyVentilated": true,
+              "supineTorso15Deg": true,
+              "endExpirationPosteriorAxillary": true,
+              "physicianConfirmed": true
+            }
+          },
+          "consolidation": "not_seen",
+          "atelectasis": "confirmed",
+          "pneumothorax": "not_seen"
+        },
+        "correlationSuggested": true,
+        "limitation": "Janela acústica limitada por enfisema subcutâneo"
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DE TÓRAX\n\nCOMENTÁRIOS:\nExame realizado com transdutores convexo e linear, com avaliação bilateral das regiões anterior, lateral e posterior do tórax.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nHemitórax direito:\nLinha pleural regular; deslizamento pleural ausente.\nNão foram registradas linhas B.\nNão se identifica derrame pleural.\nConsolidação não identificada. Atelectasia não identificada. Sinais de pneumotórax: suspeita.\n\nHemitórax esquerdo:\nLinha pleural regular; deslizamento pleural presente.\n3 linhas B, com distribuição multifocal.\nDerrame pleural com separação máxima de 22,5 mm e volume estimado de 450 mL pelo método de Balik.\nConsolidação não identificada. Atelectasia confirmada. Sinais de pneumotórax: não identificada.\n\nLimitação: Janela acústica limitada por enfisema subcutâneo.\n\nNOTA DA ESTIMATIVA:\nV (mL) = 20 × Sep (mm); Adulto sob ventilação mecânica, em decúbito supino com tronco a 15°; Separação máxima no fim da expiração, na linha axilar posterior. DOI 10.1007/s00134-005-0024-2. Erro absoluto médio aproximado de 158 mL; a estimativa não determina conduta automaticamente.\n\nCONCLUSÃO:\nHemitórax direito: ausência de deslizamento pleural, pneumotórax suspeita.\nHemitórax esquerdo: derrame pleural estimado em 450 mL, 3 linhas B de distribuição multifocal, atelectasia confirmada.\nSugere-se correlação clínica."
+    },
+    {
+      "name": "TORAX:incomplete-assessment",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "TORAX",
+        "physicianReviewed": false,
+        "right": {
+          "pleuralLine": "not_assessed",
+          "sliding": "present",
+          "linesB": {
+            "count": 0,
+            "distribution": "none"
+          },
+          "effusion": {
+            "present": false
+          },
+          "consolidation": "not_seen",
+          "atelectasis": "not_seen",
+          "pneumothorax": "not_seen"
+        },
+        "left": {
+          "pleuralLine": "regular",
+          "sliding": "present",
+          "linesB": {
+            "count": 0,
+            "distribution": "none"
+          },
+          "effusion": {
+            "present": false
+          },
+          "consolidation": "not_seen",
+          "atelectasis": "not_seen",
+          "pneumothorax": "not_seen"
+        },
+        "correlationSuggested": false
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DE TÓRAX\n\nCOMENTÁRIOS:\nExame realizado com transdutores convexo e linear, com avaliação bilateral das regiões anterior, lateral e posterior do tórax.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nHemitórax direito:\nLinha pleural não avaliada; deslizamento pleural presente.\nNão foram registradas linhas B.\nNão se identifica derrame pleural.\nConsolidação não identificada. Atelectasia não identificada. Sinais de pneumotórax: não identificada.\n\nHemitórax esquerdo:\nLinha pleural regular; deslizamento pleural presente.\nNão foram registradas linhas B.\nNão se identifica derrame pleural.\nConsolidação não identificada. Atelectasia não identificada. Sinais de pneumotórax: não identificada.\n\n\nCONCLUSÃO:\nHemitórax direito com avaliação pleural incompleta.\nHemitórax esquerdo sem alterações ecográficas significativas."
+    },
+    {
+      "name": "TORAX:block-correlation-without-reason",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "TORAX",
+        "physicianReviewed": false,
+        "right": {
+          "pleuralLine": "regular",
+          "sliding": "present",
+          "linesB": {
+            "count": 0,
+            "distribution": "none"
+          },
+          "effusion": {
+            "present": false
+          },
+          "consolidation": "not_seen",
+          "atelectasis": "not_seen",
+          "pneumothorax": "not_seen"
+        },
+        "left": {
+          "pleuralLine": "regular",
+          "sliding": "present",
+          "linesB": {
+            "count": 0,
+            "distribution": "none"
+          },
+          "effusion": {
+            "present": false
+          },
+          "consolidation": "not_seen",
+          "atelectasis": "not_seen",
+          "pneumothorax": "not_seen"
+        },
+        "correlationSuggested": true
+      },
+      "success": false,
+      "issueCodes": [
+        "CORRELATION_WITHOUT_REASON"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "TORAX:block-lines-b-distribution",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "TORAX",
+        "physicianReviewed": false,
+        "right": {
+          "pleuralLine": "regular",
+          "sliding": "present",
+          "linesB": {
+            "count": 0,
+            "distribution": "none"
+          },
+          "effusion": {
+            "present": false
+          },
+          "consolidation": "not_seen",
+          "atelectasis": "not_seen",
+          "pneumothorax": "not_seen"
+        },
+        "left": {
+          "pleuralLine": "regular",
+          "sliding": "present",
+          "linesB": {
+            "count": 0,
+            "distribution": "focal"
+          },
+          "effusion": {
+            "present": false
+          },
+          "consolidation": "not_seen",
+          "atelectasis": "not_seen",
+          "pneumothorax": "not_seen"
+        },
+        "correlationSuggested": false
+      },
+      "success": false,
+      "issueCodes": [
+        "LINES_B_DISTRIBUTION_WITHOUT_COUNT"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "QUADRIL_INFANTIL:IIA-IIC",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "QUADRIL_INFANTIL",
+        "physicianReviewed": false,
+        "ageDays": 40,
+        "right": {
+          "adequateStandardPlane": true,
+          "alphaDeg": 52,
+          "betaDeg": 60,
+          "bonyRoof": "rounded",
+          "cartilaginousRoof": "normal",
+          "femoralHead": "centered",
+          "labrumPosition": "normal",
+          "grafClassification": "IIA",
+          "classificationConfirmed": true
+        },
+        "left": {
+          "adequateStandardPlane": true,
+          "alphaDeg": 45,
+          "betaDeg": 70,
+          "bonyRoof": "rounded",
+          "cartilaginousRoof": "normal",
+          "femoralHead": "centered",
+          "labrumPosition": "normal",
+          "grafClassification": "IIC",
+          "classificationConfirmed": true
+        },
+        "recommendationConfirmed": false
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DOS QUADRIS DO LACTENTE\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, utilizando cortes coronais padronizados segundo a técnica de Graf. Idade: 40 dias.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nQuadril direito: teto ósseo arredondado, teto cartilaginoso preservado, cabeça femoral centrada, ângulo alfa de 52°, ângulo beta de 60°. Classificação de Graf IIA.\nQuadril esquerdo: teto ósseo arredondado, teto cartilaginoso preservado, cabeça femoral centrada, ângulo alfa de 45°, ângulo beta de 70°. Classificação de Graf IIC.\n\nCONCLUSÃO:\nQuadril direito classificado como Graf IIA.\nQuadril esquerdo classificado como Graf IIC."
+    },
+    {
+      "name": "QUADRIL_INFANTIL:D-III",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "QUADRIL_INFANTIL",
+        "physicianReviewed": false,
+        "ageDays": 30,
+        "right": {
+          "adequateStandardPlane": true,
+          "alphaDeg": 45,
+          "betaDeg": 80,
+          "bonyRoof": "deficient",
+          "cartilaginousRoof": "normal",
+          "femoralHead": "decentered",
+          "labrumPosition": "normal",
+          "grafClassification": "D",
+          "classificationConfirmed": true
+        },
+        "left": {
+          "adequateStandardPlane": true,
+          "alphaDeg": 40,
+          "betaDeg": 90,
+          "bonyRoof": "deficient",
+          "cartilaginousRoof": "displaced",
+          "femoralHead": "dislocated",
+          "labrumPosition": "everted",
+          "grafClassification": "III",
+          "classificationConfirmed": true
+        },
+        "recommendationConfirmed": false
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DOS QUADRIS DO LACTENTE\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, utilizando cortes coronais padronizados segundo a técnica de Graf. Idade: 30 dias.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nQuadril direito: teto ósseo deficiente, teto cartilaginoso preservado, cabeça femoral descentrada, ângulo alfa de 45°, ângulo beta de 80°. Classificação de Graf D.\nQuadril esquerdo: teto ósseo deficiente, teto cartilaginoso deslocado, cabeça femoral luxada, ângulo alfa de 40°, ângulo beta de 90°. Classificação de Graf III.\n\nCONCLUSÃO:\nQuadril direito classificado como Graf D.\nQuadril esquerdo classificado como Graf III."
+    },
+    {
+      "name": "QUADRIL_INFANTIL:IV",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "QUADRIL_INFANTIL",
+        "physicianReviewed": false,
+        "ageDays": 20,
+        "right": {
+          "adequateStandardPlane": true,
+          "alphaDeg": 63,
+          "betaDeg": 47,
+          "bonyRoof": "normal",
+          "cartilaginousRoof": "normal",
+          "femoralHead": "centered",
+          "labrumPosition": "normal",
+          "grafClassification": "I",
+          "classificationConfirmed": true
+        },
+        "left": {
+          "adequateStandardPlane": true,
+          "alphaDeg": 38,
+          "betaDeg": 95,
+          "bonyRoof": "deficient",
+          "cartilaginousRoof": "displaced",
+          "femoralHead": "dislocated",
+          "labrumPosition": "interposed",
+          "grafClassification": "IV",
+          "classificationConfirmed": true
+        },
+        "recommendationConfirmed": true,
+        "recommendation": "Sugere-se avaliação ortopédica"
+      },
+      "success": true,
+      "issueCodes": [],
+      "warningCodes": [],
+      "report": "ULTRASSONOGRAFIA DOS QUADRIS DO LACTENTE\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, utilizando cortes coronais padronizados segundo a técnica de Graf. Idade: 20 dias.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nQuadril direito: teto ósseo bem formado, teto cartilaginoso preservado, cabeça femoral centrada, ângulo alfa de 63°, ângulo beta de 47°. Classificação de Graf I.\nQuadril esquerdo: teto ósseo deficiente, teto cartilaginoso deslocado, cabeça femoral luxada, ângulo alfa de 38°, ângulo beta de 95°. Classificação de Graf IV.\n\nCONCLUSÃO:\nQuadril direito classificado como Graf I.\nQuadril esquerdo classificado como Graf IV.\nSugere-se avaliação ortopédica"
+    },
+    {
+      "name": "QUADRIL_INFANTIL:block-mismatch",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "QUADRIL_INFANTIL",
+        "physicianReviewed": false,
+        "ageDays": 60,
+        "right": {
+          "adequateStandardPlane": true,
+          "alphaDeg": 63,
+          "betaDeg": 47,
+          "bonyRoof": "normal",
+          "cartilaginousRoof": "normal",
+          "femoralHead": "centered",
+          "labrumPosition": "normal",
+          "grafClassification": "I",
+          "classificationConfirmed": true
+        },
+        "left": {
+          "adequateStandardPlane": true,
+          "alphaDeg": 55,
+          "betaDeg": 60,
+          "bonyRoof": "normal",
+          "cartilaginousRoof": "normal",
+          "femoralHead": "centered",
+          "labrumPosition": "normal",
+          "grafClassification": "I",
+          "classificationConfirmed": true
+        },
+        "recommendationConfirmed": false
+      },
+      "success": false,
+      "issueCodes": [
+        "GRAF_CLASSIFICATION_MISMATCH"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "QUADRIL_INFANTIL:block-unconfirmed",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "QUADRIL_INFANTIL",
+        "physicianReviewed": false,
+        "ageDays": 60,
+        "right": {
+          "adequateStandardPlane": true,
+          "alphaDeg": 63,
+          "betaDeg": 47,
+          "bonyRoof": "normal",
+          "cartilaginousRoof": "normal",
+          "femoralHead": "centered",
+          "labrumPosition": "normal",
+          "grafClassification": "I",
+          "classificationConfirmed": false
+        },
+        "left": {
+          "adequateStandardPlane": true,
+          "alphaDeg": 63,
+          "betaDeg": 47,
+          "bonyRoof": "normal",
+          "cartilaginousRoof": "normal",
+          "femoralHead": "centered",
+          "labrumPosition": "normal",
+          "grafClassification": "I",
+          "classificationConfirmed": true
+        },
+        "recommendationConfirmed": false
+      },
+      "success": false,
+      "issueCodes": [
+        "GRAF_UNCONFIRMED"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "QUADRIL_INFANTIL:block-no-age",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "QUADRIL_INFANTIL",
+        "physicianReviewed": false,
+        "right": {
+          "adequateStandardPlane": true,
+          "alphaDeg": 63,
+          "betaDeg": 47,
+          "bonyRoof": "normal",
+          "cartilaginousRoof": "normal",
+          "femoralHead": "centered",
+          "labrumPosition": "normal",
+          "grafClassification": "I",
+          "classificationConfirmed": true
+        },
+        "left": {
+          "adequateStandardPlane": true,
+          "alphaDeg": 63,
+          "betaDeg": 47,
+          "bonyRoof": "normal",
+          "cartilaginousRoof": "normal",
+          "femoralHead": "centered",
+          "labrumPosition": "normal",
+          "grafClassification": "I",
+          "classificationConfirmed": true
+        },
+        "recommendationConfirmed": false
+      },
+      "success": false,
+      "issueCodes": [
+        "GRAF_INPUT_INCOMPLETE",
+        "GRAF_INPUT_INCOMPLETE"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "QUADRIL_INFANTIL:block-inadequate-plane",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "QUADRIL_INFANTIL",
+        "physicianReviewed": false,
+        "ageDays": 60,
+        "right": {
+          "adequateStandardPlane": false,
+          "alphaDeg": 63,
+          "betaDeg": 47,
+          "bonyRoof": "normal",
+          "cartilaginousRoof": "normal",
+          "femoralHead": "centered",
+          "labrumPosition": "normal",
+          "grafClassification": "I",
+          "classificationConfirmed": true
+        },
+        "left": {
+          "adequateStandardPlane": true,
+          "alphaDeg": 63,
+          "betaDeg": 47,
+          "bonyRoof": "normal",
+          "cartilaginousRoof": "normal",
+          "femoralHead": "centered",
+          "labrumPosition": "normal",
+          "grafClassification": "I",
+          "classificationConfirmed": true
+        },
+        "recommendationConfirmed": false
+      },
+      "success": false,
+      "issueCodes": [
+        "GRAF_INADEQUATE_PLANE",
+        "GRAF_INPUT_INCOMPLETE"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "QUADRIL_INFANTIL:block-morphology-insufficient",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "QUADRIL_INFANTIL",
+        "physicianReviewed": false,
+        "ageDays": 60,
+        "right": {
+          "adequateStandardPlane": true,
+          "alphaDeg": 63,
+          "betaDeg": 47,
+          "bonyRoof": "normal",
+          "cartilaginousRoof": "normal",
+          "femoralHead": "centered",
+          "labrumPosition": "normal",
+          "grafClassification": "I",
+          "classificationConfirmed": true
+        },
+        "left": {
+          "adequateStandardPlane": true,
+          "alphaDeg": 40,
+          "betaDeg": 90,
+          "bonyRoof": "normal",
+          "cartilaginousRoof": "normal",
+          "femoralHead": "centered",
+          "labrumPosition": "normal",
+          "classificationConfirmed": false
+        },
+        "recommendationConfirmed": false
+      },
+      "success": false,
+      "issueCodes": [
+        "GRAF_MORPHOLOGY_INSUFFICIENT"
+      ],
+      "warningCodes": [],
+      "report": null
+    },
+    {
+      "name": "QUADRIL_INFANTIL:block-recommendation-unconfirmed",
+      "input": {
+        "schemaVersion": 1,
+        "categoryCode": "QUADRIL_INFANTIL",
+        "physicianReviewed": false,
+        "ageDays": 60,
+        "right": {
+          "adequateStandardPlane": true,
+          "alphaDeg": 63,
+          "betaDeg": 47,
+          "bonyRoof": "normal",
+          "cartilaginousRoof": "normal",
+          "femoralHead": "centered",
+          "labrumPosition": "normal",
+          "grafClassification": "I",
+          "classificationConfirmed": true
+        },
+        "left": {
+          "adequateStandardPlane": true,
+          "alphaDeg": 63,
+          "betaDeg": 47,
+          "bonyRoof": "normal",
+          "cartilaginousRoof": "normal",
+          "femoralHead": "centered",
+          "labrumPosition": "normal",
+          "grafClassification": "I",
+          "classificationConfirmed": true
+        },
+        "recommendationConfirmed": false,
+        "recommendation": "Controle em 6 semanas"
+      },
+      "success": false,
+      "issueCodes": [
+        "RECOMMENDATION_UNCONFIRMED"
+      ],
+      "warningCodes": [],
+      "report": null
+    }
+  ]
+}
