@@ -1,7 +1,7 @@
 {
   "source": "@laudousg/shared clinicalModels v1",
-  "sharedCommit": "3a6ba7c",
-  "generatedAt": "2026-10-02",
+  "sharedCommit": "a0a5967",
+  "generatedAt": "2026-10-03",
   "normalAbdomenReport": "Fígado de margens regulares, dimensões e ecotextura normais. Vasos intra-hepáticos bem visíveis e de calibre anatômico. Não há sinais de processo expansivo hepático. Vesícula biliar de topografia usual e parede fina, sem cálculos. Vias biliares sem dilatação. Pâncreas e baço sem alterações. Rins tópicos, com dimensões e diferenciação corticomedular preservadas. Aorta e veia cava inferior de calibres normais. Bexiga de paredes finas e conteúdo anecoico homogêneo.",
   "cases": [
     {
@@ -369,7 +369,7 @@
       "success": true,
       "issueCodes": [],
       "warningCodes": [],
-      "report": "ULTRASSONOGRAFIA DOS QUADRIS DO LACTENTE\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, utilizando cortes coronais padronizados segundo a técnica de Graf. Idade: 60 dias.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nQuadril direito: teto ósseo bem formado, teto cartilaginoso preservado, cabeça femoral centrada, ângulo alfa de 63°, ângulo beta de 47° e cobertura de 56%. Classificação de Graf I.\nQuadril esquerdo: teto ósseo bem formado, teto cartilaginoso preservado, cabeça femoral centrada, ângulo alfa de 63°, ângulo beta de 47° e cobertura de 56%. Classificação de Graf I.\n\nCONCLUSÃO:\nQuadril direito classificado como Graf I.\nQuadril esquerdo classificado como Graf I."
+      "report": "ULTRASSONOGRAFIA DOS QUADRIS DO LACTENTE\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, utilizando cortes coronais padronizados segundo a técnica de Graf. Idade: 60 dias.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nQuadril direito: teto ósseo bem formado, teto cartilaginoso preservado, cabeça femoral centrada, labrum em posição habitual, ângulo alfa de 63°, ângulo beta de 47° e cobertura de 56%. Classificação de Graf I.\nQuadril esquerdo: teto ósseo bem formado, teto cartilaginoso preservado, cabeça femoral centrada, labrum em posição habitual, ângulo alfa de 63°, ângulo beta de 47° e cobertura de 56%. Classificação de Graf I.\n\nCONCLUSÃO:\nQuadril direito classificado como Graf I.\nQuadril esquerdo classificado como Graf I."
     },
     {
       "name": "QUADRIL_INFANTIL:altered",
@@ -411,7 +411,7 @@
       "warningCodes": [
         "AGE_OUTSIDE_TARGET"
       ],
-      "report": "ULTRASSONOGRAFIA DOS QUADRIS DO LACTENTE\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, utilizando cortes coronais padronizados segundo a técnica de Graf. Idade: 200 dias.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nQuadril direito: teto ósseo arredondado, teto cartilaginoso preservado, cabeça femoral centrada, ângulo alfa de 55°, ângulo beta de 65°. Classificação de Graf IIB.\nQuadril esquerdo: teto ósseo bem formado, teto cartilaginoso preservado, cabeça femoral centrada, ângulo alfa de 63°, ângulo beta de 47° e cobertura de 56%. Classificação de Graf I.\n\nCONCLUSÃO:\nQuadril direito classificado como Graf IIB.\nQuadril esquerdo classificado como Graf I.\nSugere-se correlação com avaliação ortopédica, a critério clínico"
+      "report": "ULTRASSONOGRAFIA DOS QUADRIS DO LACTENTE\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, utilizando cortes coronais padronizados segundo a técnica de Graf. Idade: 200 dias.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nQuadril direito: teto ósseo arredondado, teto cartilaginoso preservado, cabeça femoral centrada, labrum em posição habitual, ângulo alfa de 55°, ângulo beta de 65°. Classificação de Graf IIB.\nQuadril esquerdo: teto ósseo bem formado, teto cartilaginoso preservado, cabeça femoral centrada, labrum em posição habitual, ângulo alfa de 63°, ângulo beta de 47° e cobertura de 56%. Classificação de Graf I.\n\nCONCLUSÃO:\nQuadril direito classificado como Graf IIB.\nQuadril esquerdo classificado como Graf I.\nSugere-se correlação com avaliação ortopédica, a critério clínico"
     },
     {
       "name": "ABDOMEN_TOTAL_DOPPLER:thrombosis-confirmed",
@@ -2441,7 +2441,7 @@
       "success": true,
       "issueCodes": [],
       "warningCodes": [],
-      "report": "ULTRASSONOGRAFIA DOS QUADRIS DO LACTENTE\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, utilizando cortes coronais padronizados segundo a técnica de Graf. Idade: 40 dias.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nQuadril direito: teto ósseo arredondado, teto cartilaginoso preservado, cabeça femoral centrada, ângulo alfa de 52°, ângulo beta de 60°. Classificação de Graf IIA.\nQuadril esquerdo: teto ósseo arredondado, teto cartilaginoso preservado, cabeça femoral centrada, ângulo alfa de 45°, ângulo beta de 70°. Classificação de Graf IIC.\n\nCONCLUSÃO:\nQuadril direito classificado como Graf IIA.\nQuadril esquerdo classificado como Graf IIC."
+      "report": "ULTRASSONOGRAFIA DOS QUADRIS DO LACTENTE\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, utilizando cortes coronais padronizados segundo a técnica de Graf. Idade: 40 dias.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nQuadril direito: teto ósseo arredondado, teto cartilaginoso preservado, cabeça femoral centrada, labrum em posição habitual, ângulo alfa de 52°, ângulo beta de 60°. Classificação de Graf IIA.\nQuadril esquerdo: teto ósseo arredondado, teto cartilaginoso preservado, cabeça femoral centrada, labrum em posição habitual, ângulo alfa de 45°, ângulo beta de 70°. Classificação de Graf IIC.\n\nCONCLUSÃO:\nQuadril direito classificado como Graf IIA.\nQuadril esquerdo classificado como Graf IIC."
     },
     {
       "name": "QUADRIL_INFANTIL:D-III",
@@ -2477,7 +2477,7 @@
       "success": true,
       "issueCodes": [],
       "warningCodes": [],
-      "report": "ULTRASSONOGRAFIA DOS QUADRIS DO LACTENTE\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, utilizando cortes coronais padronizados segundo a técnica de Graf. Idade: 30 dias.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nQuadril direito: teto ósseo deficiente, teto cartilaginoso preservado, cabeça femoral descentrada, ângulo alfa de 45°, ângulo beta de 80°. Classificação de Graf D.\nQuadril esquerdo: teto ósseo deficiente, teto cartilaginoso deslocado, cabeça femoral luxada, ângulo alfa de 40°, ângulo beta de 90°. Classificação de Graf III.\n\nCONCLUSÃO:\nQuadril direito classificado como Graf D.\nQuadril esquerdo classificado como Graf III."
+      "report": "ULTRASSONOGRAFIA DOS QUADRIS DO LACTENTE\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, utilizando cortes coronais padronizados segundo a técnica de Graf. Idade: 30 dias.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nQuadril direito: teto ósseo deficiente, teto cartilaginoso preservado, cabeça femoral descentrada, labrum em posição habitual, ângulo alfa de 45°, ângulo beta de 80°. Classificação de Graf D.\nQuadril esquerdo: teto ósseo deficiente, teto cartilaginoso deslocado, cabeça femoral luxada, labrum evertido, ângulo alfa de 40°, ângulo beta de 90°. Classificação de Graf III.\n\nCONCLUSÃO:\nQuadril direito classificado como Graf D.\nQuadril esquerdo classificado como Graf III."
     },
     {
       "name": "QUADRIL_INFANTIL:IV",
@@ -2514,7 +2514,7 @@
       "success": true,
       "issueCodes": [],
       "warningCodes": [],
-      "report": "ULTRASSONOGRAFIA DOS QUADRIS DO LACTENTE\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, utilizando cortes coronais padronizados segundo a técnica de Graf. Idade: 20 dias.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nQuadril direito: teto ósseo bem formado, teto cartilaginoso preservado, cabeça femoral centrada, ângulo alfa de 63°, ângulo beta de 47°. Classificação de Graf I.\nQuadril esquerdo: teto ósseo deficiente, teto cartilaginoso deslocado, cabeça femoral luxada, ângulo alfa de 38°, ângulo beta de 95°. Classificação de Graf IV.\n\nCONCLUSÃO:\nQuadril direito classificado como Graf I.\nQuadril esquerdo classificado como Graf IV.\nSugere-se avaliação ortopédica"
+      "report": "ULTRASSONOGRAFIA DOS QUADRIS DO LACTENTE\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, utilizando cortes coronais padronizados segundo a técnica de Graf. Idade: 20 dias.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nQuadril direito: teto ósseo bem formado, teto cartilaginoso preservado, cabeça femoral centrada, labrum em posição habitual, ângulo alfa de 63°, ângulo beta de 47°. Classificação de Graf I.\nQuadril esquerdo: teto ósseo deficiente, teto cartilaginoso deslocado, cabeça femoral luxada, labrum interposto, ângulo alfa de 38°, ângulo beta de 95°. Classificação de Graf IV.\n\nCONCLUSÃO:\nQuadril direito classificado como Graf I.\nQuadril esquerdo classificado como Graf IV.\nSugere-se avaliação ortopédica"
     },
     {
       "name": "QUADRIL_INFANTIL:block-mismatch",

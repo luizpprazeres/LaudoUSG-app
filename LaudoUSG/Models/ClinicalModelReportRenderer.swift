@@ -297,13 +297,14 @@ enum ClinicalModelReportRenderer {
         let roofLabel: [QuadrilInfantilDraft.BonyRoof: String] = [.normal: "bem formado", .rounded: "arredondado", .deficient: "deficiente", .notAssessed: "não avaliado"]
         let cartilageLabel: [QuadrilInfantilDraft.CartilaginousRoof: String] = [.normal: "preservado", .displaced: "deslocado", .notAssessed: "não avaliado"]
         let headLabel: [QuadrilInfantilDraft.FemoralHead: String] = [.centered: "centrada", .decentered: "descentrada", .dislocated: "luxada", .notAssessed: "não avaliada"]
+        let labrumLabel: [QuadrilInfantilDraft.LabrumPosition: String] = [.normal: "em posição habitual", .everted: "evertido", .interposed: "interposto", .notAssessed: "não avaliado"]
 
         func block(_ laterality: ExamLaterality, _ value: QuadrilInfantilDraft.Side) -> String {
             guard value.adequateStandardPlane else {
                 return "Quadril \(sideName(laterality)): corte padrão inadequado; classificação não emitida."
             }
             let coverage = value.coveragePercent.map { " e cobertura de \(pt($0))%" } ?? ""
-            return "Quadril \(sideName(laterality)): teto ósseo \(roofLabel[value.bonyRoof]!), teto cartilaginoso \(cartilageLabel[value.cartilaginousRoof]!), cabeça femoral \(headLabel[value.femoralHead]!), ângulo alfa de \(pt(value.alphaDeg ?? 0))°, ângulo beta de \(pt(value.betaDeg ?? 0))°\(coverage). Classificação de Graf \(value.grafClassification?.rawValue ?? "")."
+            return "Quadril \(sideName(laterality)): teto ósseo \(roofLabel[value.bonyRoof]!), teto cartilaginoso \(cartilageLabel[value.cartilaginousRoof]!), cabeça femoral \(headLabel[value.femoralHead]!), labrum \(labrumLabel[value.labrumPosition]!), ângulo alfa de \(pt(value.alphaDeg ?? 0))°, ângulo beta de \(pt(value.betaDeg ?? 0))°\(coverage). Classificação de Graf \(value.grafClassification?.rawValue ?? "")."
         }
         let recommendation = data.recommendation.flatMap { $0.isEmpty ? nil : "\n\($0)" } ?? ""
         return "ULTRASSONOGRAFIA DOS QUADRIS DO LACTENTE\n\nCOMENTÁRIOS:\nExame realizado com transdutor linear de alta frequência, utilizando cortes coronais padronizados segundo a técnica de Graf. Idade: \(data.ageDays ?? 0) dias.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\n\(block(.right, data.right))\n\(block(.left, data.left))\n\nCONCLUSÃO:\nQuadril direito classificado como Graf \(data.right.grafClassification?.rawValue ?? "").\nQuadril esquerdo classificado como Graf \(data.left.grafClassification?.rawValue ?? "").\(recommendation)"
