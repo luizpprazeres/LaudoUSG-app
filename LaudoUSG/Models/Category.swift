@@ -32,6 +32,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
     case dopplerArterialMmss = "DOPPLER_ARTERIAL_MMSS"
     case dopplerFistulaAv = "DOPPLER_FISTULA_AV"
     case dopplerRenal = "DOPPLER_RENAL"
+    case dopplerHepatico = "DOPPLER_HEPATICO"
     case torax = "TORAX"
     case quadrilInfantil = "QUADRIL_INFANTIL"
     case ocular = "OCULAR"
@@ -61,7 +62,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
     /// para encaminhá-los ao workspace correto e decodificar o histórico.
     var isPendingClinicalActivation: Bool {
         switch self {
-        case .abdomenTotalDoppler, .dopplerVenosoMmss, .dopplerArterialMmss,
+        case .abdomenTotalDoppler, .dopplerHepatico, .dopplerVenosoMmss, .dopplerArterialMmss,
              .torax, .quadrilInfantil:
             return true
         default:
@@ -102,6 +103,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .dopplerArterialMmss: return "Doppler arterial de membros superiores"
         case .dopplerFistulaAv: return "Doppler de fístula arteriovenosa"
         case .dopplerRenal: return "Doppler renal"
+        case .dopplerHepatico: return "Doppler hepático"
         case .torax: return "Ultrassonografia de tórax"
         case .quadrilInfantil: return "Quadril infantil"
         case .ocular: return "Ocular"
@@ -164,6 +166,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .dopplerArterialMmss: return "Estenoses e módulo de desfiladeiro torácico"
         case .dopplerFistulaAv: return "FAV para hemodiálise"
         case .dopplerRenal: return "Artérias renais"
+        case .dopplerHepatico: return "Veia porta e vasos hepáticos"
         case .torax: return "Pulmões, pleuras e derrames"
         case .quadrilInfantil: return "Técnica de Graf · alerta fora de 0–6 meses"
         case .ocular: return "Globo ocular e órbita"
@@ -186,7 +189,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .transfontanela, .quadrilInfantil, .ocular: return "6366F1"
         case .dopplerCarotidas, .dopplerVenosoMmii, .dopplerVenosoMmiiMedidas,
              .dopplerArterialMmii, .dopplerVenosoMmss, .dopplerArterialMmss,
-             .dopplerFistulaAv, .dopplerRenal: return "F59E0B"
+             .dopplerFistulaAv, .dopplerRenal, .dopplerHepatico: return "F59E0B"
         case .torax: return "0EA5E9"
         case .livre: return "64748B"
         }
@@ -212,7 +215,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         case .ocular: return "eye"
         case .dopplerCarotidas, .dopplerVenosoMmii, .dopplerVenosoMmiiMedidas,
              .dopplerArterialMmii, .dopplerVenosoMmss, .dopplerArterialMmss,
-             .dopplerFistulaAv, .dopplerRenal: return "waveform.path.ecg"
+             .dopplerFistulaAv, .dopplerRenal, .dopplerHepatico: return "waveform.path.ecg"
         case .livre: return "text.badge.plus"
         }
     }
@@ -254,6 +257,7 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         .dopplerVenosoMmii,
         .dopplerArterialMmii,
         .dopplerRenal,
+        .dopplerHepatico,
         .abdomenSuperior,
         .escrotal,
         .cervical,

@@ -35,11 +35,80 @@ enum ClinicalModelReportRenderer {
         }
         switch draft {
         case .abdomen(let value): return renderAbdomen(value)
+        case .hepaticDoppler(let value): return renderDopplerHepatico(value)
         case .venous(let value): return renderVenous(value)
         case .arterial(let value): return renderArterial(value)
         case .thorax(let value): return renderThorax(value)
         case .hip(let value): return renderHip(value)
         }
+    }
+
+    private static func renderDopplerHepatico(_ data: DopplerHepaticoDraft) -> String {
+        let flowLabel: [DopplerHepaticoDraft.FlowDirection: String] = [
+            .hepatopetal: "hepatopetal",
+            .hepatofugal: "hepatofugal",
+            .absent: "ausente",
+            .other: "conforme descrito pelo médico",
+        ]
+        let patternLabel: [DopplerHepaticoDraft.SpectralPattern: String] = [
+            .preserved: "preservado",
+            .altered: "alterado",
+            .other: "conforme descrito pelo médico",
+            .notAssessed: "não avaliado",
+        ]
+
+        func patency(_ value: DopplerHepaticoDraft.VascularPatency?, plural: Bool = false) -> String {
+            switch value {
+            case .patent: return plural ? "pérvias" : "pérvia"
+            case .thrombosis: return "com sinais de trombose"
+            default: return "com perviedade não informada"
+            }
+        }
+
+        func venousLine(_ label: String, _ vessel: DopplerHepaticoDraft.OptionalVessel) -> String {
+            "\(label) \(patency(vessel.patency)), com calibre de \(pt(vessel.caliberCm!)) cm, velocidade de \(pt(vessel.velocityCms!)) cm/s e fluxo \(flowLabel[vessel.flow!]!)."
+        }
+
+        var evaluatedLabels = ["veia porta"]
+        var findings = [
+            "Veia porta \(patency(data.portalVein.patency)), com calibre de \(pt(data.portalVein.caliberCm!)) cm, velocidade de \(pt(data.portalVein.velocityCms!)) cm/s e fluxo \(flowLabel[data.portalVein.flow!]!)."
+        ]
+        if data.hepaticVeins.evaluated {
+            evaluatedLabels.append("veias hepáticas")
+            findings.append("Veias hepáticas \(patency(data.hepaticVeins.patency, plural: true)), com calibre de \(pt(data.hepaticVeins.caliberCm!)) cm, velocidade de \(pt(data.hepaticVeins.velocityCms!)) cm/s, fluxo \(flowLabel[data.hepaticVeins.flow!]!) e padrão espectral \(patternLabel[data.hepaticVeins.spectralPattern!]!).")
+        }
+        if data.splenicVein.evaluated {
+            evaluatedLabels.append("veia esplênica")
+            findings.append(venousLine("Veia esplênica", data.splenicVein))
+        }
+        if data.superiorMesentericVein.evaluated {
+            evaluatedLabels.append("veia mesentérica superior")
+            findings.append(venousLine("Veia mesentérica superior", data.superiorMesentericVein))
+        }
+        if data.commonHepaticArtery.evaluated {
+            let vessel = data.commonHepaticArtery
+            evaluatedLabels.append("artéria hepática comum")
+            findings.append("Artéria hepática comum \(patency(vessel.patency)), com calibre de \(pt(vessel.caliberCm!)) cm, velocidade de pico sistólico de \(pt(vessel.peakSystolicVelocityCms!)) cm/s, velocidade diastólica final de \(pt(vessel.endDiastolicVelocityCms!)) cm/s, índice de resistência de \(pt(vessel.resistanceIndex!)), fluxo \(flowLabel[vessel.flow!]!) e padrão espectral \(patternLabel[vessel.spectralPattern!]!).")
+        }
+
+        let pathology = data.portalPathology
+        let conclusion: String
+        if pathology.status == .absent {
+            findings.append("Não foram identificados sinais de trombose nos segmentos avaliados.")
+            conclusion = "Estudo Doppler hepático sem alterações hemodinâmicas significativas nos vasos avaliados."
+        } else {
+            findings.append(sentence(pathology.evidence!))
+            let qualifier = pathology.status == .confirmed ? "Sinais ultrassonográficos de" : "Achados suspeitos de"
+            switch pathology.kind {
+            case .portalThrombosis: conclusion = "\(qualifier) trombose portal."
+            case .portalHypertension: conclusion = "\(qualifier) hipertensão portal."
+            case .other where pathology.status == .suspected:
+                conclusion = "Achados suspeitos de alteração vascular hepática, conforme descritos acima."
+            default: conclusion = "Alteração vascular hepática, conforme descrita acima."
+            }
+        }
+
+        return "DOPPLER HEPÁTICO\n\nCOMENTÁRIOS:\nEstudo realizado com transdutor convexo multifrequencial, utilizando modos bidimensional, Doppler colorido e análise espectral.\nForam avaliados \(evaluatedLabels.joined(separator: ", ")), com registro de calibre, direção do fluxo e velocidades quando aplicável.\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\n\(findings.joined(separator: "\n"))\n\nCONCLUSÃO:\n\(conclusion)"
     }
 
     private static func renderAbdomen(_ data: AbdomenTotalDopplerDraft) -> String {

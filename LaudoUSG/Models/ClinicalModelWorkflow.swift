@@ -2,6 +2,7 @@ import Foundation
 
 enum ClinicalModelDraft: Codable, Equatable, Sendable {
     case abdomen(AbdomenTotalDopplerDraft)
+    case hepaticDoppler(DopplerHepaticoDraft)
     case venous(DopplerVenosoMmssDraft)
     case arterial(DopplerArterialMmssDraft)
     case thorax(ThoraxDraft)
@@ -14,6 +15,7 @@ enum ClinicalModelDraft: Codable, Equatable, Sendable {
         let code = try container.decode(String.self, forKey: .categoryCode)
         switch ReportCategory(rawValue: code) {
         case .abdomenTotalDoppler: self = .abdomen(try .init(from: decoder))
+        case .dopplerHepatico: self = .hepaticDoppler(try .init(from: decoder))
         case .dopplerVenosoMmss: self = .venous(try .init(from: decoder))
         case .dopplerArterialMmss: self = .arterial(try .init(from: decoder))
         case .torax: self = .thorax(try .init(from: decoder))
@@ -30,6 +32,7 @@ enum ClinicalModelDraft: Codable, Equatable, Sendable {
     func encode(to encoder: Encoder) throws {
         switch self {
         case .abdomen(let value): try value.encode(to: encoder)
+        case .hepaticDoppler(let value): try value.encode(to: encoder)
         case .venous(let value): try value.encode(to: encoder)
         case .arterial(let value): try value.encode(to: encoder)
         case .thorax(let value): try value.encode(to: encoder)
@@ -40,6 +43,7 @@ enum ClinicalModelDraft: Codable, Equatable, Sendable {
     var category: ReportCategory {
         switch self {
         case .abdomen: .abdomenTotalDoppler
+        case .hepaticDoppler: .dopplerHepatico
         case .venous: .dopplerVenosoMmss
         case .arterial: .dopplerArterialMmss
         case .thorax: .torax
@@ -50,6 +54,7 @@ enum ClinicalModelDraft: Codable, Equatable, Sendable {
     var activationIssues: [ClinicalContractIssue] {
         switch self {
         case .abdomen(let value): value.activationIssues
+        case .hepaticDoppler(let value): value.activationIssues
         case .venous(let value): value.activationIssues
         case .arterial(let value): value.activationIssues
         case .thorax(let value): value.activationIssues
@@ -93,6 +98,7 @@ enum ClinicalModelDraft: Codable, Equatable, Sendable {
     var physicianReviewed: Bool {
         switch self {
         case .abdomen(let value): value.physicianReviewed
+        case .hepaticDoppler(let value): value.physicianReviewed
         case .venous(let value): value.physicianReviewed
         case .arterial(let value): value.physicianReviewed
         case .thorax(let value): value.physicianReviewed
@@ -103,6 +109,7 @@ enum ClinicalModelDraft: Codable, Equatable, Sendable {
     func settingPhysicianReviewed(_ reviewed: Bool) -> Self {
         switch self {
         case .abdomen(var value): value.physicianReviewed = reviewed; return .abdomen(value)
+        case .hepaticDoppler(var value): value.physicianReviewed = reviewed; return .hepaticDoppler(value)
         case .venous(var value): value.physicianReviewed = reviewed; return .venous(value)
         case .arterial(var value): value.physicianReviewed = reviewed; return .arterial(value)
         case .thorax(var value): value.physicianReviewed = reviewed; return .thorax(value)
@@ -139,6 +146,8 @@ enum ClinicalModelDraft: Codable, Equatable, Sendable {
                     status: .absent, kind: nil, evidence: nil, physicianConfirmed: false
                 )
             ))
+        case .dopplerHepatico:
+            return .hepaticDoppler(.empty)
         case .dopplerVenosoMmss:
             let side = DopplerVenosoMmssDraft.unexaminedSide
             return .venous(DopplerVenosoMmssDraft(

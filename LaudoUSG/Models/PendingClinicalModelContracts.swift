@@ -1,11 +1,12 @@
 import Foundation
 
 /// Espelho Swift do contrato `clinicalModels/v1` compartilhado por Web e
-/// Android. Os cinco modelos foram aprovados e são oferecidos em conjunto.
+/// Android. Os modelos aprovados são oferecidos em conjunto.
 enum PendingClinicalModelContracts {
     static let schemaVersion = 1
     static let categories: Set<ReportCategory> = [
         .abdomenTotalDoppler,
+        .dopplerHepatico,
         .dopplerVenosoMmss,
         .dopplerArterialMmss,
         .torax,
@@ -53,7 +54,7 @@ struct ClinicalContractIssue: Codable, Equatable, Sendable {
     }
 }
 
-private func physicianReviewIssues(_ reviewed: Bool) -> [ClinicalContractIssue] {
+func physicianReviewIssues(_ reviewed: Bool) -> [ClinicalContractIssue] {
     reviewed ? [] : [
         .init("MODEL_NOT_REVIEWED", field: "physicianReviewed", message: "Revise todos os achados e confirme o modelo antes de liberar o laudo."),
     ]

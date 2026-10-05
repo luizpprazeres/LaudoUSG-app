@@ -68,6 +68,8 @@ struct ClinicalModelWorkspace: View {
         switch state.draft {
         case .abdomen(let value):
             AbdomenClinicalEditor(value: value) { state.replaceDraft(.abdomen($0)) }
+        case .hepaticDoppler(let value):
+            DopplerHepaticoClinicalEditor(value: value) { state.replaceDraft(.hepaticDoppler($0)) }
         case .venous(let value):
             VenousClinicalEditor(value: value) { state.replaceDraft(.venous($0)) }
         case .arterial(let value):
@@ -173,6 +175,167 @@ struct ClinicalModelWorkspace: View {
         let key = "clinical-model-draft.\(category.rawValue)"
         guard let data = try? JSONEncoder().encode(value.draftForPersistence) else { return }
         UserDefaults.standard.set(data, forKey: key)
+    }
+}
+
+private struct DopplerHepaticoClinicalEditor: View {
+    let value: DopplerHepaticoDraft
+    let onChange: (DopplerHepaticoDraft) -> Void
+
+    var body: some View {
+        Section("Veia porta obrigatória") {
+            Picker("Perviedade", selection: Binding(
+                get: { value.portalVein.patency },
+                set: { newValue in update { $0.portalVein.patency = newValue } }
+            )) { patencyOptions() }
+            ClinicalNumberField("Calibre (cm)", get: { value.portalVein.caliberCm },
+                set: { newValue in update { $0.portalVein.caliberCm = newValue } })
+            ClinicalNumberField("Velocidade (cm/s)", get: { value.portalVein.velocityCms },
+                set: { newValue in update { $0.portalVein.velocityCms = newValue } })
+            Picker("Direção do fluxo", selection: Binding(
+                get: { value.portalVein.flow },
+                set: { newValue in update { $0.portalVein.flow = newValue } }
+            )) { flowOptions(expected: .hepatopetal) }
+        }
+
+        Section("Situação vascular") {
+            Picker("Situação portal", selection: Binding(
+                get: { value.portalPathology.status },
+                set: { newValue in
+                    var copy = value
+                    copy.portalPathology = value.portalPathology.settingStatus(newValue)
+                    copy.normalHemodynamicsConfirmed = false
+                    onChange(copy)
+                }
+            )) {
+                Text("Não avaliada").tag(DopplerHepaticoDraft.PortalStatus.notAssessed)
+                Text("Sem alteração").tag(DopplerHepaticoDraft.PortalStatus.absent)
+                Text("Suspeita").tag(DopplerHepaticoDraft.PortalStatus.suspected)
+                Text("Confirmada").tag(DopplerHepaticoDraft.PortalStatus.confirmed)
+            }
+            if value.portalPathology.status == .suspected || value.portalPathology.status == .confirmed {
+                Picker("Tipo de alteração", selection: Binding(
+                    get: { value.portalPathology.kind },
+                    set: { newValue in update { $0.portalPathology.kind = newValue } }
+                )) {
+                    Text("Selecione").tag(DopplerHepaticoDraft.PortalPathologyKind?.none)
+                    Text("Hipertensão portal").tag(DopplerHepaticoDraft.PortalPathologyKind?.some(.portalHypertension))
+                    Text("Trombose portal").tag(DopplerHepaticoDraft.PortalPathologyKind?.some(.portalThrombosis))
+                    Text("Outra alteração").tag(DopplerHepaticoDraft.PortalPathologyKind?.some(.other))
+                }
+                TextField("Critérios e achados", text: optionalBinding(
+                    get: { value.portalPathology.evidence },
+                    set: { newValue in update { $0.portalPathology.evidence = newValue } }
+                ))
+                Toggle("Critérios confirmados pelo médico", isOn: Binding(
+                    get: { value.portalPathology.physicianConfirmed },
+                    set: { newValue in update { $0.portalPathology.physicianConfirmed = newValue } }
+                ))
+            }
+            if value.portalPathology.status == .absent {
+                Toggle("Confirmo a coerência hemodinâmica do exame", isOn: Binding(
+                    get: { value.normalHemodynamicsConfirmed },
+                    set: { newValue in var copy = value; copy.normalHemodynamicsConfirmed = newValue; onChange(copy) }
+                ))
+            }
+        }
+
+        Section("Vasos opcionais") {
+            vesselEditor("Veias hepáticas", expected: .hepatofugal, vessel: value.hepaticVeins, kind: .hepaticVeins) {
+                newValue in update { $0.hepaticVeins = newValue }
+            }
+            vesselEditor("Veia esplênica", expected: .hepatopetal, vessel: value.splenicVein, kind: .venous) {
+                newValue in update { $0.splenicVein = newValue }
+            }
+            vesselEditor("Veia mesentérica superior", expected: .hepatopetal, vessel: value.superiorMesentericVein, kind: .venous) {
+                newValue in update { $0.superiorMesentericVein = newValue }
+            }
+            vesselEditor("Artéria hepática comum", expected: .hepatopetal, vessel: value.commonHepaticArtery, kind: .arterial) {
+                newValue in update { $0.commonHepaticArtery = newValue }
+            }
+        }
+    }
+
+    private enum VesselKind { case venous, hepaticVeins, arterial }
+
+    @ViewBuilder
+    private func vesselEditor(
+        _ label: String,
+        expected: DopplerHepaticoDraft.FlowDirection,
+        vessel: DopplerHepaticoDraft.OptionalVessel,
+        kind: VesselKind,
+        change: @escaping (DopplerHepaticoDraft.OptionalVessel) -> Void
+    ) -> some View {
+        DisclosureGroup {
+            Picker("Perviedade", selection: Binding(
+                get: { vessel.patency },
+                set: { var copy = vessel; copy.patency = $0; change(copy) }
+            )) { patencyOptions() }
+            ClinicalNumberField("Calibre (cm)", get: { vessel.caliberCm },
+                set: { var copy = vessel; copy.caliberCm = $0; change(copy) })
+            if kind != .arterial {
+                ClinicalNumberField("Velocidade (cm/s)", get: { vessel.velocityCms },
+                    set: { var copy = vessel; copy.velocityCms = $0; change(copy) })
+            }
+            Picker("Direção do fluxo", selection: Binding(
+                get: { vessel.flow },
+                set: { var copy = vessel; copy.flow = $0; change(copy) }
+            )) { flowOptions(expected: expected) }
+            if kind == .hepaticVeins || kind == .arterial {
+                Picker("Padrão espectral", selection: Binding(
+                    get: { vessel.spectralPattern },
+                    set: { var copy = vessel; copy.spectralPattern = $0; change(copy) }
+                )) { spectralOptions() }
+            }
+            if kind == .arterial {
+                ClinicalNumberField("VPS (cm/s)", get: { vessel.peakSystolicVelocityCms },
+                    set: { var copy = vessel; copy.peakSystolicVelocityCms = $0; change(copy) })
+                ClinicalNumberField("VDF (cm/s)", get: { vessel.endDiastolicVelocityCms },
+                    set: { var copy = vessel; copy.endDiastolicVelocityCms = $0; change(copy) })
+                ClinicalNumberField("Índice de resistência", get: { vessel.resistanceIndex },
+                    set: { var copy = vessel; copy.resistanceIndex = $0; change(copy) })
+            }
+        } label: {
+            Toggle(label, isOn: Binding(
+                get: { vessel.evaluated },
+                set: { change(vessel.settingEvaluated($0)) }
+            ))
+        }
+    }
+
+    @ViewBuilder
+    private func patencyOptions() -> some View {
+        Text("Selecione").tag(DopplerHepaticoDraft.VascularPatency?.none)
+        Text("Não avaliada").tag(DopplerHepaticoDraft.VascularPatency?.some(.notAssessed))
+        Text("Pérvia").tag(DopplerHepaticoDraft.VascularPatency?.some(.patent))
+        Text("Trombose").tag(DopplerHepaticoDraft.VascularPatency?.some(.thrombosis))
+    }
+
+    @ViewBuilder
+    private func flowOptions(expected: DopplerHepaticoDraft.FlowDirection) -> some View {
+        Text("Selecione").tag(DopplerHepaticoDraft.FlowDirection?.none)
+        Text(expected == .hepatopetal ? "Hepatopetal (fisiológico)" : "Hepatopetal")
+            .tag(DopplerHepaticoDraft.FlowDirection?.some(.hepatopetal))
+        Text(expected == .hepatofugal ? "Hepatofugal (fisiológico)" : "Hepatofugal")
+            .tag(DopplerHepaticoDraft.FlowDirection?.some(.hepatofugal))
+        Text("Ausente").tag(DopplerHepaticoDraft.FlowDirection?.some(.absent))
+        Text("Outro").tag(DopplerHepaticoDraft.FlowDirection?.some(.other))
+    }
+
+    @ViewBuilder
+    private func spectralOptions() -> some View {
+        Text("Selecione").tag(DopplerHepaticoDraft.SpectralPattern?.none)
+        Text("Não avaliado").tag(DopplerHepaticoDraft.SpectralPattern?.some(.notAssessed))
+        Text("Preservado").tag(DopplerHepaticoDraft.SpectralPattern?.some(.preserved))
+        Text("Alterado").tag(DopplerHepaticoDraft.SpectralPattern?.some(.altered))
+        Text("Outro").tag(DopplerHepaticoDraft.SpectralPattern?.some(.other))
+    }
+
+    private func update(_ mutation: (inout DopplerHepaticoDraft) -> Void) {
+        var copy = value
+        mutation(&copy)
+        copy.normalHemodynamicsConfirmed = false
+        onChange(copy)
     }
 }
 

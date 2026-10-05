@@ -135,6 +135,7 @@ final class ClinicalModelsIOSPreparationTests: XCTestCase {
     func testHumanLabelsMatchSharedPresentation() {
         let expected: [ReportCategory: String] = [
             .abdomenTotalDoppler: "Abdome total com Doppler",
+            .dopplerHepatico: "Doppler hepático",
             .dopplerVenosoMmss: "Doppler venoso de membros superiores",
             .dopplerArterialMmss: "Doppler arterial de membros superiores",
             .torax: "Ultrassonografia de tórax",

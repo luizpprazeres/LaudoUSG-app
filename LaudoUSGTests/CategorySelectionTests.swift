@@ -22,7 +22,7 @@ final class CategorySelectionTests: XCTestCase {
             "PROSTATA_SUPRAPUBICA", "TRANSFONTANELA", "DOPPLER_CAROTIDAS",
             "DOPPLER_VENOSO_MMII", "DOPPLER_VENOSO_MMII_MEDIDAS",
             "DOPPLER_ARTERIAL_MMII", "DOPPLER_FISTULA_AV", "DOPPLER_RENAL",
-            "ABDOMEN_TOTAL_DOPPLER", "DOPPLER_VENOSO_MMSS", "DOPPLER_ARTERIAL_MMSS",
+            "ABDOMEN_TOTAL_DOPPLER", "DOPPLER_HEPATICO", "DOPPLER_VENOSO_MMSS", "DOPPLER_ARTERIAL_MMSS",
             "TORAX", "QUADRIL_INFANTIL", "OCULAR", "LIVRE",
         ]
         let selectable = ReportCategory.selectable
@@ -37,6 +37,7 @@ final class CategorySelectionTests: XCTestCase {
     func testHiddenCodesStillDecodeForSavedReports() throws {
         for category in [
             ReportCategory.abdomenTotalDoppler,
+            .dopplerHepatico,
             .dopplerVenosoMmss,
             .dopplerArterialMmss,
             .torax,
@@ -57,6 +58,7 @@ final class CategorySelectionTests: XCTestCase {
             Set(pending.map(\.rawValue)),
             [
                 "ABDOMEN_TOTAL_DOPPLER",
+                "DOPPLER_HEPATICO",
                 "DOPPLER_VENOSO_MMSS",
                 "DOPPLER_ARTERIAL_MMSS",
                 "TORAX",
