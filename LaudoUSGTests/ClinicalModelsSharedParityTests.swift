@@ -119,15 +119,15 @@ final class ClinicalModelsSharedParityTests: XCTestCase {
 }
 
 final class ClinicalModelsIOSPreparationTests: XCTestCase {
-    func testRolloutGateKeepsFiveModelsHiddenAndUnreachable() async {
-        XCTAssertFalse(PendingClinicalModelContracts.isRolloutEnabled)
-        XCTAssertTrue(PendingClinicalModelContracts.categories.isDisjoint(with: Set(ReportCategory.selectable)))
+    func testApprovedModelsAreSelectableAndReachable() async {
+        XCTAssertTrue(PendingClinicalModelContracts.isRolloutEnabled)
+        XCTAssertTrue(PendingClinicalModelContracts.categories.isSubset(of: Set(ReportCategory.selectable)))
         await MainActor.run {
             let vm = GenerateViewModel()
             vm.category = .viasUrinarias
             for category in PendingClinicalModelContracts.categories {
                 vm.category = category
-                XCTAssertEqual(vm.category, .viasUrinarias, "\(category.rawValue) não pode ser aberta com o gate OFF")
+                XCTAssertEqual(vm.category, category, "\(category.rawValue) deve abrir o fluxo estruturado aprovado")
             }
         }
     }

@@ -1,8 +1,7 @@
 import Foundation
 
 /// Espelho Swift do contrato `clinicalModels/v1` compartilhado por Web e
-/// Android. Os cinco modelos ficam compilados e testados, mas continuam fora de
-/// `ReportCategory.selectable` até o gate de ativação simultânea.
+/// Android. Os cinco modelos foram aprovados e são oferecidos em conjunto.
 enum PendingClinicalModelContracts {
     static let schemaVersion = 1
     static let categories: Set<ReportCategory> = [
@@ -13,16 +12,10 @@ enum PendingClinicalModelContracts {
         .quadrilInfantil,
     ]
 
-    /// Gate de liberação conjunta (Web, iOS, Android e `RENDERER_CATEGORIES`
-    /// do backend). Em Release fica sempre OFF. Em Debug, só abre com
-    /// `-ClinicalModelsV1Preview YES` nos argumentos do scheme, para QA local;
-    /// o servidor continua respondendo 404 enquanto o gate dele estiver OFF.
+    /// Liberação conjunta aprovada para Web, iOS, Android e backend.
+    /// A validação clínica de cada contrato continua fail-closed antes de gerar.
     static var isRolloutEnabled: Bool {
-        #if DEBUG
-        UserDefaults.standard.bool(forKey: "ClinicalModelsV1Preview")
-        #else
-        false
-        #endif
+        true
     }
 }
 

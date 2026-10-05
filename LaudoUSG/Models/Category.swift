@@ -57,9 +57,8 @@ enum ReportCategory: String, CaseIterable, Identifiable, Codable {
         self == .musculoesqueleticoRaras
     }
 
-    /// Modelos aprovados clinicamente, mas ainda ocultos até Web, iOS, Android e
-    /// backend fecharem juntos os gates de integração. Os códigos permanecem no
-    /// enum para decodificar histórico e exercitar o contrato antes do lançamento.
+    /// Modelos clínicos com fluxo estruturado próprio. A propriedade permanece
+    /// para encaminhá-los ao workspace correto e decodificar o histórico.
     var isPendingClinicalActivation: Bool {
         switch self {
         case .abdomenTotalDoppler, .dopplerVenosoMmss, .dopplerArterialMmss,

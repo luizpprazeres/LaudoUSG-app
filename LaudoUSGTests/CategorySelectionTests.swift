@@ -22,13 +22,14 @@ final class CategorySelectionTests: XCTestCase {
             "PROSTATA_SUPRAPUBICA", "TRANSFONTANELA", "DOPPLER_CAROTIDAS",
             "DOPPLER_VENOSO_MMII", "DOPPLER_VENOSO_MMII_MEDIDAS",
             "DOPPLER_ARTERIAL_MMII", "DOPPLER_FISTULA_AV", "DOPPLER_RENAL",
-            "OCULAR", "LIVRE",
+            "ABDOMEN_TOTAL_DOPPLER", "DOPPLER_VENOSO_MMSS", "DOPPLER_ARTERIAL_MMSS",
+            "TORAX", "QUADRIL_INFANTIL", "OCULAR", "LIVRE",
         ]
         let selectable = ReportCategory.selectable
         XCTAssertEqual(Set(selectable.map(\.rawValue)), expected)
         XCTAssertEqual(selectable.count, expected.count)
         XCTAssertTrue(selectable.contains(.cervicometria))
-        XCTAssertFalse(selectable.contains(.abdomenTotalDoppler))
+        XCTAssertTrue(selectable.contains(.abdomenTotalDoppler))
         XCTAssertFalse(selectable.contains(.musculoesqueleticoRaras))
         XCTAssertTrue(Set(ReportCategory.priority).isSubset(of: Set(selectable)))
     }
@@ -48,10 +49,10 @@ final class CategorySelectionTests: XCTestCase {
         }
     }
 
-    func testApprovedPendingModelsRemainHiddenUntilSimultaneousActivation() {
+    func testApprovedClinicalModelsAreAvailableTogether() {
         let pending = Set(ReportCategory.allCases.filter(\.isPendingClinicalActivation))
         XCTAssertEqual(pending, PendingClinicalModelContracts.categories)
-        XCTAssertTrue(pending.isDisjoint(with: Set(ReportCategory.selectable)))
+        XCTAssertTrue(pending.isSubset(of: Set(ReportCategory.selectable)))
         XCTAssertEqual(
             Set(pending.map(\.rawValue)),
             [
