@@ -188,22 +188,24 @@ enum HadlockCalculator {
     ) -> (percentile: Int, sexUsed: Sex, version: String)? {
         switch source {
         case .intergrowth21st:
+            guard let percentile = IntergrowthTable.percentileFor(
+                weight: weight,
+                igWeeks: igWeeks,
+                igDays: igDays
+            ) else { return nil }
             return (
-                IntergrowthTable.percentileFor(
-                    weight: weight,
-                    igWeeks: igWeeks,
-                    igDays: igDays
-                ),
+                percentile,
                 .unisex,
                 IntergrowthTable.version
             )
         case .hadlock1991:
+            guard let percentile = HadlockTable.percentileFor(
+                weight: weight,
+                igWeeks: igWeeks,
+                igDays: igDays
+            ) else { return nil }
             return (
-                HadlockTable.percentileFor(
-                    weight: weight,
-                    igWeeks: igWeeks,
-                    igDays: igDays
-                ),
+                percentile,
                 .unisex,
                 HadlockTable.version
             )

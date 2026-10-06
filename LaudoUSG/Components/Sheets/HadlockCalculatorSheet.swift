@@ -33,6 +33,11 @@ struct HadlockCalculatorSheet: View {
                 description
                 measureInputs
                 igPicker
+                if let ageRangeMessage {
+                    Text(ageRangeMessage)
+                        .font(TextStyle.caption)
+                        .foregroundStyle(SemanticColor.warningText)
+                }
                 if let result {
                     resultCard(result)
                     insertButton(result)
@@ -97,6 +102,24 @@ struct HadlockCalculatorSheet: View {
                     ForEach(0...6, id: \.self) { Text("\($0) d").tag($0) }
                 }
             }
+        }
+    }
+
+    private var effectiveSource: PercentileSource {
+        app.preferences.percentileSource.isAvailable
+            ? app.preferences.percentileSource
+            : .intergrowth21st
+    }
+
+    private var ageRangeMessage: String? {
+        let totalDays = igWeeks * 7 + igDays
+        switch effectiveSource {
+        case .intergrowth21st where !(22 * 7...40 * 7).contains(totalDays):
+            return "A curva Intergrowth-21st está disponível de 22+0 a 40+0 semanas."
+        case .hadlock1991 where !(24 * 7...41 * 7).contains(totalDays):
+            return "A curva Hadlock 1991 está disponível de 24+0 a 41+0 semanas."
+        default:
+            return nil
         }
     }
 

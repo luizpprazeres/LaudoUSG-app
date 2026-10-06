@@ -18,6 +18,42 @@ final class HadlockCalculatorTests: XCTestCase {
         XCTAssertEqual(result?.sourceVersion, HadlockTable.version)
     }
 
+    func testIntergrowthRejectsAgeOutsideTableDomain() {
+        XCTAssertNil(IntergrowthTable.lookup(igWeeks: 21, igDays: 6))
+        XCTAssertNotNil(IntergrowthTable.lookup(igWeeks: 22, igDays: 0))
+        XCTAssertNotNil(IntergrowthTable.lookup(igWeeks: 39, igDays: 6))
+        XCTAssertNotNil(IntergrowthTable.lookup(igWeeks: 40, igDays: 0))
+        XCTAssertNil(IntergrowthTable.lookup(igWeeks: 40, igDays: 1))
+        XCTAssertNil(IntergrowthTable.lookup(igWeeks: 30, igDays: 7))
+
+        XCTAssertNil(calculate(input(.normal, igWeeks: 20, igDays: 0), source: .intergrowth21st))
+        XCTAssertNotNil(calculate(input(.normal, igWeeks: 22, igDays: 0), source: .intergrowth21st))
+        XCTAssertNil(calculate(input(.normal, igWeeks: 40, igDays: 1), source: .intergrowth21st))
+    }
+
+    func testHadlockRejectsAgeOutsideTableDomain() {
+        XCTAssertNil(HadlockTable.lookup(igWeeks: 23, igDays: 6))
+        XCTAssertNotNil(HadlockTable.lookup(igWeeks: 24, igDays: 0))
+        XCTAssertNotNil(HadlockTable.lookup(igWeeks: 40, igDays: 6))
+        XCTAssertNotNil(HadlockTable.lookup(igWeeks: 41, igDays: 0))
+        XCTAssertNil(HadlockTable.lookup(igWeeks: 41, igDays: 1))
+        XCTAssertNil(HadlockTable.lookup(igWeeks: 30, igDays: -1))
+
+        XCTAssertNil(calculate(input(.normal, igWeeks: 23, igDays: 6), source: .hadlock1991))
+        XCTAssertNotNil(calculate(input(.normal, igWeeks: 41, igDays: 0), source: .hadlock1991))
+        XCTAssertNil(calculate(input(.normal, igWeeks: 41, igDays: 1), source: .hadlock1991))
+    }
+
+    func testKnownResultsRemainStableInsideCurveDomain() {
+        let intergrowth = calculate(input(.normal), source: .intergrowth21st)
+        XCTAssertEqual(intergrowth?.weightGrams, 1_472)
+        XCTAssertEqual(intergrowth?.percentileValue, 56)
+
+        let hadlock = calculate(input(.normal), source: .hadlock1991)
+        XCTAssertEqual(hadlock?.weightGrams, 1_472)
+        XCTAssertEqual(hadlock?.percentileValue, 24)
+    }
+
     func testNormalWHO() throws {
         if WHOMulticentreTable.unisex.isEmpty {
             throw XCTSkip("WHO Multicentre table pending curation")
@@ -137,14 +173,19 @@ final class HadlockCalculatorTests: XCTestCase {
         case large
     }
 
-    private func input(_ kind: CaseKind, sex: Sex = .unisex) -> BiometryInput {
+    private func input(
+        _ kind: CaseKind,
+        sex: Sex = .unisex,
+        igWeeks: Int? = nil,
+        igDays: Int? = nil
+    ) -> BiometryInput {
         switch kind {
         case .normal:
-            BiometryInput(dbp: 72, cc: 280, ca: 260, cf: 56, igWeeks: 30, igDays: 2, sex: sex)
+            BiometryInput(dbp: 72, cc: 280, ca: 260, cf: 56, igWeeks: igWeeks ?? 30, igDays: igDays ?? 2, sex: sex)
         case .small:
-            BiometryInput(dbp: 65, cc: 245, ca: 215, cf: 50, igWeeks: 30, igDays: 0, sex: sex)
+            BiometryInput(dbp: 65, cc: 245, ca: 215, cf: 50, igWeeks: igWeeks ?? 30, igDays: igDays ?? 0, sex: sex)
         case .large:
-            BiometryInput(dbp: 82, cc: 310, ca: 310, cf: 62, igWeeks: 30, igDays: 0, sex: sex)
+            BiometryInput(dbp: 82, cc: 310, ca: 310, cf: 62, igWeeks: igWeeks ?? 30, igDays: igDays ?? 0, sex: sex)
         }
     }
 

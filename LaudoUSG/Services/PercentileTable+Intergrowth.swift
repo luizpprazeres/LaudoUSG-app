@@ -35,17 +35,19 @@ enum IntergrowthTable {
     ]
 
     static func lookup(igWeeks: Int, igDays: Int) -> PercentileBand? {
+        guard (0...6).contains(igDays), igWeeks >= 0 else { return nil }
         let totalDays = igWeeks * 7 + igDays
-        let clampedWeek = max(22, min(40, totalDays / 7))
-        let fraction = Double(totalDays - clampedWeek * 7) / 7
-        guard let band = unisex[clampedWeek] else { return nil }
+        guard totalDays >= 22 * 7, totalDays <= 40 * 7 else { return nil }
+        let week = totalDays / 7
+        let fraction = Double(totalDays - week * 7) / 7
+        guard let band = unisex[week] else { return nil }
         if fraction == 0 { return band }
-        guard clampedWeek < 40, let nextBand = unisex[clampedWeek + 1] else { return band }
+        guard let nextBand = unisex[week + 1] else { return nil }
         return interpolate(band, nextBand, fraction: fraction)
     }
 
-    static func percentileFor(weight: Int, igWeeks: Int, igDays: Int) -> Int {
-        guard let band = lookup(igWeeks: igWeeks, igDays: igDays) else { return 50 }
+    static func percentileFor(weight: Int, igWeeks: Int, igDays: Int) -> Int? {
+        guard let band = lookup(igWeeks: igWeeks, igDays: igDays) else { return nil }
         return PercentileMath.percentileFor(weight: weight, band: band)
     }
 
