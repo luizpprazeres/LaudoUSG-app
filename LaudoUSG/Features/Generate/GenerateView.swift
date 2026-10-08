@@ -9,7 +9,6 @@ struct GenerateView: View {
     @State private var path: [AppDestination] = []
     @State private var didCopyLaudo: Bool = false
     @State private var isEditingLaudo: Bool = false  // toggle visualização (com highlight) vs edição (TextEditor)
-    @State private var isSanityExpanded: Bool = false // acordeão de pontos a revisar
     @State private var isNegativeFeedbackExpanded: Bool = false
     @State private var feedbackComment: String = ""
     @Namespace private var tabNamespace
@@ -137,13 +136,7 @@ struct GenerateView: View {
                     laudoEditor
                         .padding(.horizontal, Spacing.md)
                         .padding(.top, Spacing.sm)
-                    if !vm.sanityIssues.isEmpty {
-                        sanityCard
-                            .padding(.horizontal, Spacing.md)
-                            .padding(.bottom, 96)
-                    } else {
-                        Color.clear.frame(height: 96)
-                    }
+                    Color.clear.frame(height: 96)
                 }
             }
             .animation(.easeOut(duration: 0.2), value: vm.lastError)
@@ -513,11 +506,14 @@ struct GenerateView: View {
                         // Renderiza laudo durante streaming com placeholders ____ em
                         // destaque roxo (efeito hidrocor — "ponto a revisar" visualmente
                         // marcado, fica profissional + fácil de identificar).
-                        Text(vm.displayedOutput.laudoHighlighted)
+                        ReviewHighlightedText(
+                            text: vm.displayedOutput,
+                            issues: vm.sanityIssues.map(\.laudoHighlightIssue),
+                            selectionEnabled: false
+                        )
                             .font(TextStyle.bodyLarge)
                             .foregroundStyle(AppSurface.textPrimary)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .textSelection(.disabled)
                             .padding(.top, Spacing.xs)
                             .padding(.leading, Spacing.xs)
                         TypingCursor()
@@ -548,13 +544,15 @@ struct GenerateView: View {
                 // Modo visualização — Text(AttributedString) com linhas que contêm ____ destacadas em roxo
                 ScrollView {
                     VStack(alignment: .leading, spacing: Spacing.md) {
-                        Text(vm.editedLaudoText.laudoHighlighted)
+                        ReviewHighlightedText(
+                            text: vm.editedLaudoText,
+                            issues: vm.sanityIssues.map(\.laudoHighlightIssue)
+                        )
                             .font(TextStyle.bodyLarge)
                             .foregroundStyle(AppSurface.textPrimary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.top, Spacing.xs)
                             .padding(.leading, Spacing.xs)
-                            .textSelection(.enabled) // permite copiar com seleção
 
                         if vm.canShowFeedback {
                             feedbackCard
@@ -800,6 +798,11 @@ struct GenerateView: View {
                 saveIndicator
                 Spacer()
                 if vm.hasLaudoOutput {
+                    GeneralReviewNoticesButton(
+                        text: vm.editedLaudoText,
+                        issues: vm.sanityIssues.map(\.laudoHighlightIssue)
+                    )
+
                     // Botão toggle: visualização (com highlight roxo) ↔ edição (TextEditor)
                     Button {
                         Haptics.tap()
@@ -1004,66 +1007,6 @@ struct GenerateView: View {
             .accessibilityLabel("Dispensar aviso")
         }
         .padding(Spacing.sm)
-        .background(
-            RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
-                .fill(SemanticColor.warningBg)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
-                .stroke(SemanticColor.warningBorder, lineWidth: 1)
-        )
-    }
-
-    private var sanityCard: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Header com toggle expansível — discreto, mostra contagem
-            Button {
-                Haptics.tap()
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    isSanityExpanded.toggle()
-                }
-            } label: {
-                HStack(spacing: Spacing.xs) {
-                    Image(systemName: "exclamationmark.bubble.fill")
-                        .foregroundStyle(SemanticColor.warningText)
-                    Text("\(vm.sanityIssues.count) ponto\(vm.sanityIssues.count == 1 ? "" : "s") a revisar")
-                        .font(TextStyle.bodyLargeSemibold)
-                        .foregroundStyle(SemanticColor.warningText)
-                    Spacer()
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(SemanticColor.warningText)
-                        .rotationEffect(.degrees(isSanityExpanded ? 180 : 0))
-                }
-            }
-            .buttonStyle(PressableButtonStyle())
-
-            // Lista expansível
-            if isSanityExpanded {
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Divider().padding(.vertical, Spacing.xs)
-                    ForEach(vm.sanityIssues) { issue in
-                        HStack(alignment: .top, spacing: Spacing.xs) {
-                            Image(systemName: issue.severity == "critical" ? "xmark.octagon.fill" : "exclamationmark.triangle")
-                                .foregroundStyle(issue.severity == "critical" ? SemanticColor.errorText : SemanticColor.warningText)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(issue.message)
-                                    .font(TextStyle.body)
-                                    .foregroundStyle(AppSurface.textPrimary)
-                                if let range = issue.range, !range.isEmpty {
-                                    Text("Trecho: \(range)")
-                                        .font(TextStyle.caption)
-                                        .foregroundStyle(AppSurface.textMuted)
-                                        .lineLimit(1)
-                                }
-                            }
-                        }
-                    }
-                }
-                .transition(.opacity.combined(with: .move(edge: .top)))
-            }
-        }
-        .padding(Spacing.md)
         .background(
             RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
                 .fill(SemanticColor.warningBg)

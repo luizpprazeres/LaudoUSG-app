@@ -40,6 +40,33 @@ final class ReportReviewContractTests: XCTestCase {
         XCTAssertNil(report.reviewStatus)
         XCTAssertNil(report.reviewedAt)
     }
+
+    func testAutomaticMarkersDoNotChangeTextSentForMedicalReview() {
+        let visible = "Rim medindo 123 cm. [REVISAR — magnitude improvável]"
+        XCTAssertEqual(visible.strippedReviewMarkers, "Rim medindo 123 cm.")
+    }
+
+    func testReportDecodesPersistedSanityAnchorForContextualHighlight() throws {
+        let reportJSON = #"{"id":"r1","category_code":"ABDOME_TOTAL","status":"generated","generated_output":"Rim medindo 123 cm.","sanity_result":{"verdict":"warning","issues":[{"type":"medida_divergente","severity":"warning","detail":"Magnitude improvável.","trecho_laudo":"123 cm","campo_achado":null}],"summary":"Conferir."},"created_at":"2026-09-28T14:00:00Z","updated_at":"2026-09-28T14:00:00Z"}"#
+        let report = try JSONDecoder.api.decode(Report.self, from: Data(reportJSON.utf8))
+
+        XCTAssertEqual(report.sanityResult?.issues.first?.range, "123 cm")
+        XCTAssertEqual(report.sanityResult?.issues.first?.message, "Magnitude improvável.")
+    }
+
+    func testHighlightKeepsUnanchoredAlertAccessible() {
+        let issue = LaudoHighlightIssue(
+            id: "sem-trecho",
+            kind: .warning,
+            anchor: nil,
+            message: "Achado do ditado não localizado.",
+            severity: "critical"
+        )
+        let content = "Laudo preservado.".laudoHighlight(issues: [issue])
+
+        XCTAssertEqual(String(content.attributed.characters), "Laudo preservado.")
+        XCTAssertEqual(content.notices.map(\.message), ["Achado do ditado não localizado."])
+    }
 }
 
 private struct ReportEnvelopeFixture: Decodable {

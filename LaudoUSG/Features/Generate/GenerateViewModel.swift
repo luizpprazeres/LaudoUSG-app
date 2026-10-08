@@ -605,9 +605,14 @@ final class GenerateViewModel {
         }
 
         do {
-            let textBeingReviewed = editedLaudoText
+            // O texto persistido vai sem marcadores automáticos. A confirmação
+            // precisa comparar essa mesma versão limpa; antes, qualquer
+            // `[REVISAR ...]` fazia a checagem falhar apesar de o médico ter
+            // confirmado explicitamente o laudo.
+            let textBeingReviewed = editedLaudoText.strippedReviewMarkers
             let response = try await HistoryService.reviewReport(id: reportId, expectedText: textBeingReviewed)
-            guard lastReportId == reportId, editedLaudoText == textBeingReviewed else { return }
+            guard lastReportId == reportId,
+                  editedLaudoText.strippedReviewMarkers == textBeingReviewed else { return }
             reviewStatus = response.reviewStatus
             reviewedAt = response.reviewedAt
             reviewMessage = "Revisado. Esta versão foi liberada para a Sala."

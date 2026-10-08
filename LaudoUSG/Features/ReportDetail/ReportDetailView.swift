@@ -217,7 +217,10 @@ struct ReportDetailView: View {
                 .padding(.top, Spacing.xs)
             } else {
                 ScrollView {
-                    Text(vm.editingText.laudoHighlighted)
+                    ReviewHighlightedText(
+                        text: vm.editingText,
+                        issues: vm.report?.sanityResult?.issues.map(\.laudoHighlightIssue) ?? []
+                    )
                         .font(TextStyle.bodyLarge)
                         .foregroundStyle(AppSurface.textPrimary)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -318,6 +321,10 @@ struct ReportDetailView: View {
     private var bottomActions: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
             HStack(spacing: Spacing.xs) {
+                GeneralReviewNoticesButton(
+                    text: vm.editingText,
+                    issues: vm.report?.sanityResult?.issues.map(\.laudoHighlightIssue) ?? []
+                )
                 SecondaryButton(
                     title: didCopy ? "Copiado" : "Copiar",
                     icon: didCopy ? "checkmark" : "doc.on.doc"

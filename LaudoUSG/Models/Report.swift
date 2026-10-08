@@ -25,6 +25,7 @@ struct Report: Identifiable, Codable, Hashable {
     var contentRevision: Int?
     var reviewStatus: ReportReviewStatus?
     var reviewedAt: Date?
+    var sanityResult: SanityResult? = nil
     var createdAt: Date
     var updatedAt: Date
 
