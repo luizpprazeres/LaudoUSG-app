@@ -51,7 +51,8 @@ enum GestationalAgeCalculator {
         let days = currentTotalDays % 7
         let dpp = addDays(usgDate, 280 - usgTotalDays)
         let label = igLabel(weeks: weeks, days: days)
-        let insertBloco = "Primeira ultrassonografia realizada em \(formatDate(usgDate)). Hoje com \(label)."
+        let usgLabel = igLabel(weeks: usgWeeks, days: usgDays)
+        let insertBloco = "Primeira ultrassonografia realizada em \(formatDate(usgDate)) com \(usgLabel). Hoje com \(label)."
 
         return IGResult(weeks: weeks, days: days, dpp: dpp, method: .usg, label: label, insertBloco: insertBloco)
     }
