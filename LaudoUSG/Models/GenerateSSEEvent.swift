@@ -83,6 +83,16 @@ struct StagePayload: Decodable, Sendable, Hashable {
 struct StructuredPayload: Decodable, Sendable, Hashable {
     let ts: String?
     let payload: StructuredFindings
+    /// Aceito se o backend também mandar a categoria efetiva fora do `payload`.
+    let effectiveCategory: String?
+
+    /// Código da categoria efetiva; `nil` quando o evento não a informa.
+    var effectiveCategoryCode: String? {
+        [effectiveCategory, payload.categoriaDetectada, payload.category]
+            .lazy
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .first { !$0.isEmpty }
+    }
 }
 
 struct ValidatorPayload: Decodable, Sendable, Hashable {

@@ -94,7 +94,10 @@ final class GenerateViewModel {
                 category = oldValue
                 return
             }
-            if category != oldValue { dopplerOnly = false }
+            if category != oldValue {
+                dopplerOnly = false
+                clearCategoryRoute()
+            }
         }
     }
     var dopplerOnly = false
@@ -187,11 +190,13 @@ final class GenerateViewModel {
     /// `effective` já rebaixa "nativa" para "LaudoUSG" em iOS < 26, então aqui não
     /// há caminho em que o usuário fique sem ditado por ter escolhido algo que o
     /// aparelho não suporta.
-    private func engine(for category: ReportCategory) -> any LiveMicEngine {
+    func engine(for category: ReportCategory) -> any LiveMicEngine {
         // O backend usa a categoria pra enxugar os keyterms — precisa estar
         // setada ANTES do prewarm, que já busca o token.
         deepgram.categoryCode = category.rawValue
-        guard transcriptionEngine.effective == .nativa else { return deepgram }
+        // Laudo livre fica sempre no Deepgram: o roteamento do modelo depende
+        // do ditado, e a transcrição precisa ser a mesma das categorias diretas.
+        guard category != .livre, transcriptionEngine.effective == .nativa else { return deepgram }
         if #available(iOS 26.0, *) {
             if onDeviceEngine == nil { onDeviceEngine = AppleSpeechLiveService() }
             return onDeviceEngine ?? deepgram
@@ -482,38 +487,55 @@ final class GenerateViewModel {
     var lastReportId: String?
     var sanityIssues: [LocalSanityIssue] = []
 
+    /// Categoria escolhida quando a geração atual começou.
+    private(set) var requestedCategory: ReportCategory?
+    /// Código que o backend roteou a partir do Laudo livre (evento `structured`).
+    private(set) var routedCategoryCode: String?
+    private var routedCategoryExamLabel: String?
+
+    /// Rota só vale para geração nascida em LIVRE e que saiu de LIVRE.
+    private var activeRouteCode: String? {
+        guard requestedCategory == .livre,
+              let code = routedCategoryCode,
+              code != ReportCategory.livre.rawValue else { return nil }
+        return code
+    }
+
+    /// Categoria usada na validação local. Código roteado que o app não
+    /// conhece mantém as regras genéricas do Laudo livre.
+    var effectiveCategory: ReportCategory {
+        guard let code = activeRouteCode else { return category }
+        return ReportCategory(rawValue: code) ?? .livre
+    }
+
+    /// Código enviado no feedback — o modelo que de fato escreveu o laudo.
+    var effectiveCategoryCode: String {
+        activeRouteCode ?? category.rawValue
+    }
+
+    /// "Modelo identificado: Tireoide" — só para Laudo livre roteado.
+    var routedModelNotice: String? {
+        guard let code = activeRouteCode else { return nil }
+        if case .error = phase { return nil }
+        let label = ReportCategory(rawValue: code)?.label
+            ?? routedCategoryExamLabel
+            ?? ReportCategory.displayLabel(for: code)
+        return "Modelo identificado: \(label)"
+    }
+
+    private func clearCategoryRoute() {
+        requestedCategory = nil
+        routedCategoryCode = nil
+        routedCategoryExamLabel = nil
+    }
+
     /// #1: task da geração em voo — cancelada em reset/nova geração para o
     /// stream antigo não sobrescrever o laudo da geração nova (risco clínico).
     private var generateTask: Task<Void, Never>?
 
     func generate(writingStyleId: String) {
         guard canGenerate else { return }
-        lastReportId = nil
-        streamedOutput = ""
-        displayedOutput = ""
-        editedLaudoText = ""
-        reviewStatus = nil
-        reviewedAt = nil
-        reviewMessage = nil
-        isReviewingForSala = false
-        generationFindings = []
-        latestVenousScheme = nil
-        saveStatus = .idle
-        feedbackState = .idle
-        lastError = nil
-        lastWarning = nil
-        sanityIssues = []
-        phase = .generating
-        startStreamingFeedback()
-        withAnimation(.easeOut(duration: 0.18)) { activeTab = .laudo }
-
-        let req = GenerateRequest(
-            rawInput: inputText,
-            categoryHint: category,
-            writingStyleId: writingStyleId,
-            mode: generationMode,
-            dopplerMode: category == .dopplerObstetrico ? (dopplerOnly ? .isolated : .combined) : nil
-        )
+        let req = prepareGeneration(writingStyleId: writingStyleId)
 
         generateTask?.cancel()
         generateTask = Task { @MainActor in
@@ -548,6 +570,38 @@ final class GenerateViewModel {
                 stopStreamingFeedback()
             }
         }
+    }
+
+    /// Zera o estado da geração anterior e monta o request da nova.
+    func prepareGeneration(writingStyleId: String) -> GenerateRequest {
+        lastReportId = nil
+        streamedOutput = ""
+        displayedOutput = ""
+        editedLaudoText = ""
+        reviewStatus = nil
+        reviewedAt = nil
+        reviewMessage = nil
+        isReviewingForSala = false
+        generationFindings = []
+        latestVenousScheme = nil
+        saveStatus = .idle
+        feedbackState = .idle
+        lastError = nil
+        lastWarning = nil
+        sanityIssues = []
+        clearCategoryRoute()
+        requestedCategory = category
+        phase = .generating
+        startStreamingFeedback()
+        withAnimation(.easeOut(duration: 0.18)) { activeTab = .laudo }
+
+        return GenerateRequest(
+            rawInput: inputText,
+            categoryHint: category,
+            writingStyleId: writingStyleId,
+            mode: generationMode,
+            dopplerMode: category == .dopplerObstetrico ? (dopplerOnly ? .isolated : .combined) : nil
+        )
     }
 
     func laudoTextChanged(_ newValue: String) {
@@ -631,7 +685,7 @@ final class GenerateViewModel {
         do {
             try await FeedbackService.submit(
                 reportId: reportId,
-                categoryCode: category.rawValue,
+                categoryCode: effectiveCategoryCode,
                 verdict: verdict,
                 comment: comment
             )
@@ -643,7 +697,7 @@ final class GenerateViewModel {
         }
     }
 
-    private func handle(event: GenerateSSEEvent) {
+    func handle(event: GenerateSSEEvent) {
         switch event {
         case .open(let payload):
             lastReportId = payload.reportId
@@ -651,8 +705,11 @@ final class GenerateViewModel {
             break
         case .stage(let payload):
             handle(stage: payload)
-        case .structured:
-            break
+        case .structured(let payload):
+            guard requestedCategory == .livre, let code = payload.effectiveCategoryCode else { break }
+            routedCategoryCode = code
+            let examLabel = payload.payload.tipoExame?.trimmingCharacters(in: .whitespacesAndNewlines)
+            routedCategoryExamLabel = examLabel?.isEmpty == false ? examLabel : nil
         case .validator(let payload):
             if !payload.ok && payload.issuesCount > 0 {
                 // Sprint 8: tratar clarify questions
@@ -704,7 +761,7 @@ final class GenerateViewModel {
             displayedOutput = resolved
             editedLaudoText = resolved
             lastReportId = payload.reportId
-            sanityIssues = SanityChecker.check(text: resolved, category: category)
+            sanityIssues = SanityChecker.check(text: resolved, category: effectiveCategory)
             phase = .done(reportId: payload.reportId)
             activeTab = .laudo
             stopStreamingFeedback()
@@ -717,8 +774,11 @@ final class GenerateViewModel {
             phase = .error(message: payload.reason)
             stopStreamingFeedback()
         case .error(let payload):
-            lastError = payload.message
-            phase = .error(message: payload.message)
+            let message = payload.message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                ? "Não foi possível gerar o laudo (\(payload.code)). Tente novamente."
+                : payload.message
+            lastError = message
+            phase = .error(message: message)
             // DESCARTA o texto parcial já transmitido.
             //
             // O backend só emite `error` depois de recusar o laudo — por estar
@@ -747,6 +807,7 @@ final class GenerateViewModel {
         liveTranscript = ""
         generationFindings = []
         latestVenousScheme = nil
+        clearCategoryRoute()
         phase = .idle
         activeTab = .achados
         saveStatus = .idle

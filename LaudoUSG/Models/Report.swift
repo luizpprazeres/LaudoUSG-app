@@ -40,6 +40,9 @@ struct Report: Identifiable, Codable, Hashable {
 
 struct StructuredFindings: Codable, Hashable {
     var category: String?
+    /// Categoria efetiva que o backend grava em `categoria_detectada` (já roteada).
+    var categoriaDetectada: String?
+    var tipoExame: String?
     var measurements: [Measurement]?
     var laterality: String?
     var commands: [String]?

@@ -498,6 +498,9 @@ struct GenerateView: View {
     private var laudoEditor: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             laudoToolbar
+            if let notice = vm.routedModelNotice {
+                routedModelNoticeView(notice)
+            }
             if vm.phase.isBusy && vm.streamedOutput.isEmpty && !vm.currentStatusMessage.isEmpty {
                 generationProgressView
             } else if vm.phase.isBusy && !vm.displayedOutput.isEmpty {
@@ -569,6 +572,21 @@ struct GenerateView: View {
         .onChange(of: vm.phase.isBusy) { _, newValue in
             if newValue { isEditingLaudo = false }
         }
+    }
+
+    private func routedModelNoticeView(_ notice: String) -> some View {
+        HStack(spacing: Spacing.xxs) {
+            Image(systemName: "checkmark.circle")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(BrandColor.primary)
+            Text(notice)
+                .font(TextStyle.captionMedium)
+                .foregroundStyle(AppSurface.textSecondary)
+                .lineLimit(1)
+        }
+        .padding(.leading, Spacing.xs)
+        .transition(.opacity)
+        .accessibilityElement(children: .combine)
     }
 
     private var generationProgressView: some View {

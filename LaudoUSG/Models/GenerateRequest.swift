@@ -16,6 +16,9 @@ struct GenerateRequest: Codable, Sendable {
     let clarifyAnswers: [ClarifyAnswer]?
     let mode: String?
     let dopplerMode: DopplerExamMode?
+    /// Só no Laudo livre: pede ao backend que identifique o modelo pelo ditado.
+    /// `nil` nas categorias diretas — o campo nem vai no JSON.
+    let routeFreeCategory: Bool?
 
     init(
         rawInput: String,
@@ -35,6 +38,7 @@ struct GenerateRequest: Codable, Sendable {
         self.clarifyAnswers = clarifyAnswers
         self.mode = mode
         self.dopplerMode = categoryHint == .dopplerObstetrico ? dopplerMode : nil
+        self.routeFreeCategory = categoryHint == .livre ? true : nil
     }
 }
 
