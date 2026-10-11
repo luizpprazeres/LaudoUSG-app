@@ -24,45 +24,58 @@ struct LaudoUSGApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(app: appState)
-                .preferredColorScheme(colorScheme)
-                .onOpenURL { url in
-                    guard url.scheme == "laudousg" else { return }
-                    Task {
-                        do {
-                            let result = try await AuthService.shared.handleMagicLink(url)
-                            await MainActor.run {
-                                switch result {
-                                case .signedIn(let session):
-                                    appState.signIn(email: session.email, name: nil)
-                                    Haptics.success()
-                                case .passwordRecovery(let session):
-                                    recoverySession = session
-                                    Haptics.tap()
-                                }
+            #if DEBUG
+            if AdjustLaudoDemo.isActive {
+                AdjustLaudoDemoHost()
+                    .preferredColorScheme(.light)
+            } else {
+                root
+            }
+            #else
+            root
+            #endif
+        }
+    }
+
+    private var root: some View {
+        ContentView(app: appState)
+            .preferredColorScheme(colorScheme)
+            .onOpenURL { url in
+                guard url.scheme == "laudousg" else { return }
+                Task {
+                    do {
+                        let result = try await AuthService.shared.handleMagicLink(url)
+                        await MainActor.run {
+                            switch result {
+                            case .signedIn(let session):
+                                appState.signIn(email: session.email, name: nil)
+                                Haptics.success()
+                            case .passwordRecovery(let session):
+                                recoverySession = session
+                                Haptics.tap()
                             }
-                        } catch {
-                            await MainActor.run {
-                                linkErrorMessage = "Este link é inválido ou expirou."
-                                Haptics.error()
-                            }
+                        }
+                    } catch {
+                        await MainActor.run {
+                            linkErrorMessage = "Este link é inválido ou expirou."
+                            Haptics.error()
                         }
                     }
                 }
-                .fullScreenCover(item: $recoverySession) { session in
-                    ResetPasswordView(session: session)
+            }
+            .fullScreenCover(item: $recoverySession) { session in
+                ResetPasswordView(session: session)
+            }
+            .alert("Link inválido", isPresented: Binding(
+                get: { linkErrorMessage != nil },
+                set: { if !$0 { linkErrorMessage = nil } }
+            )) {
+                Button("OK", role: .cancel) {
+                    linkErrorMessage = nil
                 }
-                .alert("Link inválido", isPresented: Binding(
-                    get: { linkErrorMessage != nil },
-                    set: { if !$0 { linkErrorMessage = nil } }
-                )) {
-                    Button("OK", role: .cancel) {
-                        linkErrorMessage = nil
-                    }
-                } message: {
-                    Text(linkErrorMessage ?? "")
-                }
-        }
+            } message: {
+                Text(linkErrorMessage ?? "")
+            }
     }
 }
 
