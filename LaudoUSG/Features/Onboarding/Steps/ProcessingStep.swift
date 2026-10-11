@@ -5,9 +5,13 @@ struct ProcessingStep: View {
     let streamedLaudo: String
     let warningMessage: String?
     let errorMessage: String?
+    /// Perguntas do evento `clarify` (laudo pausado no servidor). Vazio = sem pergunta.
+    var clarifyQuestions: [String] = []
     let completedStages: Set<OnboardingGenerationStage>
     let namespace: Namespace.ID
     let onRetry: () -> Void
+    var onGenerateAnyway: () -> Void = {}
+    var onRecordAgain: () -> Void = {}
     let onSkip: () -> Void
 
     var body: some View {
@@ -41,6 +45,8 @@ struct ProcessingStep: View {
 
             if let errorMessage {
                 errorPanel(errorMessage)
+            } else if !clarifyQuestions.isEmpty {
+                clarifyPanel
             } else {
                 laudoPreview
             }
@@ -100,6 +106,34 @@ struct ProcessingStep: View {
     private var nextStageRawValue: Int {
         let done = completedStages.map(\.rawValue)
         return (done.max() ?? -1) + 1
+    }
+
+    /// No onboarding não há campo de resposta: o ditado é uma amostra de 5 s.
+    /// O médico escolhe gerar mesmo assim (mantendo o ditado) ou gravar de novo.
+    private var clarifyPanel: some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            Label("Preciso de um esclarecimento", systemImage: "questionmark.bubble.fill")
+                .font(TextStyle.bodyLargeSemibold)
+                .foregroundStyle(BrandColor.primaryDeep)
+            ForEach(clarifyQuestions, id: \.self) { question in
+                Text(question)
+                    .font(TextStyle.body)
+                    .foregroundStyle(AppSurface.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            PrimaryButton(title: "Gerar assim mesmo", icon: "arrow.right") {
+                onGenerateAnyway()
+            }
+            SecondaryButton(title: "Gravar de novo", icon: "mic") {
+                onRecordAgain()
+            }
+        }
+        .padding(Spacing.md)
+        .background(AppSurface.card, in: RoundedRectangle(cornerRadius: Radius.xl, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
+                .stroke(BrandColor.primaryBorder, lineWidth: 1)
+        )
     }
 
     private func errorPanel(_ message: String) -> some View {

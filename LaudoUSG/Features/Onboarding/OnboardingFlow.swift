@@ -39,6 +39,9 @@ struct OnboardingFlow: View {
     @State private var warningMessage: String?
     @State private var generationError: String?
     @State private var generationStages: Set<OnboardingGenerationStage> = []
+    /// Pergunta(s) do evento `clarify` e o report pausado que "Gerar assim mesmo" retoma.
+    @State private var clarifyQuestions: [ClarifyQuestion] = []
+    @State private var clarifyReportId: String?
     @State private var completionCelebration = 0
     @State private var recordingTask: Task<Void, Never>?
     @State private var generationTask: Task<Void, Never>?
@@ -98,9 +101,12 @@ struct OnboardingFlow: View {
                 streamedLaudo: streamedLaudo,
                 warningMessage: warningMessage,
                 errorMessage: generationError,
+                clarifyQuestions: clarifyQuestions.map(\.question),
                 completedStages: generationStages,
                 namespace: laudoNamespace,
                 onRetry: beginGeneration,
+                onGenerateAnyway: generateIgnoringClarify,
+                onRecordAgain: recordAgain,
                 onSkip: completeAndDismiss
             )
         case .firstLaudo:
@@ -246,11 +252,54 @@ struct OnboardingFlow: View {
     private func beginGeneration() {
         guard !transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         Haptics.tap()
+        runGeneration(request: GenerateRequest(
+            rawInput: transcript,
+            categoryHint: .abdomenTotal,
+            writingStyleId: app.defaultWritingStyleId
+        ))
+    }
+
+    /// "Gerar assim mesmo" depois de um `clarify`: retoma o report pausado
+    /// respondendo cada pergunta com "manter como ditado" (o backend exige ao
+    /// menos uma resposta não vazia para retomar).
+    private func generateIgnoringClarify() {
+        guard let pausedReportId = clarifyReportId, !clarifyQuestions.isEmpty else {
+            beginGeneration()
+            return
+        }
+        Haptics.tap()
+        runGeneration(request: GenerateRequest(
+            rawInput: transcript,
+            categoryHint: .abdomenTotal,
+            writingStyleId: app.defaultWritingStyleId,
+            resumeFromReportId: pausedReportId,
+            clarifyAnswers: clarifyQuestions.map {
+                ClarifyAnswer(questionId: $0.id, answer: "Manter exatamente como foi ditado, sem alterar este trecho.")
+            }
+        ))
+    }
+
+    private func recordAgain() {
+        Haptics.tap()
+        generationTask?.cancel()
+        isGenerating = false
+        generationError = nil
+        clarifyQuestions = []
+        clarifyReportId = nil
+        transcript = ""
+        withAnimation(.spring(duration: 0.38, bounce: 0.16)) {
+            step = .firstRecording
+        }
+    }
+
+    private func runGeneration(request: GenerateRequest) {
         streamedLaudo = ""
         finalLaudo = ""
         reportId = nil
         warningMessage = nil
         generationError = nil
+        clarifyQuestions = []
+        clarifyReportId = nil
         generationStages = [.transcribed]
         isGenerating = true
         withAnimation(.spring(duration: 0.38, bounce: 0.16)) {
@@ -259,25 +308,31 @@ struct OnboardingFlow: View {
         generationTask?.cancel()
         generationTask = Task { @MainActor in
             do {
-                let request = GenerateRequest(
-                    rawInput: transcript,
-                    categoryHint: .abdomenTotal,
-                    writingStyleId: app.defaultWritingStyleId
-                )
                 let stream = try await ReportService.generateStream(request: request)
                 for try await event in stream {
+                    guard !Task.isCancelled else { return }
                     handle(event: event)
                 }
-            } catch let error as APIError {
-                generationError = error.errorDescription
-                isGenerating = false
-                Haptics.error()
+                guard !Task.isCancelled else { return }
+                // Stream encerrado sem `done`/`error`/`blocked`/`clarify` (corte de rede,
+                // frame descartado): sem isto a tela ficava girando para sempre.
+                if isGenerating {
+                    failGeneration(GenerationStreamError.interrupted)
+                }
+            } catch is CancellationError {
+                // cancelada por nova tentativa/saída — encerra em silêncio.
             } catch {
-                generationError = error.localizedDescription
-                isGenerating = false
-                Haptics.error()
+                guard !Task.isCancelled else { return }
+                // Inclui o corte de 120 s do URLSession (URLError.timedOut).
+                failGeneration(GenerationStreamError.message(for: error))
             }
         }
+    }
+
+    private func failGeneration(_ message: String) {
+        generationError = message
+        isGenerating = false
+        Haptics.error()
     }
 
     private func handle(event: GenerateSSEEvent) {
@@ -295,8 +350,15 @@ struct OnboardingFlow: View {
                 generationStages.insert(.rules)
             }
         case .clarify(let payload):
-            generationError = payload.questions.first?.question ?? "Preciso de mais um detalhe antes de gerar o laudo."
+            // O servidor pausou o laudo (`awaiting_clarify`) e encerrou o stream.
             isGenerating = false
+            let questions = Array(payload.questions.prefix(2))
+            if questions.isEmpty || reportId == nil {
+                failGeneration("Preciso de mais um detalhe antes de gerar o laudo. Grave de novo, com calma.")
+            } else {
+                clarifyQuestions = questions
+                clarifyReportId = reportId
+            }
         case .rag:
             generationStages.insert(.rules)
         case .warning(let payload):
@@ -319,13 +381,10 @@ struct OnboardingFlow: View {
                 step = .firstLaudo
             }
         case .blocked(let payload):
-            generationError = payload.reason
-            isGenerating = false
-            Haptics.error()
+            failGeneration(payload.reason)
         case .error(let payload):
-            generationError = payload.message
-            isGenerating = false
-            Haptics.error()
+            let message = payload.message.trimmingCharacters(in: .whitespacesAndNewlines)
+            failGeneration(message.isEmpty ? "Não foi possível gerar o laudo (\(payload.code)). Tente novamente." : message)
         }
     }
 
