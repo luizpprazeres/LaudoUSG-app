@@ -5,7 +5,7 @@ import UIKit
 
 struct GenerateView: View {
     @Environment(AppState.self) private var app
-    @State private var vm = GenerateViewModel()
+    @State private var vm: GenerateViewModel
     @State private var path: [AppDestination] = []
     @State private var didCopyLaudo: Bool = false
     @State private var isEditingLaudo: Bool = false  // toggle visualização (com highlight) vs edição (TextEditor)
@@ -15,6 +15,16 @@ struct GenerateView: View {
     @FocusState private var isAchadosFocused: Bool
     // Espelha a flag do AppShellView pra saber se o tour ainda vai aparecer por cima.
     @AppStorage("laudousg.hasSeenTour") private var hasSeenTour: Bool = false
+    private let adjustEntryStyle = AdjustLaudoEntryStyle.current
+
+    init() {
+        _vm = State(initialValue: GenerateViewModel())
+    }
+
+    /// Tela com um view model já montado (modo de demonstração em DEBUG).
+    init(viewModel: GenerateViewModel) {
+        _vm = State(initialValue: viewModel)
+    }
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -34,6 +44,7 @@ struct GenerateView: View {
         // O motor precisa estar escolhido ANTES do prewarm — é ele que decide se o
         // que se pré-aquece é o token do Deepgram ou o modelo de voz da Apple.
         .task {
+            guard !vm.skipsRemoteBootstrap else { return }
             vm.transcriptionEngine = app.preferences.transcriptionEngine
             vm.experimentalModel = app.preferences.experimentalModel
             vm.prewarmMic()
@@ -269,6 +280,17 @@ struct GenerateView: View {
         }
         .sheet(isPresented: Binding(get: { vm.isSalaSheetPresented }, set: { vm.isSalaSheetPresented = $0 })) {
             SalaPairingSheet(onDismiss: { vm.isSalaSheetPresented = false })
+        }
+        .sheet(
+            isPresented: Binding(get: { vm.adjust.isPresented }, set: { vm.adjust.isPresented = $0 }),
+            onDismiss: { vm.dismissAdjust() }
+        ) {
+            AdjustLaudoSheet(
+                model: vm.adjust,
+                onSubmit: { target in Task { await vm.submitAdjust(targetOverride: target) } },
+                onApply: { vm.applyAdjust() },
+                onDismiss: { vm.dismissAdjust() }
+            )
         }
         .sheet(isPresented: Binding(get: { vm.isCompanionSheetPresented }, set: { vm.isCompanionSheetPresented = $0 })) {
             CompanionSheet(
@@ -549,24 +571,46 @@ struct GenerateView: View {
                 // Modo visualização — Text(AttributedString) com linhas que contêm ____ destacadas em roxo
                 ScrollView {
                     VStack(alignment: .leading, spacing: Spacing.md) {
-                        ReviewHighlightedText(
-                            text: vm.editedLaudoText,
-                            issues: vm.sanityIssues.map(\.laudoHighlightIssue)
-                        )
-                            .font(TextStyle.bodyLarge)
-                            .foregroundStyle(AppSurface.textPrimary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                        if adjustEntryStyle == .trecho && vm.canAdjustLaudo {
+                            AdjustableLaudoText(
+                                text: vm.editedLaudoText,
+                                issues: vm.sanityIssues.map(\.laudoHighlightIssue),
+                                selectedLine: Binding(get: { vm.adjust.selectedLine }, set: { vm.adjust.selectedLine = $0 }),
+                                onAdjust: { trecho in vm.presentAdjust(anchor: trecho) }
+                            )
                             .padding(.top, Spacing.xs)
-                            .padding(.leading, Spacing.xs)
+                            .padding(.leading, Spacing.xxs)
+                        } else {
+                            ReviewHighlightedText(
+                                text: vm.editedLaudoText,
+                                issues: vm.sanityIssues.map(\.laudoHighlightIssue)
+                            )
+                                .font(TextStyle.bodyLarge)
+                                .foregroundStyle(AppSurface.textPrimary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.top, Spacing.xs)
+                                .padding(.leading, Spacing.xs)
+                        }
 
                         if vm.canShowFeedback {
                             feedbackCard
+                        }
+                        if adjustEntryStyle == .cantinho && vm.canAdjustLaudo {
+                            // Folga para o botão do canto não cobrir o fim do laudo.
+                            Color.clear.frame(height: 36)
                         }
                     }
                 }
                 .scrollIndicators(.hidden)
                 .background(AppSurface.background)
                 .frame(maxHeight: .infinity)
+                .overlay(alignment: .bottomTrailing) {
+                    if adjustEntryStyle == .cantinho && vm.canAdjustLaudo {
+                        AdjustCornerButton { vm.presentAdjust() }
+                            .padding(.bottom, Spacing.xs)
+                            .transition(.opacity)
+                    }
+                }
             }
         }
         .frame(maxHeight: .infinity)
@@ -971,12 +1015,15 @@ struct GenerateView: View {
                     Button {
                         Haptics.tap()
                         isEditingLaudo.toggle()
+                        if isEditingLaudo { vm.forgetAdjustUndo() }
                     } label: {
                         HStack(spacing: Spacing.xxs) {
                             Image(systemName: isEditingLaudo ? "eye.fill" : "pencil")
                                 .font(.system(size: 12, weight: .semibold))
                             Text(isEditingLaudo ? "Visualizar" : "Editar")
                                 .font(TextStyle.captionMedium)
+                                .lineLimit(1)
+                                .fixedSize()
                         }
                         .foregroundStyle(AppSurface.textSecondary)
                         .padding(.horizontal, Spacing.sm)
@@ -995,6 +1042,8 @@ struct GenerateView: View {
                                 .font(.system(size: 12, weight: .semibold))
                             Text(didCopyLaudo ? "Copiado" : "Copiar")
                                 .font(TextStyle.captionMedium)
+                                .lineLimit(1)
+                                .fixedSize()
                         }
                         .foregroundStyle(AppSurface.textSecondary)
                         .padding(.horizontal, Spacing.sm)
@@ -1013,6 +1062,8 @@ struct GenerateView: View {
                                 .font(.system(size: 12, weight: .semibold))
                             Text("Enviar p/ Sala")
                                 .font(TextStyle.captionMedium)
+                                .lineLimit(1)
+                                .fixedSize()
                         }
                         .foregroundStyle(.white)
                         .padding(.horizontal, Spacing.sm)
@@ -1021,7 +1072,18 @@ struct GenerateView: View {
                     }
                     .buttonStyle(PressableButtonStyle())
                     .accessibilityLabel("Enviar laudo para Sala do Auxiliar")
+
+                    if adjustEntryStyle == .menu && vm.canAdjustLaudo {
+                        AdjustMenuButton(
+                            onVoice: { vm.presentAdjust(listen: true) },
+                            onType: { vm.presentAdjust(listen: false) }
+                        )
+                    }
                 }
+            }
+
+            if vm.adjustUndoText != nil && !isEditingLaudo {
+                AdjustUndoChip { vm.undoAdjust() }
             }
 
             if vm.hasLaudoOutput {

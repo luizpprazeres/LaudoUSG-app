@@ -152,6 +152,21 @@ final class GenerateViewModel {
     var isPaywallPresented = false
     var isMiomaEditorPresented = false
     var isVenousSchemaPresented = false
+
+    // MARK: Ajustar laudo (edição incremental via /api/edit)
+
+    let adjust: AdjustLaudoModel
+    /// Texto do laudo antes do último ajuste aplicado — o "Desfazer" volta a ele.
+    private(set) var adjustUndoText: String?
+
+    /// Ajuste só sobre laudo pronto e salvo no servidor (o `/api/edit` parte do
+    /// texto armazenado do report).
+    var canAdjustLaudo: Bool {
+        guard case .done = phase, lastReportId != nil else { return false }
+        return !editedLaudoText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !isReviewingForSala
+    }
+
     var companionConnection: CompanionConnection?
     var pendingCompanionImageData: BiometricData?
     var pendingCompanionImageSummary = ""
@@ -177,8 +192,21 @@ final class GenerateViewModel {
     /// Motor que está de fato gravando. A UI lê daqui e não sabe qual é.
     private(set) var activeEngine: any LiveMicEngine
 
-    init() {
+    /// Grava o texto final do report. Injetável para teste e para o modo de
+    /// demonstração (DEBUG), que não pode tocar no banco.
+    var saveFinalOutput: (_ reportId: String, _ text: String) async throws -> Void = { reportId, text in
+        try await HistoryService.updateFinalOutput(reportId: reportId, finalText: text)
+    }
+
+    /// Motor de ditado fixo (teste/demonstração). `nil` = escolha normal por categoria.
+    var micEngineOverride: (any LiveMicEngine)?
+
+    /// Modo de demonstração: não pré-aquece microfone nem consulta a conexão web.
+    var skipsRemoteBootstrap = false
+
+    init(reportEditor: any ReportEditing = LiveReportEditor()) {
         activeEngine = deepgram
+        adjust = AdjustLaudoModel(editor: reportEditor)
     }
 
     /// Motor escolhido pelo usuário em Preferências → Ditado. A View empurra o
@@ -207,6 +235,7 @@ final class GenerateViewModel {
         // O backend usa a categoria pra enxugar os keyterms — precisa estar
         // setada ANTES do prewarm, que já busca o token.
         deepgram.categoryCode = category.rawValue
+        if let micEngineOverride { return micEngineOverride }
         // Laudo livre fica sempre no Deepgram: o roteamento do modelo depende
         // do ditado, e a transcrição precisa ser a mesma das categorias diretas.
         guard category != .livre, transcriptionEngine.effective == .nativa else { return deepgram }
@@ -661,6 +690,7 @@ final class GenerateViewModel {
     /// Estado limpo para uma geração (nova ou retomada após clarify).
     private func resetForGeneration(requested: ReportCategory) {
         clearClarifyState()
+        adjustUndoText = nil
         lastReportId = nil
         streamedOutput = ""
         displayedOutput = ""
@@ -706,7 +736,7 @@ final class GenerateViewModel {
         do {
             // Salva LIMPO (sem marcadores [REVISAR — ...]) — o que vai pra Sala
             // (pushReport usa o relatório salvo) e pro histórico fica final.
-            try await HistoryService.updateFinalOutput(reportId: reportId, finalText: editedLaudoText.strippedReviewMarkers)
+            try await saveFinalOutput(reportId, editedLaudoText.strippedReviewMarkers)
             saveStatus = .saved
         } catch {
             saveStatus = .failed(error.localizedDescription)
@@ -755,6 +785,58 @@ final class GenerateViewModel {
             reviewedAt = nil
             reviewMessage = error.localizedDescription
         }
+    }
+
+    // MARK: - Ajustar laudo
+
+    /// - Parameters:
+    ///   - anchor: trecho escolhido no laudo (toque longo), se houver.
+    ///   - listen: abre já ouvindo — a voz é o caminho principal.
+    func presentAdjust(anchor: String? = nil, listen: Bool = true) {
+        guard canAdjustLaudo else { return }
+        adjust.present(anchor: anchor, mic: engine(for: category), listen: listen)
+    }
+
+    func submitAdjust(targetOverride: AdjustTarget? = nil) async {
+        guard let reportId = lastReportId else { return }
+        await adjust.submit(
+            reportId: reportId,
+            currentText: editedLaudoText.strippedReviewMarkers,
+            targetOverride: targetOverride,
+            flush: { [weak self] in await self?.flushLaudoAutosave() ?? false }
+        )
+    }
+
+    /// "Aplicar" na prévia: o texto entra na tela e o anterior vira o "Desfazer".
+    /// O servidor já gravou; o autosave regrava o mesmo texto (idempotente) e
+    /// invalida a revisão para a Sala, como qualquer edição.
+    func applyAdjust() {
+        let previous = editedLaudoText
+        guard let text = adjust.takeAcceptedText() else { return }
+        adjustUndoText = previous
+        laudoTextChanged(text)
+        Haptics.success()
+    }
+
+    /// "Descartar" (ou fechar a prévia): o servidor já gravou o ajuste aceito, então
+    /// regrava a versão da tela para o laudo salvo voltar a ser o que o médico vê.
+    func dismissAdjust() {
+        let hadAcceptedPreview: Bool
+        if case .preview = adjust.phase { hadAcceptedPreview = true } else { hadAcceptedPreview = false }
+        Task { await adjust.close() }
+        if hadAcceptedPreview { laudoTextChanged(editedLaudoText) }
+    }
+
+    func undoAdjust() {
+        guard let previous = adjustUndoText else { return }
+        adjustUndoText = nil
+        laudoTextChanged(previous)
+        Haptics.tap()
+    }
+
+    /// Edição manual depois do ajuste: o "Desfazer" deixa de fazer sentido.
+    func forgetAdjustUndo() {
+        adjustUndoText = nil
     }
 
     func submitFeedback(verdict: String, comment: String?) async {
@@ -887,6 +969,7 @@ final class GenerateViewModel {
 
     func reset() {
         dopplerOnly = false
+        adjustUndoText = nil
         generateTask?.cancel()
         stopStreamingFeedback()
         lastReportId = nil
