@@ -15,7 +15,7 @@ final class AIConsentPolicyTests: XCTestCase {
     }
 
     func testAllAITransportsRequirePermissionButAccountAndHistoryDoNot() {
-        for path in ["/api/generate", "/api/consultant", "/api/transcribe", "/api/analyze-image", "/api/deepgram/token", "api/generate/"] {
+        for path in ["/api/generate", "/api/consultant", "/api/transcribe", "/api/analyze-image", "/api/deepgram/token", "/api/edit", "api/generate/"] {
             XCTAssertTrue(AIConsentPolicy.requiresPermission(path: path), path)
         }
         for path in ["/api/me/profile", "/api/reports/123", "/api/reports/123/review", "/api/me/delete-account", "/api/iap/validate-receipt", "/api/sala/push"] {

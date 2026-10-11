@@ -23,7 +23,7 @@ enum AIConsentPolicy {
 
     static func requiresPermission(path: String) -> Bool {
         let normalized = "/" + path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        return ["/api/generate", "/api/consultant", "/api/transcribe", "/api/analyze-image", "/api/deepgram/token"].contains(normalized)
+        return ["/api/generate", "/api/consultant", "/api/transcribe", "/api/analyze-image", "/api/deepgram/token", "/api/edit"].contains(normalized)
     }
 
     static func authorize(path: String) async throws {
