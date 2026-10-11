@@ -78,6 +78,34 @@ struct StagePayload: Decodable, Sendable, Hashable {
     let ts: String?
     let stage: String
     let label: String
+    /// W16B (servidor com PROGRESS_ETAPAS): etapa real 1…steps e tempo desde o pedido. Ausentes em servidor antigo.
+    let step: Int?
+    let steps: Int?
+    let elapsedMs: Int?
+
+    private enum CodingKeys: String, CodingKey {
+        case ts, stage, label, step, steps, elapsedMs
+    }
+
+    init(ts: String? = nil, stage: String, label: String, step: Int? = nil, steps: Int? = nil, elapsedMs: Int? = nil) {
+        self.ts = ts
+        self.stage = stage
+        self.label = label
+        self.step = step
+        self.steps = steps
+        self.elapsedMs = elapsedMs
+    }
+
+    /// Campos W16B com `try?`: um valor fora do formato perde só o indicador de etapa, nunca o evento.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        ts = try c.decodeIfPresent(String.self, forKey: .ts)
+        stage = try c.decode(String.self, forKey: .stage)
+        label = try c.decode(String.self, forKey: .label)
+        step = try? c.decodeIfPresent(Int.self, forKey: .step)
+        steps = try? c.decodeIfPresent(Int.self, forKey: .steps)
+        elapsedMs = try? c.decodeIfPresent(Int.self, forKey: .elapsedMs)
+    }
 }
 
 struct StructuredPayload: Decodable, Sendable, Hashable {
@@ -146,6 +174,36 @@ struct DonePayload: Decodable, Sendable, Hashable {
     let ts: String?
     let reportId: String
     let finalText: String
+    /// W16B: tempos de cada etapa (ms desde o pedido). Ausente em servidor antigo.
+    let timings: GenerationTimings?
+
+    private enum CodingKeys: String, CodingKey {
+        case ts, reportId, finalText, timings
+    }
+
+    init(ts: String? = nil, reportId: String, finalText: String, timings: GenerationTimings? = nil) {
+        self.ts = ts
+        self.reportId = reportId
+        self.finalText = finalText
+        self.timings = timings
+    }
+
+    /// `timings` com `try?`: tempo malformado não pode derrubar o `done` (e com ele o laudo).
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        ts = try c.decodeIfPresent(String.self, forKey: .ts)
+        reportId = try c.decode(String.self, forKey: .reportId)
+        finalText = try c.decode(String.self, forKey: .finalText)
+        timings = try? c.decodeIfPresent(GenerationTimings.self, forKey: .timings)
+    }
+}
+
+struct GenerationTimings: Decodable, Sendable, Hashable {
+    let recebidoMs: Int?
+    let lendoMs: Int?
+    let montandoMs: Int?
+    let textoMs: Int?
+    let totalMs: Int?
 }
 
 struct BlockedPayload: Decodable, Sendable, Hashable {

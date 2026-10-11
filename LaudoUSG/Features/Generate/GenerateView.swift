@@ -601,6 +601,29 @@ struct GenerateView: View {
                     .id(vm.currentStatusMessage)
                     .transition(.opacity.combined(with: .move(edge: .leading)))
                 Spacer(minLength: 0)
+                // W16B: relógio local (só com etapas do servidor), sem animar o rótulo.
+                if vm.generationStep != nil, let inicio = vm.generationStartedAt {
+                    TimelineView(.periodic(from: inicio, by: 1)) { ctx in
+                        let s = max(0, Int(ctx.date.timeIntervalSince(inicio)))
+                        Text("\(s) s")
+                            .font(TextStyle.captionMedium.monospacedDigit())
+                            .foregroundStyle(AppSurface.textMuted)
+                            .opacity(s >= 3 ? 1 : 0)
+                    }
+                    .accessibilityHidden(true)
+                }
+            }
+
+            // W16B: etapas reais — recebido · lendo o ditado · montando · pronto.
+            if let step = vm.generationStep {
+                HStack(spacing: Spacing.xxs) {
+                    ForEach(1...max(vm.generationSteps, 1), id: \.self) { i in
+                        Capsule()
+                            .fill(i <= step ? BrandColor.primary : BrandColor.primary.opacity(0.16))
+                            .frame(height: 4)
+                    }
+                }
+                .accessibilityHidden(true)
             }
 
             if !vm.generationFindings.isEmpty {
@@ -639,6 +662,7 @@ struct GenerateView: View {
         .padding(.horizontal, Spacing.xs)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .animation(.easeInOut(duration: 0.25), value: vm.currentStatusMessage)
+        .animation(.easeInOut(duration: 0.25), value: vm.generationStep)
         .animation(.easeOut(duration: 0.18), value: vm.generationFindings)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(progressAccessibilityLabel)

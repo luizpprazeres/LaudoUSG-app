@@ -107,6 +107,13 @@ final class GenerateViewModel {
     var displayedOutput: String = ""
     var currentStatusMessage: String = ""
     var generationFindings: [String] = []
+    /// W16B: etapa real (1 recebido, 2 lendo o ditado, 3 montando; 4 = pronto) e início da geração, para o
+    /// indicador de etapas e o relógio local. `nil` com servidor sem PROGRESS_ETAPAS (fica só o label).
+    var generationStep: Int?
+    var generationSteps: Int = 4
+    var generationStartedAt: Date?
+    /// Tempo total da última geração (do `done`), para "Pronto em N s".
+    var lastGenerationSeconds: Double?
     var latestVenousScheme: VenousSchemePayload?
     var liveTranscript: String = ""
     var hardMode: Bool = false
@@ -761,6 +768,7 @@ final class GenerateViewModel {
             displayedOutput = resolved
             editedLaudoText = resolved
             lastReportId = payload.reportId
+            lastGenerationSeconds = payload.timings?.totalMs.map { Double($0) / 1000 }
             sanityIssues = SanityChecker.check(text: resolved, category: effectiveCategory)
             phase = .done(reportId: payload.reportId)
             activeTab = .laudo
@@ -819,10 +827,15 @@ final class GenerateViewModel {
     private func startStreamingFeedback() {
         currentStatusMessage = "Interpretando o ditado…"
         generationFindings = []
+        generationStep = nil
+        generationStartedAt = Date()
+        lastGenerationSeconds = nil
     }
 
     private func stopStreamingFeedback() {
         currentStatusMessage = ""
+        generationStep = nil
+        generationStartedAt = nil
     }
 
     private func handle(stage payload: StagePayload) {
@@ -830,8 +843,22 @@ final class GenerateViewModel {
         case "achado":
             appendGenerationFinding(payload.label)
         default:
-            currentStatusMessage = payload.label
+            if let step = payload.step {
+                // W16B: com etapas, o relógio é local (TimelineView) — o "… 12 s" do servidor sai do rótulo para
+                // a etapa não animar a cada 3 s; o tempo do servidor reancora o relógio.
+                generationStep = step
+                if let steps = payload.steps, steps > 0 { generationSteps = steps }
+                if let ms = payload.elapsedMs { generationStartedAt = Date().addingTimeInterval(-Double(ms) / 1000) }
+                currentStatusMessage = Self.semRelogio(payload.label)
+            } else {
+                currentStatusMessage = payload.label
+            }
         }
+    }
+
+    /// "Lendo o ditado… 12 s" → "Lendo o ditado…" (formato fixo do servidor, pipeline/andamento.ts).
+    nonisolated static func semRelogio(_ label: String) -> String {
+        label.replacingOccurrences(of: #"\s+\d+\s*s$"#, with: "", options: .regularExpression)
     }
 
     private func appendGenerationFinding(_ label: String) {
