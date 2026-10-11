@@ -228,7 +228,20 @@ final class AdjustLaudoTests: XCTestCase {
         vm.presentAdjust(anchor: "Fígado de dimensões normais.", listen: false)
         vm.adjust.instruction = "fígado aumentado, 17 cm"
         await vm.submitAdjust()
-        XCTAssertEqual(editor.calls.first?.instruction, "No trecho \u{201C}Fígado de dimensões normais.\u{201D}: fígado aumentado, 17 cm")
+        XCTAssertEqual(editor.calls.first?.instruction, "No trecho que começa com \u{201C}Fígado de dimensões normais\u{201D}: fígado aumentado, 17 cm")
+        XCTAssertEqual(vm.adjust.sentInstruction, "fígado aumentado, 17 cm", "o eco na prévia é só o que o médico disse")
+    }
+
+    /// Formato que passou na bancada W18 (12/12): só o começo da linha, para o
+    /// "sem imagens de cálculos ou cistos" do trecho não ligar o guard de achado.
+    func testAnchorStartKeepsOnlyTheBeginningOfTheLine() {
+        XCTAssertEqual(AdjustLaudoModel.anchorStart("Rins tópicos, de forma, contornos e dimensões normais, sem imagens de cálculos ou cistos."), "Rins tópicos")
+        XCTAssertEqual(AdjustLaudoModel.anchorStart("Rim direito com diâmetros longitudinais e anteroposterior dentro dos limites normais."), "Rim direito com diâmetros longitudinais")
+        XCTAssertEqual(AdjustLaudoModel.anchorStart("O índice do líquido amniótico mede 10,4 cm."), "O índice do líquido amniótico")
+        XCTAssertEqual(AdjustLaudoModel.anchorStart("1. Gestação tópica, única, em torno de 30 semanas."), "Gestação tópica")
+        XCTAssertEqual(AdjustLaudoModel.anchorStart("2) Rins sem alterações ecográficas."), "Rins sem alterações ecográficas")
+        XCTAssertEqual(AdjustLaudoModel.anchorStart("TÉCNICA: Exame realizado com transdutor convexo."), "TÉCNICA")
+        XCTAssertFalse(AdjustLaudoModel.anchorStart("Rins tópicos, sem imagens de cálculos ou cistos.").contains("cisto"))
     }
 
     func testCannotAdjustWithoutSavedReport() {

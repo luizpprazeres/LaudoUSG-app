@@ -111,10 +111,28 @@ final class AdjustLaudoModel {
     // MARK: - Enviar
 
     /// Instrução que vai ao servidor. O contrato do `/api/edit` não tem campo de
-    /// trecho, então ele vai no texto, entre aspas, antes do pedido.
+    /// trecho, então ele vai no texto, antes do pedido — mas SÓ O COMEÇO da linha.
+    ///
+    /// O servidor lê a instrução inteira com regex (acréscimo/substituição/achado).
+    /// Com a linha toda, um trecho normal que NEGA achado ("sem imagens de cálculos
+    /// ou cistos") ligava o guard de achado novo e a conclusão normal era trocada
+    /// por uma medida normal (bancada W18: 0/2). Com o começo da linha: 12/12.
     func composedInstruction() -> String {
         guard let anchor else { return trimmedInstruction }
-        return "No trecho \u{201C}\(anchor)\u{201D}: \(trimmedInstruction)"
+        return "No trecho que começa com \u{201C}\(Self.anchorStart(anchor))\u{201D}: \(trimmedInstruction)"
+    }
+
+    /// Começo da linha até a 1ª vírgula/ponto (máx. 5 palavras), sem a numeração
+    /// de item ("1.", "2)") — é o que basta para o modelo achar a linha.
+    static func anchorStart(_ line: String) -> String {
+        var text = line.trimmingCharacters(in: .whitespaces)
+        if let range = text.range(of: #"^\d+\s*[.)\-]\s*"#, options: .regularExpression) {
+            text.removeSubrange(range)
+        }
+        let head = text.split(whereSeparator: { ",.;:".contains($0) }).first.map(String.init) ?? text
+        let words = head.split(whereSeparator: \.isWhitespace).prefix(5)
+        let start = words.joined(separator: " ")
+        return start.isEmpty ? text.split(whereSeparator: \.isWhitespace).prefix(5).joined(separator: " ") : start
     }
 
     /// - Parameters:
