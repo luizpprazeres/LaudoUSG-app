@@ -6,19 +6,19 @@ import Observation
 ///
 /// Abre a tela do laudo com um laudo FICTÍCIO (sem paciente), um `/api/edit` simulado
 /// e um microfone que "ouve" uma frase pronta. Não toca no backend nem no banco.
-/// Serve para screenshots no simulador e para o Luiz comparar as variantes.
+/// Serve para screenshots do fluxo no simulador.
 ///
 /// Argumentos de execução:
 ///   -AjusteLaudoDemo YES
-///   -experiments.adjustEntryStyle A|B|C
-///   -AjusteDemoState fechado|selecionado|aberto|previa|recusa|aplicado
+///   -AjusteDemoState dica|selecionado|aberto|previa|recusa|aplicado
+/// "dica" zera o "já viu" da dica; os outros estados a dão por vista.
 enum AdjustLaudoDemo {
     static var isActive: Bool {
         UserDefaults.standard.bool(forKey: "AjusteLaudoDemo")
     }
 
     static var state: String {
-        UserDefaults.standard.string(forKey: "AjusteDemoState") ?? "fechado"
+        UserDefaults.standard.string(forKey: "AjusteDemoState") ?? "dica"
     }
 
     static let reportId = "00000000-0000-4000-8000-000000000238"
@@ -57,6 +57,7 @@ enum AdjustLaudoDemo {
     @MainActor
     static func makeViewModel() -> GenerateViewModel {
         let rejects = state == "recusa"
+        UserDefaults.standard.set(state != "dica", forKey: AdjustHint.seenKey)
         let vm = GenerateViewModel(reportEditor: DemoReportEditor(rejects: rejects))
         vm.skipsRemoteBootstrap = true
         vm.saveFinalOutput = { _, _ in }
@@ -76,13 +77,14 @@ enum AdjustLaudoDemo {
     /// Leva a tela ao estado pedido. Os atrasos imitam o uso real (o sheet precisa
     /// estar na tela antes do microfone "ouvir").
     @MainActor
-    static func drive(_ vm: GenerateViewModel, style: AdjustLaudoEntryStyle) async {
+    static func drive(_ vm: GenerateViewModel) async {
         let rimIndex = laudo.components(separatedBy: "\n").firstIndex(of: rimLinha)
-        let anchor: String? = style == .trecho ? rimLinha : nil
+        let anchor: String? = rimLinha
         switch state {
         case "selecionado":
             vm.adjust.selectedLine = rimIndex
         case "aberto":
+            vm.adjust.selectedLine = rimIndex
             await pause(0.6)
             vm.presentAdjust(anchor: anchor, listen: true)
         case "previa", "recusa", "aplicado":
@@ -112,7 +114,7 @@ struct AdjustLaudoDemoHost: View {
     var body: some View {
         GenerateView(viewModel: vm)
             .environment(app)
-            .task { await AdjustLaudoDemo.drive(vm, style: AdjustLaudoEntryStyle.current) }
+            .task { await AdjustLaudoDemo.drive(vm) }
     }
 }
 

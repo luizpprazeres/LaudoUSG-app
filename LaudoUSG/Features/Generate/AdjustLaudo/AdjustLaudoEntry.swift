@@ -1,109 +1,19 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
-/// Por onde o médico chega ao "Ajustar laudo". Três variantes discretas em teste;
-/// o Luiz escolhe uma e as outras saem.
-///
-/// Em DEBUG dá para trocar sem recompilar:
-/// `-experiments.adjustEntryStyle A|B|C` nos argumentos de execução (o domínio de
-/// argumentos do `UserDefaults` lê isso sozinho).
-enum AdjustLaudoEntryStyle: String, CaseIterable {
-    /// (A) Item no menu "…" da barra do laudo.
-    case menu = "A"
-    /// (B) Toque longo num trecho do laudo → "Ajustar este trecho".
-    case trecho = "B"
-    /// (C) Botão pequeno no canto do laudo.
-    case cantinho = "C"
+// MARK: - Toque e segure num trecho
 
-    static let defaultsKey = "experiments.adjustEntryStyle"
-    static let recommended: AdjustLaudoEntryStyle = .cantinho
-
-    static var current: AdjustLaudoEntryStyle {
-        #if DEBUG
-        if let raw = UserDefaults.standard.string(forKey: defaultsKey)?.uppercased(),
-           let style = AdjustLaudoEntryStyle(rawValue: raw) {
-            return style
-        }
-        #endif
-        return recommended
-    }
-}
-
-// MARK: - (A) menu "…"
-
-struct AdjustMenuButton: View {
-    let onVoice: () -> Void
-    let onType: () -> Void
-
-    var body: some View {
-        Menu {
-            Button {
-                onVoice()
-            } label: {
-                Label("Ajustar laudo por voz", systemImage: "mic")
-            }
-            Button {
-                onType()
-            } label: {
-                Label("Ajustar laudo digitando", systemImage: "keyboard")
-            }
-        } label: {
-            Image(systemName: "ellipsis")
-                .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(AppSurface.textSecondary)
-                .frame(width: 30, height: 30)
-                .background(Circle().fill(AppSurface.card))
-                .overlay(Circle().stroke(AppSurface.border, lineWidth: 1))
-        }
-        .accessibilityLabel("Mais ações do laudo")
-    }
-}
-
-// MARK: - (C) canto do laudo
-
-struct AdjustCornerButton: View {
-    let action: () -> Void
-
-    var body: some View {
-        Button {
-            Haptics.tap()
-            action()
-        } label: {
-            HStack(spacing: 5) {
-                ZStack(alignment: .bottomTrailing) {
-                    Image(systemName: "mic")
-                        .font(.system(size: 13, weight: .semibold))
-                    Image(systemName: "pencil")
-                        .font(.system(size: 7, weight: .heavy))
-                        .padding(1.5)
-                        .background(Circle().fill(AppSurface.card))
-                        .offset(x: 4, y: 3)
-                }
-                Text("Ajustar")
-                    .font(TextStyle.captionMedium)
-            }
-            .foregroundStyle(AppSurface.textSecondary)
-            .padding(.leading, Spacing.sm)
-            .padding(.trailing, Spacing.sm + 2)
-            .frame(minHeight: 32)
-            .background(Capsule().fill(.regularMaterial))
-            .overlay(Capsule().stroke(AppSurface.border, lineWidth: 1))
-            .brandShadow(.sm)
-        }
-        .buttonStyle(PressableButtonStyle())
-        .accessibilityLabel("Ajustar laudo por voz")
-        .accessibilityHint("Dite uma correção; você confere antes de aplicar.")
-    }
-}
-
-// MARK: - (B) toque longo num trecho
-
-/// Laudo em linhas tocáveis: toque longo marca a linha e oferece "Ajustar este
-/// trecho". Toque em outra área desmarca.
+/// Laudo em linhas tocáveis: tocar e segurar marca a linha e oferece "Ajustar este
+/// trecho" (ditado) e "Copiar trecho" — este substitui a seleção de texto, que não
+/// convive com o toque longo. Tocar fora desmarca.
 struct AdjustableLaudoText: View {
     let text: String
     var issues: [LaudoHighlightIssue] = []
     @Binding var selectedLine: Int?
     let onAdjust: (_ trecho: String) -> Void
+    @State private var copiedLine: Int?
 
     private var lines: [String] {
         text.components(separatedBy: "\n")
@@ -135,50 +45,132 @@ struct AdjustableLaudoText: View {
                             .fill(isSelected ? BrandColor.primary.opacity(0.12) : .clear)
                     )
                     .contentShape(Rectangle())
-                    .onLongPressGesture(minimumDuration: 0.35) {
-                        Haptics.press()
-                        withAnimation(.easeOut(duration: 0.15)) { selectedLine = index }
-                    }
-                    .onTapGesture {
-                        if selectedLine != nil {
-                            withAnimation(.easeOut(duration: 0.15)) { selectedLine = nil }
+                    // Simultâneos: o toque nos destaques de revisão (links) continua valendo.
+                    .simultaneousGesture(
+                        LongPressGesture(minimumDuration: 0.35).onEnded { _ in
+                            Haptics.press()
+                            copiedLine = nil
+                            withAnimation(.easeOut(duration: 0.15)) { selectedLine = index }
                         }
-                    }
+                    )
+                    .simultaneousGesture(
+                        TapGesture().onEnded {
+                            withAnimation(.easeOut(duration: 0.15)) { selectedLine = nil }
+                        },
+                        including: selectedLine == nil ? .subviews : .all
+                    )
+                    .accessibilityAction(named: "Ajustar este trecho") { onAdjust(line) }
+                    .accessibilityAction(named: "Copiar trecho") { copy(line, index: index) }
 
                 if isSelected {
-                    HStack(spacing: Spacing.xs) {
-                        Button {
-                            Haptics.tap()
-                            onAdjust(line)
-                        } label: {
-                            Label("Ajustar este trecho", systemImage: "mic")
-                                .font(TextStyle.captionMedium)
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, Spacing.sm)
-                                .frame(minHeight: 30)
-                                .background(Capsule().fill(BrandColor.primary))
-                        }
-                        .buttonStyle(PressableButtonStyle())
-
-                        Button {
-                            withAnimation(.easeOut(duration: 0.15)) { selectedLine = nil }
-                        } label: {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundStyle(AppSurface.textSecondary)
-                                .frame(width: 30, height: 30)
-                                .background(Circle().fill(AppSurface.card))
-                                .overlay(Circle().stroke(AppSurface.border, lineWidth: 1))
-                        }
-                        .buttonStyle(PressableButtonStyle())
-                        .accessibilityLabel("Cancelar")
-                    }
-                    .padding(.leading, 3)
-                    .padding(.bottom, Spacing.xs)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                    actions(index: index, line: line)
+                        .padding(.leading, 3)
+                        .padding(.bottom, Spacing.xs)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
                 }
             }
         }
+    }
+
+    private func actions(index: Int, line: String) -> some View {
+        HStack(spacing: Spacing.xs) {
+            Button {
+                Haptics.tap()
+                onAdjust(line)
+            } label: {
+                Label("Ajustar este trecho", systemImage: "mic")
+                    .font(TextStyle.captionMedium)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, Spacing.sm)
+                    .frame(minHeight: 32)
+                    .background(Capsule().fill(BrandColor.primary))
+            }
+            .buttonStyle(PressableButtonStyle())
+
+            Button {
+                copy(line, index: index)
+            } label: {
+                Label(copiedLine == index ? "Copiado" : "Copiar trecho",
+                      systemImage: copiedLine == index ? "checkmark" : "doc.on.doc")
+                    .font(TextStyle.captionMedium)
+                    .foregroundStyle(AppSurface.textSecondary)
+                    .padding(.horizontal, Spacing.sm)
+                    .frame(minHeight: 32)
+                    .background(Capsule().fill(AppSurface.card))
+                    .overlay(Capsule().stroke(AppSurface.border, lineWidth: 1))
+            }
+            .buttonStyle(PressableButtonStyle())
+
+            Button {
+                withAnimation(.easeOut(duration: 0.15)) { selectedLine = nil }
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(AppSurface.textSecondary)
+                    .frame(width: 32, height: 32)
+                    .background(Circle().fill(AppSurface.card))
+                    .overlay(Circle().stroke(AppSurface.border, lineWidth: 1))
+            }
+            .buttonStyle(PressableButtonStyle())
+            .accessibilityLabel("Desmarcar trecho")
+        }
+        .lineLimit(1)
+    }
+
+    private func copy(_ line: String, index: Int) {
+        #if canImport(UIKit)
+        UIPasteboard.general.string = line.strippedReviewMarkers
+        #endif
+        Haptics.success()
+        withAnimation(.easeOut(duration: 0.15)) { copiedLine = index }
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            withAnimation(.easeOut(duration: 0.15)) {
+                if copiedLine == index { copiedLine = nil }
+                if selectedLine == index { selectedLine = nil }
+            }
+        }
+    }
+}
+
+// MARK: - Dica (uma vez)
+
+/// Dica mostrada UMA vez, no primeiro laudo pronto. Some ao tocar ou sozinha.
+enum AdjustHint {
+    static let seenKey = "laudousg.hint.adjustTrecho.seen"
+    static let visibleSeconds: Double = 6
+}
+
+struct AdjustHintBanner: View {
+    let onDismiss: () -> Void
+
+    var body: some View {
+        Button(action: onDismiss) {
+            HStack(spacing: Spacing.xs) {
+                Image(systemName: "hand.tap")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(BrandColor.primary)
+                Text("Dica: toque e segure um trecho do laudo para ajustá-lo por voz.")
+                    .font(TextStyle.footnote)
+                    .foregroundStyle(AppSurface.textPrimary)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(AppSurface.textMuted)
+            }
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, Spacing.xs + 2)
+            .background(RoundedRectangle(cornerRadius: Radius.xl, style: .continuous).fill(.regularMaterial))
+            .overlay(
+                RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
+                    .stroke(AppSurface.border, lineWidth: 1)
+            )
+            .brandShadow(.md)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Dica: toque e segure um trecho do laudo para ajustá-lo por voz. Toque para fechar.")
     }
 }
 

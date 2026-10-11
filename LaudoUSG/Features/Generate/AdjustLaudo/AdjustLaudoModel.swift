@@ -23,15 +23,13 @@ final class AdjustLaudoModel {
 
     var isPresented = false
     var phase: Phase = .composing
-    /// Linha marcada no toque longo (variante B), antes de abrir o ajuste.
+    /// Linha marcada no toque longo, antes de abrir o ajuste.
     var selectedLine: Int?
     var instruction = ""
     var targetChoice: AdjustTargetChoice = .automatic
-    /// Trecho do laudo escolhido no toque longo (variante B). Vai junto do pedido.
+    /// Trecho do laudo escolhido no toque longo. Vai junto do pedido.
     private(set) var anchor: String?
     private(set) var isListening = false
-    /// Aberto pelo "digitando" (variante A): o sheet já abre com o teclado.
-    private(set) var prefersTyping = false
     private(set) var micError: String?
     private(set) var mic: (any LiveMicEngine)?
     /// Instrução efetivamente enviada (com o trecho, se houver) — para o eco na prévia.
@@ -61,7 +59,6 @@ final class AdjustLaudoModel {
         self.anchor = anchor?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
         self.mic = mic
         selectedLine = nil
-        prefersTyping = !listen
         instruction = ""
         targetChoice = .automatic
         phase = .composing

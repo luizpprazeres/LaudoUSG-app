@@ -15,7 +15,9 @@ struct GenerateView: View {
     @FocusState private var isAchadosFocused: Bool
     // Espelha a flag do AppShellView pra saber se o tour ainda vai aparecer por cima.
     @AppStorage("laudousg.hasSeenTour") private var hasSeenTour: Bool = false
-    private let adjustEntryStyle = AdjustLaudoEntryStyle.current
+    /// Dica do "toque e segure" — mostrada uma vez só, no primeiro laudo pronto.
+    @AppStorage(AdjustHint.seenKey) private var adjustHintSeen: Bool = false
+    @State private var showsAdjustHint = false
 
     init() {
         _vm = State(initialValue: GenerateViewModel())
@@ -571,12 +573,22 @@ struct GenerateView: View {
                 // Modo visualização — Text(AttributedString) com linhas que contêm ____ destacadas em roxo
                 ScrollView {
                     VStack(alignment: .leading, spacing: Spacing.md) {
-                        if adjustEntryStyle == .trecho && vm.canAdjustLaudo {
+                        if vm.canAdjustLaudo {
+                            // Toque e segure num trecho → "Ajustar este trecho" / "Copiar trecho".
                             AdjustableLaudoText(
                                 text: vm.editedLaudoText,
                                 issues: vm.sanityIssues.map(\.laudoHighlightIssue),
-                                selectedLine: Binding(get: { vm.adjust.selectedLine }, set: { vm.adjust.selectedLine = $0 }),
-                                onAdjust: { trecho in vm.presentAdjust(anchor: trecho) }
+                                selectedLine: Binding(
+                                    get: { vm.adjust.selectedLine },
+                                    set: { line in
+                                        vm.adjust.selectedLine = line
+                                        if line != nil { dismissAdjustHint() }
+                                    }
+                                ),
+                                onAdjust: { trecho in
+                                    dismissAdjustHint()
+                                    vm.presentAdjust(anchor: trecho)
+                                }
                             )
                             .padding(.top, Spacing.xs)
                             .padding(.leading, Spacing.xxs)
@@ -595,22 +607,20 @@ struct GenerateView: View {
                         if vm.canShowFeedback {
                             feedbackCard
                         }
-                        if adjustEntryStyle == .cantinho && vm.canAdjustLaudo {
-                            // Folga para o botão do canto não cobrir o fim do laudo.
-                            Color.clear.frame(height: 36)
-                        }
                     }
                 }
                 .scrollIndicators(.hidden)
                 .background(AppSurface.background)
                 .frame(maxHeight: .infinity)
-                .overlay(alignment: .bottomTrailing) {
-                    if adjustEntryStyle == .cantinho && vm.canAdjustLaudo {
-                        AdjustCornerButton { vm.presentAdjust() }
+                .overlay(alignment: .bottom) {
+                    if showsAdjustHint {
+                        AdjustHintBanner { dismissAdjustHint() }
                             .padding(.bottom, Spacing.xs)
-                            .transition(.opacity)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }
+                .onAppear { showAdjustHintIfNeeded() }
+                .onChange(of: vm.canAdjustLaudo) { _, _ in showAdjustHintIfNeeded() }
             }
         }
         .frame(maxHeight: .infinity)
@@ -1022,8 +1032,6 @@ struct GenerateView: View {
                                 .font(.system(size: 12, weight: .semibold))
                             Text(isEditingLaudo ? "Visualizar" : "Editar")
                                 .font(TextStyle.captionMedium)
-                                .lineLimit(1)
-                                .fixedSize()
                         }
                         .foregroundStyle(AppSurface.textSecondary)
                         .padding(.horizontal, Spacing.sm)
@@ -1042,8 +1050,6 @@ struct GenerateView: View {
                                 .font(.system(size: 12, weight: .semibold))
                             Text(didCopyLaudo ? "Copiado" : "Copiar")
                                 .font(TextStyle.captionMedium)
-                                .lineLimit(1)
-                                .fixedSize()
                         }
                         .foregroundStyle(AppSurface.textSecondary)
                         .padding(.horizontal, Spacing.sm)
@@ -1062,8 +1068,6 @@ struct GenerateView: View {
                                 .font(.system(size: 12, weight: .semibold))
                             Text("Enviar p/ Sala")
                                 .font(TextStyle.captionMedium)
-                                .lineLimit(1)
-                                .fixedSize()
                         }
                         .foregroundStyle(.white)
                         .padding(.horizontal, Spacing.sm)
@@ -1072,13 +1076,6 @@ struct GenerateView: View {
                     }
                     .buttonStyle(PressableButtonStyle())
                     .accessibilityLabel("Enviar laudo para Sala do Auxiliar")
-
-                    if adjustEntryStyle == .menu && vm.canAdjustLaudo {
-                        AdjustMenuButton(
-                            onVoice: { vm.presentAdjust(listen: true) },
-                            onType: { vm.presentAdjust(listen: false) }
-                        )
-                    }
                 }
             }
 
@@ -1143,6 +1140,22 @@ struct GenerateView: View {
                 .accessibilityLabel("Abrir esquema visual")
             }
         }
+    }
+
+    /// Dica mostrada uma vez: marca como vista ao aparecer e some sozinha.
+    private func showAdjustHintIfNeeded() {
+        guard vm.canAdjustLaudo, !adjustHintSeen, !showsAdjustHint, !vm.adjust.isPresented else { return }
+        adjustHintSeen = true
+        withAnimation(.easeOut(duration: 0.25)) { showsAdjustHint = true }
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: UInt64(AdjustHint.visibleSeconds * 1_000_000_000))
+            dismissAdjustHint()
+        }
+    }
+
+    private func dismissAdjustHint() {
+        guard showsAdjustHint else { return }
+        withAnimation(.easeOut(duration: 0.2)) { showsAdjustHint = false }
     }
 
     private var hasVisualSchema: Bool {

@@ -50,10 +50,6 @@ struct AdjustLaudoSheet: View {
             if key == "composing" { showsProposal = false }
         }
         .onAppear {
-            if model.prefersTyping {
-                isTyping = true
-                isFieldFocused = true
-            }
             detent = (phaseKey == "preview" || phaseKey == "rejected") ? .medium : AdjustLaudoSheet.compactDetent
         }
     }
