@@ -295,7 +295,7 @@ struct OnboardingFlow: View {
                 generationStages.insert(.rules)
             }
         case .clarify(let payload):
-            generationError = payload.questions.first?.text ?? "Preciso de mais um detalhe antes de gerar o laudo."
+            generationError = payload.questions.first?.question ?? "Preciso de mais um detalhe antes de gerar o laudo."
             isGenerating = false
         case .rag:
             generationStages.insert(.rules)

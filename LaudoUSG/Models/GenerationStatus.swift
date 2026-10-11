@@ -6,7 +6,7 @@ enum GenerationPhase: Equatable {
     case transcribing
     case ready
     case generating
-    case clarifying(question: String)
+    case clarifying(questions: [ClarifyQuestion])
     case done(reportId: String)
     case error(message: String)
 

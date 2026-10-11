@@ -134,11 +134,27 @@ struct ClarifyPayload: Decodable, Sendable, Hashable {
     let questions: [ClarifyQuestion]
 }
 
+/// Espelha `ClarifyQuestionSchema` (packages/shared/src/schemas/validator.ts):
+/// `{ id, question, expects, choices?, target_field? }`.
+///
+/// Antes este struct exigia `kind`/`text`, que a API nunca mandou: o frame `clarify`
+/// falhava no decode, o `SSEStreamer` o descartava em silêncio e a pergunta nunca
+/// chegava à tela (a geração terminava como "interrompida").
 struct ClarifyQuestion: Decodable, Sendable, Hashable, Identifiable {
     let id: String
-    let kind: String
-    let text: String
-    let suggestedAnswer: String?
+    let question: String
+    /// "text" | "choice" | "yesno" | "number" — orienta o teclado. Opcional por tolerância.
+    let expects: String?
+    let choices: [String]?
+    let targetField: String?
+
+    init(id: String, question: String, expects: String? = "text", choices: [String]? = nil, targetField: String? = nil) {
+        self.id = id
+        self.question = question
+        self.expects = expects
+        self.choices = choices
+        self.targetField = targetField
+    }
 }
 
 struct RagPayload: Decodable, Sendable, Hashable {

@@ -114,6 +114,12 @@ final class GenerateViewModel {
     var generationStartedAt: Date?
     /// Tempo total da última geração (do `done`), para "Pronto em N s".
     var lastGenerationSeconds: Double?
+    /// Pergunta(s) de esclarecimento pendentes (evento `clarify`) — no máximo 2 — e as
+    /// respostas digitadas, por `question.id`. O laudo fica em `awaiting_clarify` no servidor.
+    var clarifyQuestions: [ClarifyQuestion] = []
+    var clarifyAnswers: [String: String] = [:]
+    /// Report pausado que o reenvio retoma (`resume_from_report_id`).
+    private(set) var clarifyReportId: String?
     var latestVenousScheme: VenousSchemePayload?
     var liveTranscript: String = ""
     var hardMode: Bool = false
@@ -540,10 +546,15 @@ final class GenerateViewModel {
     /// stream antigo não sobrescrever o laudo da geração nova (risco clínico).
     private var generateTask: Task<Void, Never>?
 
+    /// Request da última geração — base do reenvio com `clarify_answers`.
+    private var lastGenerateRequest: GenerateRequest?
+
     func generate(writingStyleId: String) {
         guard canGenerate else { return }
-        let req = prepareGeneration(writingStyleId: writingStyleId)
+        runGeneration(request: prepareGeneration(writingStyleId: writingStyleId))
+    }
 
+    private func runGeneration(request req: GenerateRequest) {
         generateTask?.cancel()
         generateTask = Task { @MainActor in
             do {
@@ -552,35 +563,104 @@ final class GenerateViewModel {
                     guard !Task.isCancelled else { return }
                     handle(event: event)
                 }
-                // #11: stream terminou sem `done`/`error`/`blocked` (corte/frame
+                guard !Task.isCancelled else { return }
+                // #11: stream terminou sem `done`/`error`/`blocked`/`clarify` (corte/frame
                 // descartado) → não deixar a UI presa em .generating pra sempre.
                 if case .generating = phase {
-                    lastError = "A geração foi interrompida antes de concluir. Tente novamente."
-                    phase = .error(message: lastError ?? "Erro")
-                    stopStreamingFeedback()
+                    failGeneration(GenerationStreamError.interrupted)
                 }
             } catch is CancellationError {
                 // cancelada por reset/nova geração — encerra silenciosamente.
-            } catch let error as APIError {
-                guard !Task.isCancelled else { return }
-                if case .unauthorized = error {
-                    lastError = "Sessão expirada. Faça login novamente."
-                } else {
-                    lastError = error.errorDescription
-                }
-                phase = .error(message: lastError ?? "Erro")
-                stopStreamingFeedback()
             } catch {
                 guard !Task.isCancelled else { return }
-                lastError = error.localizedDescription
-                phase = .error(message: lastError ?? "Erro")
-                stopStreamingFeedback()
+                failGeneration(GenerationStreamError.message(for: error))
             }
         }
     }
 
+    private func failGeneration(_ message: String) {
+        lastError = message
+        phase = .error(message: message)
+        stopStreamingFeedback()
+    }
+
+    // MARK: - Esclarecimento (clarify)
+
+    /// Pode reenviar: há report pausado e ao menos uma resposta com texto (o
+    /// backend recusa `clarify_answers` vazias com RESUME_EMPTY_ANSWERS).
+    var canSubmitClarify: Bool {
+        guard case .clarifying = phase, clarifyReportId != nil, lastGenerateRequest != nil else { return false }
+        return clarifyQuestions.contains { !(clarifyAnswers[$0.id] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    }
+
+    /// Reenvia o mesmo POST com `resume_from_report_id` + as respostas digitadas.
+    func submitClarifyAnswers() {
+        let answers = clarifyQuestions.compactMap { q -> ClarifyAnswer? in
+            let text = (clarifyAnswers[q.id] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            return text.isEmpty ? nil : ClarifyAnswer(questionId: q.id, answer: text)
+        }
+        resumeAfterClarify(with: answers)
+    }
+
+    /// "Gerar assim mesmo": responde a cada pergunta mantendo o que foi ditado.
+    /// O backend exige ao menos uma resposta não vazia para retomar; a resposta
+    /// entra como comando do médico, sem inventar conteúdo.
+    func generateIgnoringClarify() {
+        let answers = clarifyQuestions.map {
+            ClarifyAnswer(questionId: $0.id, answer: "Manter exatamente como foi ditado, sem alterar este trecho.")
+        }
+        resumeAfterClarify(with: answers)
+    }
+
+    /// Volta aos achados para corrigir o ditado; a próxima geração começa do zero.
+    func cancelClarify() {
+        clearClarifyState()
+        phase = inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .idle : .ready
+        withAnimation(.easeOut(duration: 0.18)) { activeTab = .achados }
+    }
+
+    private func resumeAfterClarify(with answers: [ClarifyAnswer]) {
+        guard case .clarifying = phase,
+              !answers.isEmpty,
+              let reportId = clarifyReportId,
+              let original = lastGenerateRequest else { return }
+        let req = GenerateRequest(
+            rawInput: original.rawInput,
+            categoryHint: original.categoryHint,
+            writingStyleId: original.writingStyleId,
+            consolidatedTranscript: original.consolidatedTranscript,
+            resumeFromReportId: reportId,
+            clarifyAnswers: answers,
+            mode: original.mode,
+            dopplerMode: original.dopplerMode
+        )
+        resetForGeneration(requested: original.categoryHint ?? category)
+        runGeneration(request: req)
+    }
+
+    private func clearClarifyState() {
+        clarifyQuestions = []
+        clarifyAnswers = [:]
+        clarifyReportId = nil
+    }
+
     /// Zera o estado da geração anterior e monta o request da nova.
     func prepareGeneration(writingStyleId: String) -> GenerateRequest {
+        resetForGeneration(requested: category)
+        let request = GenerateRequest(
+            rawInput: inputText,
+            categoryHint: category,
+            writingStyleId: writingStyleId,
+            mode: generationMode,
+            dopplerMode: category == .dopplerObstetrico ? (dopplerOnly ? .isolated : .combined) : nil
+        )
+        lastGenerateRequest = request
+        return request
+    }
+
+    /// Estado limpo para uma geração (nova ou retomada após clarify).
+    private func resetForGeneration(requested: ReportCategory) {
+        clearClarifyState()
         lastReportId = nil
         streamedOutput = ""
         displayedOutput = ""
@@ -597,18 +677,10 @@ final class GenerateViewModel {
         lastWarning = nil
         sanityIssues = []
         clearCategoryRoute()
-        requestedCategory = category
+        requestedCategory = requested
         phase = .generating
         startStreamingFeedback()
         withAnimation(.easeOut(duration: 0.18)) { activeTab = .laudo }
-
-        return GenerateRequest(
-            rawInput: inputText,
-            categoryHint: category,
-            writingStyleId: writingStyleId,
-            mode: generationMode,
-            dopplerMode: category == .dopplerObstetrico ? (dopplerOnly ? .isolated : .combined) : nil
-        )
     }
 
     func laudoTextChanged(_ newValue: String) {
@@ -722,7 +794,20 @@ final class GenerateViewModel {
                 // Sprint 8: tratar clarify questions
             }
         case .clarify(let payload):
-            phase = .clarifying(question: payload.questions.first?.text ?? "Esclarecimento necessário")
+            // O servidor pausou o laudo em `awaiting_clarify` e encerrou o stream.
+            let questions = Array(payload.questions.prefix(2))
+            stopStreamingFeedback()
+            guard !questions.isEmpty, let reportId = lastReportId else {
+                failGeneration("O gerador pediu um esclarecimento que o app não conseguiu ler. Revise o ditado e tente novamente.")
+                break
+            }
+            streamedOutput = ""
+            displayedOutput = ""
+            clarifyReportId = reportId
+            clarifyQuestions = questions
+            clarifyAnswers = [:]
+            phase = .clarifying(questions: questions)
+            activeTab = .laudo
         case .rag:
             break
         case .warning(let payload):
@@ -816,6 +901,8 @@ final class GenerateViewModel {
         generationFindings = []
         latestVenousScheme = nil
         clearCategoryRoute()
+        clearClarifyState()
+        lastGenerateRequest = nil
         phase = .idle
         activeTab = .achados
         saveStatus = .idle

@@ -501,7 +501,9 @@ struct GenerateView: View {
             if let notice = vm.routedModelNotice {
                 routedModelNoticeView(notice)
             }
-            if vm.phase.isBusy && vm.streamedOutput.isEmpty && !vm.currentStatusMessage.isEmpty {
+            if case .clarifying = vm.phase, !vm.clarifyQuestions.isEmpty {
+                clarifyCard
+            } else if vm.phase.isBusy && vm.streamedOutput.isEmpty && !vm.currentStatusMessage.isEmpty {
                 generationProgressView
             } else if vm.phase.isBusy && !vm.displayedOutput.isEmpty {
                 ScrollView {
@@ -666,6 +668,126 @@ struct GenerateView: View {
         .animation(.easeOut(duration: 0.18), value: vm.generationFindings)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(progressAccessibilityLabel)
+    }
+
+    // MARK: - Esclarecimento (clarify)
+
+    /// Pergunta(s) do evento `clarify`. O laudo fica pausado no servidor até o
+    /// reenvio com `clarify_answers` (ou até o médico voltar ao ditado).
+    private var clarifyCard: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: Spacing.md) {
+                HStack(alignment: .top, spacing: Spacing.xs) {
+                    Image(systemName: "questionmark.bubble.fill")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(BrandColor.primary)
+                    VStack(alignment: .leading, spacing: Spacing.xxs) {
+                        Text(vm.clarifyQuestions.count > 1 ? "Preciso de dois esclarecimentos" : "Preciso de um esclarecimento")
+                            .font(TextStyle.bodyLargeSemibold)
+                            .foregroundStyle(AppSurface.textPrimary)
+                        Text("Responda para o laudo sair fiel ao ditado. Ele fica pausado até você responder.")
+                            .font(TextStyle.body)
+                            .foregroundStyle(AppSurface.textSecondary)
+                    }
+                }
+
+                ForEach(vm.clarifyQuestions) { question in
+                    clarifyQuestionField(question)
+                }
+
+                PrimaryButton(
+                    title: "Enviar",
+                    icon: "paperplane.fill",
+                    isDisabled: !vm.canSubmitClarify
+                ) {
+                    Haptics.press()
+                    vm.submitClarifyAnswers()
+                }
+
+                SecondaryButton(title: "Gerar assim mesmo", icon: "arrow.right") {
+                    Haptics.tap()
+                    vm.generateIgnoringClarify()
+                }
+
+                Button {
+                    Haptics.tap()
+                    vm.cancelClarify()
+                } label: {
+                    Text("Voltar e editar o ditado")
+                        .font(TextStyle.bodyMedium)
+                        .foregroundStyle(AppSurface.textMuted)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Spacing.xs)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(Spacing.md)
+            .background(
+                RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
+                    .fill(AppSurface.card)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
+                    .stroke(BrandColor.primaryBorder, lineWidth: 1)
+            )
+            .padding(.top, Spacing.xs)
+        }
+        .scrollIndicators(.hidden)
+        .scrollDismissesKeyboard(.interactively)
+        .frame(maxHeight: .infinity)
+    }
+
+    private func clarifyQuestionField(_ question: ClarifyQuestion) -> some View {
+        let answer = Binding(
+            get: { vm.clarifyAnswers[question.id] ?? "" },
+            set: { vm.clarifyAnswers[question.id] = $0 }
+        )
+        let quickAnswers: [String] = {
+            if let choices = question.choices, !choices.isEmpty { return choices }
+            return question.expects == "yesno" ? ["Sim", "Não"] : []
+        }()
+        return VStack(alignment: .leading, spacing: Spacing.xs) {
+            Text(question.question)
+                .font(TextStyle.body)
+                .foregroundStyle(AppSurface.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if !quickAnswers.isEmpty {
+                FlowLayout(spacing: Spacing.xs, alignment: .leading) {
+                    ForEach(quickAnswers, id: \.self) { option in
+                        let selected = answer.wrappedValue == option
+                        Button {
+                            Haptics.tap()
+                            answer.wrappedValue = option
+                        } label: {
+                            Text(option)
+                                .font(TextStyle.captionMedium)
+                                .foregroundStyle(selected ? Color.white : AppSurface.textSecondary)
+                                .padding(.horizontal, Spacing.sm)
+                                .frame(height: 30)
+                                .background(Capsule().fill(selected ? BrandColor.primary : BrandColor.primaryTint))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+
+            TextField("Sua resposta", text: answer, axis: .vertical)
+                .font(TextStyle.bodyLarge)
+                .lineLimit(1...4)
+                .keyboardType(question.expects == "number" ? .decimalPad : .default)
+                .submitLabel(.done)
+                .padding(Spacing.sm)
+                .background(
+                    RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
+                        .fill(AppSurface.background)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
+                        .stroke(AppSurface.border, lineWidth: 1)
+                )
+                .accessibilityLabel("Resposta: \(question.question)")
+        }
     }
 
     private var feedbackCard: some View {
