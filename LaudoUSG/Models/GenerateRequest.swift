@@ -19,6 +19,9 @@ struct GenerateRequest: Codable, Sendable {
     /// Só no Laudo livre: pede ao backend que identifique o modelo pelo ditado.
     /// `nil` nas categorias diretas — o campo nem vai no JSON.
     let routeFreeCategory: Bool?
+    /// Texto do motor de voz antes da edição + confiança por palavra (opção B do estudo de 12/10).
+    /// `nil` quando não houve ditado — o campo nem vai no JSON.
+    let asrOriginal: AsrOriginalPayload?
 
     init(
         rawInput: String,
@@ -28,7 +31,8 @@ struct GenerateRequest: Codable, Sendable {
         resumeFromReportId: String? = nil,
         clarifyAnswers: [ClarifyAnswer]? = nil,
         mode: String? = nil,
-        dopplerMode: DopplerExamMode? = nil
+        dopplerMode: DopplerExamMode? = nil,
+        asrOriginal: AsrOriginalPayload? = nil
     ) {
         self.rawInput = rawInput
         self.categoryHint = categoryHint
@@ -39,6 +43,7 @@ struct GenerateRequest: Codable, Sendable {
         self.mode = mode
         self.dopplerMode = categoryHint == .dopplerObstetrico ? dopplerMode : nil
         self.routeFreeCategory = categoryHint == .livre ? true : nil
+        self.asrOriginal = asrOriginal
     }
 }
 

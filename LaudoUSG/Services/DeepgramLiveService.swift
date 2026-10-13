@@ -51,6 +51,8 @@ final class DeepgramLiveService {
     var status: String = "Pronto"
     var finalText: String = ""        // transcript confirmado (acumulado)
     var interimText: String = ""      // parcial (ao vivo, ainda mudando)
+    /// Palavras dos trechos finais, com a confiança do Deepgram (opção B do estudo de 12/10).
+    var finalWords: [AsrWord] = []
     var errorMessage: String?
     /// Texto completo (final + interim) pra exibir.
     var liveTranscript: String {
@@ -137,7 +139,7 @@ final class DeepgramLiveService {
             return
         }
         errorMessage = nil
-        finalText = ""; interimText = ""
+        finalText = ""; interimText = ""; finalWords = []
         audioLevel = 0; elapsed = 0; startDate = Date()
         reconnectAttempts = 0; receivedAnyTranscript = false
         keytermsDisabled = false; isReconnecting = false
@@ -316,6 +318,11 @@ final class DeepgramLiveService {
             // Dedupe leve: não repete a última frase final (eco de reconexão).
             if !finalText.hasSuffix(transcript) {
                 finalText += (finalText.isEmpty ? "" : " ") + transcript
+                let words = resp.channel?.alternatives?.first?.words ?? []
+                finalWords += words.compactMap { w in
+                    guard let text = w.punctuatedWord ?? w.word, let c = w.confidence else { return nil }
+                    return AsrWord(w: text, c: c, s: w.start)
+                }
             }
             interimText = ""
         } else {
@@ -520,5 +527,17 @@ private struct DeepgramResponse: Decodable {
     }
     struct Alternative: Decodable {
         let transcript: String?
+        let words: [Word]?
+    }
+    /// Palavra do Deepgram. Decodificação tolerante: qualquer campo pode faltar.
+    struct Word: Decodable {
+        let word: String?
+        let punctuatedWord: String?
+        let confidence: Double?
+        let start: Double?
+        enum CodingKeys: String, CodingKey {
+            case word, confidence, start
+            case punctuatedWord = "punctuated_word"
+        }
     }
 }

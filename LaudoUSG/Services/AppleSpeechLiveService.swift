@@ -52,6 +52,7 @@ final class AppleSpeechLiveService: LiveMicEngine {
 
     /// Casa com o nome que o usuário escolheu em Preferências → Ditado.
     var engineLabel: String? { "NATIVA · NO APARELHO" }
+    var asrProvider: String { "apple" }
 
     private let log = Logger(subsystem: "com.laudousg.LaudoUSG", category: "apple-speech")
 

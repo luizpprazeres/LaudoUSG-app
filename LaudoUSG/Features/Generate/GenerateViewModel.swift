@@ -103,6 +103,9 @@ final class GenerateViewModel {
     var dopplerOnly = false
     var writingStyle: WritingStyle = .tradicional
     var inputText: String = ""
+    /// O que o motor de voz devolveu nas gravações deste laudo, antes de qualquer edição.
+    /// Zera junto com `inputText` (texto vazio = laudo novo).
+    private(set) var asrCapture = AsrCaptureBuffer()
     var streamedOutput: String = ""
     var displayedOutput: String = ""
     var currentStatusMessage: String = ""
@@ -307,7 +310,7 @@ final class GenerateViewModel {
             if !remainingText.isEmpty {
                 try await CompanionService.sendText(remainingText, connection: connection)
             }
-            inputText = ""
+            inputText = ""; asrCapture.reset()
             pendingCompanionImageData = nil
             pendingCompanionImageSummary = ""
             pendingCompanionImageText = ""
@@ -512,6 +515,8 @@ final class GenerateViewModel {
             // Usa liveTranscript (final + último parcial) pra não perder o fim da fala.
             let transcript = mic.liveTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
             if !transcript.isEmpty {
+                if inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { asrCapture.reset() }
+                asrCapture.append(text: transcript, words: mic.finalWords, provider: mic.asrProvider)
                 if inputText.isEmpty {
                     inputText = transcript
                 } else {
@@ -661,7 +666,8 @@ final class GenerateViewModel {
             resumeFromReportId: reportId,
             clarifyAnswers: answers,
             mode: original.mode,
-            dopplerMode: original.dopplerMode
+            dopplerMode: original.dopplerMode,
+            asrOriginal: original.asrOriginal
         )
         resetForGeneration(requested: original.categoryHint ?? category)
         runGeneration(request: req)
@@ -681,7 +687,8 @@ final class GenerateViewModel {
             categoryHint: category,
             writingStyleId: writingStyleId,
             mode: generationMode,
-            dopplerMode: category == .dopplerObstetrico ? (dopplerOnly ? .isolated : .combined) : nil
+            dopplerMode: category == .dopplerObstetrico ? (dopplerOnly ? .isolated : .combined) : nil,
+            asrOriginal: asrCapture.payload
         )
         lastGenerateRequest = request
         return request
@@ -973,7 +980,7 @@ final class GenerateViewModel {
         generateTask?.cancel()
         stopStreamingFeedback()
         lastReportId = nil
-        inputText = ""
+        inputText = ""; asrCapture.reset()
         streamedOutput = ""
         displayedOutput = ""
         editedLaudoText = ""

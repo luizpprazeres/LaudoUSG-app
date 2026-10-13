@@ -29,6 +29,11 @@ protocol LiveMicEngine: AnyObject, Observable {
     /// `nil` = motor padrão, não precisa anunciar.
     var engineLabel: String? { get }
 
+    /// Palavras FINAIS da última gravação com a confiança do motor (vazio se o motor não dá).
+    var finalWords: [AsrWord] { get }
+    /// "deepgram" | "apple" | "outro" — vai no `asr_original`.
+    var asrProvider: String { get }
+
     func tick()
     /// Prepara o motor antes do toque no mic (token, download de modelo…).
     func prewarm() async
@@ -36,7 +41,13 @@ protocol LiveMicEngine: AnyObject, Observable {
     func stop() async
 }
 
+extension LiveMicEngine {
+    var finalWords: [AsrWord] { [] }
+    var asrProvider: String { "outro" }
+}
+
 extension DeepgramLiveService: LiveMicEngine {
     /// Motor padrão — o overlay não anuncia nada.
     var engineLabel: String? { nil }
+    var asrProvider: String { "deepgram" }
 }
