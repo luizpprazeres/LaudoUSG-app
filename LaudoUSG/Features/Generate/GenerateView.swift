@@ -18,6 +18,8 @@ struct GenerateView: View {
     /// Dica do "toque e segure" — mostrada uma vez só, no primeiro laudo pronto.
     @AppStorage(AdjustHint.seenKey) private var adjustHintSeen: Bool = false
     @State private var showsAdjustHint = false
+    /// Lista de avisos gerais (o que antes abria pelo botão amarelo da barra).
+    @State private var isNoticesPresented = false
 
     init() {
         _vm = State(initialValue: GenerateViewModel())
@@ -409,6 +411,16 @@ struct GenerateView: View {
             tabButton(tab: .achados, label: "Achados")
             tabButton(tab: .laudo, label: "Laudo")
         }
+        .sheet(isPresented: $isNoticesPresented) { noticesSheet }
+        #if DEBUG
+        .task {
+            // Captura de tela do modo de demonstração: abre a lista de avisos.
+            if UserDefaults.standard.bool(forKey: "AvisosDemoAberto") {
+                try? await Task.sleep(nanoseconds: 1_200_000_000)
+                isNoticesPresented = true
+            }
+        }
+        #endif
         .padding(4)
         .background(
             Capsule()
@@ -423,30 +435,48 @@ struct GenerateView: View {
         .frame(maxWidth: .infinity)
     }
 
+    /// Avisos que não estão pintados no texto (antes: botão amarelo ao lado de Editar/Copiar).
+    private var laudoNotices: [LaudoHighlightIssue] {
+        guard vm.hasLaudoOutput, !vm.phase.isBusy else { return [] }
+        return vm.editedLaudoText.laudoHighlight(issues: vm.sanityIssues.map(\.laudoHighlightIssue)).notices
+    }
+
     private func tabButton(tab: GenerateTab, label: String) -> some View {
         let isActive = vm.activeTab == tab
         let isLaudoWithBadge = tab == .laudo && vm.hasLaudoOutput && !isActive
+        // Com aviso, a aba "Laudo" fica amarela; tocar nela já aberta mostra os avisos.
+        let warns = tab == .laudo && !laudoNotices.isEmpty
+        let activeFill = warns ? Color.dynamic(light: Color(hex: "F5B800"), dark: Color(hex: "FCD34D")) : BrandColor.primary
+        let activeText = warns ? Color(hex: "2A1D00") : Color.white
+        let idleText = warns ? SemanticColor.warningText : BrandColor.primary.opacity(0.7)
         return Button {
             Haptics.tap()
-            withAnimation(.laudousgSmooth) { vm.activeTab = tab }
+            if warns && isActive {
+                isNoticesPresented = true
+            } else {
+                withAnimation(.laudousgSmooth) { vm.activeTab = tab }
+            }
         } label: {
             ZStack {
                 if isActive {
                     Capsule()
-                        .fill(BrandColor.primary)
+                        .fill(activeFill)
                         .scaleEffect(x: 1, y: 1.05)
                         .smoothMorph(id: "tabPill", in: tabNamespace)
                 }
                 HStack(spacing: Spacing.xxs) {
                     Text(label)
                         .font(isActive ? TextStyle.bodySemibold : TextStyle.bodyMedium)
-                    if isLaudoWithBadge {
+                    if warns {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 11, weight: .semibold))
+                    } else if isLaudoWithBadge {
                         Circle()
                             .fill(BrandColor.primary)
                             .frame(width: 6, height: 6)
                     }
                 }
-                .foregroundStyle(isActive ? .white : BrandColor.primary.opacity(0.7))
+                .foregroundStyle(isActive ? activeText : idleText)
                 .frame(maxWidth: .infinity)
             }
             .frame(maxWidth: .infinity)
@@ -456,6 +486,34 @@ struct GenerateView: View {
             .animation(.laudousgSmooth, value: isActive)
         }
         .buttonStyle(PressableButtonStyle())
+        .accessibilityLabel(warns ? "\(label), \(laudoNotices.count) ponto(s) a revisar" : label)
+        .accessibilityHint(warns && isActive ? "Mostra os pontos a revisar" : "")
+    }
+
+    /// Avisos gerais do laudo — abre ao tocar na aba "Laudo" amarela.
+    private var noticesSheet: some View {
+        NavigationStack {
+            List(laudoNotices) { notice in
+                HStack(alignment: .top, spacing: Spacing.sm) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(SemanticColor.warningText)
+                    Text(notice.message)
+                        .font(TextStyle.body)
+                        .foregroundStyle(AppSurface.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.vertical, Spacing.xxs)
+            }
+            .listStyle(.plain)
+            .navigationTitle(laudoNotices.count == 1 ? "Ponto a revisar" : "Pontos a revisar")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Entendi") { isNoticesPresented = false }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
     }
 
     private var shortcutsBar: some View {
@@ -666,29 +724,6 @@ struct GenerateView: View {
                     .id(vm.currentStatusMessage)
                     .transition(.opacity.combined(with: .move(edge: .leading)))
                 Spacer(minLength: 0)
-                // W16B: relógio local (só com etapas do servidor), sem animar o rótulo.
-                if vm.generationStep != nil, let inicio = vm.generationStartedAt {
-                    TimelineView(.periodic(from: inicio, by: 1)) { ctx in
-                        let s = max(0, Int(ctx.date.timeIntervalSince(inicio)))
-                        Text("\(s) s")
-                            .font(TextStyle.captionMedium.monospacedDigit())
-                            .foregroundStyle(AppSurface.textMuted)
-                            .opacity(s >= 3 ? 1 : 0)
-                    }
-                    .accessibilityHidden(true)
-                }
-            }
-
-            // W16B: etapas reais — recebido · lendo o ditado · montando · pronto.
-            if let step = vm.generationStep {
-                HStack(spacing: Spacing.xxs) {
-                    ForEach(1...max(vm.generationSteps, 1), id: \.self) { i in
-                        Capsule()
-                            .fill(i <= step ? BrandColor.primary : BrandColor.primary.opacity(0.16))
-                            .frame(height: 4)
-                    }
-                }
-                .accessibilityHidden(true)
             }
 
             if !vm.generationFindings.isEmpty {
@@ -727,7 +762,6 @@ struct GenerateView: View {
         .padding(.horizontal, Spacing.xs)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .animation(.easeInOut(duration: 0.25), value: vm.currentStatusMessage)
-        .animation(.easeInOut(duration: 0.25), value: vm.generationStep)
         .animation(.easeOut(duration: 0.18), value: vm.generationFindings)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(progressAccessibilityLabel)
@@ -1025,11 +1059,6 @@ struct GenerateView: View {
                 saveIndicator
                 Spacer()
                 if vm.hasLaudoOutput {
-                    GeneralReviewNoticesButton(
-                        text: vm.editedLaudoText,
-                        issues: vm.sanityIssues.map(\.laudoHighlightIssue)
-                    )
-
                     // Botão toggle: visualização (com highlight roxo) ↔ edição (TextEditor)
                     Button {
                         Haptics.tap()

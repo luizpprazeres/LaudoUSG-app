@@ -72,6 +72,10 @@ enum AdjustLaudoDemo {
         vm.saveStatus = .saved
         vm.activeTab = .laudo
         if state == "ditado" { prepareDitado(vm) }
+        if state == "avisos" {
+            vm.sanityIssues = [LocalSanityIssue(code: "servidor-1", severity: "warning",
+                message: "O volume do ovário esquerdo foi ditado (9,9 cm³), mas não aparece no laudo.", range: nil)]
+        }
         return vm
     }
 
