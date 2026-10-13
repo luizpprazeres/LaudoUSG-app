@@ -106,6 +106,65 @@ final class GenerateViewModel {
     /// O que o motor de voz devolveu nas gravações deste laudo, antes de qualquer edição.
     /// Zera junto com `inputText` (texto vazio = laudo novo).
     private(set) var asrCapture = AsrCaptureBuffer()
+
+    /// Faixa "Revisão do ditado" (opção D do estudo de 12/10): trocas automáticas com desfazer,
+    /// sugestões para aceitar/recusar, avisos de medida e palavras ouvidas com pouca certeza.
+    private(set) var ditadoReview = DitadoReviewState()
+    private var ditadoDismissed: Set<String> = []
+    /// Injetável para teste/demonstração.
+    var ditadoReviewer: (String, ReportCategory) async -> [DitadoSuggestion] = { text, category in
+        await DitadoReviewService.review(text: text, category: category)
+    }
+
+    /// Pede a revisão do ditado inteiro. Só aplica se o texto não mudou enquanto esperava.
+    func requestDitadoReview() {
+        let snapshot = inputText
+        let cat = category
+        let uncertain = asrCapture.uncertainWords
+        let dismissed = ditadoDismissed
+        guard !snapshot.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        Task { @MainActor in
+            let suggestions = await ditadoReviewer(snapshot, cat)
+            guard inputText == snapshot else { return }
+            let result = DitadoReviewEngine.apply(suggestions, to: snapshot, uncertainWords: uncertain, dismissed: dismissed)
+            if result.text != inputText { inputText = result.text }
+            ditadoReview = result.state
+        }
+    }
+
+    func acceptDitadoSuggestion(_ s: DitadoSuggestion) {
+        Haptics.tap()
+        if let rep = s.replacement,
+           let t = DitadoReviewEngine.replaceNear(in: inputText, original: s.original, with: rep, near: s.start) {
+            inputText = t
+        }
+        ditadoReview.pending.removeAll { $0.id == s.id }
+    }
+
+    func dismissDitadoSuggestion(_ s: DitadoSuggestion) {
+        ditadoDismissed.insert(s.dismissKey)
+        ditadoReview.pending.removeAll { $0.id == s.id }
+        ditadoReview.warnings.removeAll { $0.id == s.id }
+    }
+
+    func undoDitadoCorrection(_ a: DitadoReviewState.Applied) {
+        Haptics.tap()
+        if let t = DitadoReviewEngine.replaceNear(in: inputText, original: a.replacement, with: a.original, near: a.start) {
+            inputText = t
+        }
+        ditadoDismissed.insert(a.dismissKey)
+        ditadoReview.applied.removeAll { $0.id == a.id }
+    }
+
+    func dismissUncertainWords() { ditadoReview.uncertainWords = [] }
+
+    /// Botão "Limpar" dos achados: zera o texto, a captura de voz e a revisão.
+    func clearAchados() {
+        inputText = ""
+        asrCapture.reset()
+        ditadoReview = DitadoReviewState()
+        ditadoDismissed = []
+    }
     var streamedOutput: String = ""
     var displayedOutput: String = ""
     var currentStatusMessage: String = ""
@@ -310,7 +369,7 @@ final class GenerateViewModel {
             if !remainingText.isEmpty {
                 try await CompanionService.sendText(remainingText, connection: connection)
             }
-            inputText = ""; asrCapture.reset()
+            inputText = ""; asrCapture.reset(); ditadoReview = DitadoReviewState(); ditadoDismissed = []
             pendingCompanionImageData = nil
             pendingCompanionImageSummary = ""
             pendingCompanionImageText = ""
@@ -528,6 +587,7 @@ final class GenerateViewModel {
             }
             liveTranscript = ""
             phase = inputText.isEmpty ? .idle : .ready
+            if !transcript.isEmpty { requestDitadoReview() }
         }
     }
 
@@ -713,6 +773,7 @@ final class GenerateViewModel {
         lastError = nil
         lastWarning = nil
         sanityIssues = []
+        ditadoReview = DitadoReviewState()
         clearCategoryRoute()
         requestedCategory = requested
         phase = .generating
@@ -980,7 +1041,7 @@ final class GenerateViewModel {
         generateTask?.cancel()
         stopStreamingFeedback()
         lastReportId = nil
-        inputText = ""; asrCapture.reset()
+        inputText = ""; asrCapture.reset(); ditadoReview = DitadoReviewState(); ditadoDismissed = []
         streamedOutput = ""
         displayedOutput = ""
         editedLaudoText = ""

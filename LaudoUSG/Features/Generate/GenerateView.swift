@@ -129,6 +129,14 @@ struct GenerateView: View {
                             }
                             shortcutsBar
                             achadosEditor
+                            DitadoReviewStrip(
+                                state: vm.ditadoReview,
+                                text: vm.inputText,
+                                onAccept: { vm.acceptDitadoSuggestion($0) },
+                                onDismiss: { vm.dismissDitadoSuggestion($0) },
+                                onUndo: { vm.undoDitadoCorrection($0) },
+                                onDismissUncertain: { vm.dismissUncertainWords() }
+                            )
                             Color.clear.frame(height: 120)
                         }
                         .padding(.horizontal, Spacing.md)
@@ -503,7 +511,7 @@ struct GenerateView: View {
                     Spacer()
                     Button {
                         Haptics.tap()
-                        vm.inputText = ""
+                        vm.clearAchados()
                     } label: {
                         Text("Limpar")
                             .font(TextStyle.captionMedium)

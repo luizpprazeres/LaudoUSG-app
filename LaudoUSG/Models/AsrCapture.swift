@@ -36,6 +36,20 @@ struct AsrCaptureBuffer: Sendable, Hashable {
 
     mutating func reset() { self = AsrCaptureBuffer() }
 
+    /// Palavras que o motor ouviu com pouca certeza (< 0,65), sem repetição, até 8.
+    /// Só as que dizem algo: com 3+ letras ou com número.
+    var uncertainWords: [String] {
+        var seen = Set<String>()
+        var out: [String] = []
+        for p in palavras where p.c < 0.65 {
+            let w = p.w.trimmingCharacters(in: .punctuationCharacters)
+            guard w.count >= 3 || w.rangeOfCharacter(from: .decimalDigits) != nil else { continue }
+            if seen.insert(w.lowercased()).inserted { out.append(w) }
+            if out.count == 8 { break }
+        }
+        return out
+    }
+
     /// Nil quando não houve ditado (texto digitado ou colado não é captura de voz).
     var payload: AsrOriginalPayload? {
         guard !isEmpty, let provedor else { return nil }

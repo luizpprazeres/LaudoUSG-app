@@ -71,7 +71,32 @@ enum AdjustLaudoDemo {
         vm.phase = .done(reportId: reportId)
         vm.saveStatus = .saved
         vm.activeTab = .laudo
+        if state == "ditado" { prepareDitado(vm) }
         return vm
+    }
+
+    /// Estudo de transcrição 12/10 (opção D): achados com erros típicos do Deepgram e a revisão simulada.
+    static let ditado = "Rim direito medindo 10,2 x 4,5 x 4,1 cm, sem dilatação. Vesícula com cálculo de 1,2 cm, 6 sinais de colecistite. Mama esquerda C e nódulos. Cisto de Baker na fossa apoplítea. Útero medindo 7.34 0,1 x 5,2 cm. Pico sistólico de 6 e 20 cm/s."
+
+    @MainActor
+    private static func prepareDitado(_ vm: GenerateViewModel) {
+        vm.activeTab = .achados
+        vm.phase = .ready
+        vm.inputText = ditado
+        vm.ditadoReviewer = { text, _ in
+            let ns = text as NSString
+            func at(_ o: String, _ r: String?, _ k: String, auto: Bool, conf: Double) -> DitadoSuggestion {
+                let g = ns.range(of: o)
+                return DitadoSuggestion(start: g.location, end: g.location + g.length, original: o, replacement: r, kind: k, confidence: conf, automatic: auto)
+            }
+            return [
+                at("C e", "sem", "negacao", auto: true, conf: 0.84),
+                at("apoplítea", "poplítea", "grafia", auto: true, conf: 0.91),
+                at("6", "sem", "negacao", auto: false, conf: 0.62),
+                at("6 e 20", "120", "centena", auto: false, conf: 0.76),
+                at("7.34 0,1", nil, "medida", auto: false, conf: 1),
+            ]
+        }
     }
 
     /// Leva a tela ao estado pedido. Os atrasos imitam o uso real (o sheet precisa
@@ -81,6 +106,9 @@ enum AdjustLaudoDemo {
         let rimIndex = laudo.components(separatedBy: "\n").firstIndex(of: rimLinha)
         let anchor: String? = rimLinha
         switch state {
+        case "ditado":
+            await pause(0.4)
+            vm.requestDitadoReview()
         case "selecionado":
             vm.adjust.selectedLine = rimIndex
         case "aberto":
