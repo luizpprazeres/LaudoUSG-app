@@ -47,6 +47,13 @@ extension String {
     private static let reviewMarker = try! Regex(#"\s*\[REVISAR\b[^\]]*\]"#)
     private static let placeholder = try! Regex(#"____|\{(?:LINHA|CONCLUSAO)_[A-Z_]+\}"#)
 
+    /// Âncora que não identifica um lugar do laudo: só número com unidade ("12 mm", "0,5 cm") ou curtíssima.
+    static func isGenericAnchor(_ anchor: String) -> Bool {
+        let t = anchor.trimmingCharacters(in: .whitespacesAndNewlines)
+        if t.count < 4 { return true }
+        return t.wholeMatch(of: try! Regex(#"(?i)[\d.,\sx×]+(mm|cm|ml|cm³|cm3|mm³|%)?"#)) != nil
+    }
+
     var strippedReviewMarkers: String {
         replacing(String.reviewMarker, with: "")
     }
@@ -65,6 +72,13 @@ extension String {
             guard let rawAnchor = issue.anchor?.trimmingCharacters(in: .whitespacesAndNewlines),
                   !rawAnchor.isEmpty,
                   let range = cleanText.range(of: rawAnchor, options: [.caseInsensitive, .diacriticInsensitive]) else {
+                appendUnique(issue, to: &notices, seen: &seen)
+                continue
+            }
+            // Estudo dos alertas (12/10): aviso informativo e âncora curta e genérica ("12 mm") não pintam
+            // o laudo — vão só para a lista. O roxo do campo pendente continua sempre pintado.
+            let isPlaceholder = String(cleanText[range]).firstMatch(of: String.placeholder) != nil
+            if !isPlaceholder, issue.severity.lowercased() == "info" || String.isGenericAnchor(rawAnchor) {
                 appendUnique(issue, to: &notices, seen: &seen)
                 continue
             }
@@ -104,6 +118,8 @@ extension String {
             var search = cleanText.startIndex..<cleanText.endIndex
             while let range = cleanText.range(of: anchor, options: [], range: search) {
                 occurrences.append(HighlightOccurrence(range: range, issue: issue))
+                // Amarelo: só a primeira ocorrência (antes pintava todas — "chuva de amarelo").
+                if issue.kind == .warning { break }
                 guard range.upperBound < cleanText.endIndex else { break }
                 search = range.upperBound..<cleanText.endIndex
             }
@@ -152,7 +168,10 @@ extension String {
         to target: inout [LaudoHighlightIssue],
         seen: inout Set<String>
     ) {
-        let key = "\(issue.kind.rawValue)\u{0}\(issue.anchor ?? "")\u{0}\(issue.message)"
+        // O mesmo aviso chega duas vezes (evento sanity determinístico e depois o mesclado com a IA),
+        // às vezes com espaço/caixa diferentes: a chave ignora isso.
+        let norm: (String) -> String = { $0.lowercased().split(whereSeparator: \.isWhitespace).joined(separator: " ") }
+        let key = "\(issue.kind.rawValue)\u{0}\(norm(issue.anchor ?? ""))\u{0}\(norm(issue.message))"
         guard seen.insert(key).inserted else { return }
         target.append(issue)
     }
