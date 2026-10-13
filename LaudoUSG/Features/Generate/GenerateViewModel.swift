@@ -156,6 +156,18 @@ final class GenerateViewModel {
         ditadoReview.applied.removeAll { $0.id == a.id }
     }
 
+    /// Desfaz todas as trocas de formato (de trás para frente, para as posições valerem).
+    func undoAllFormatting() {
+        Haptics.tap()
+        for a in ditadoReview.formatted.sorted(by: { $0.start > $1.start }) {
+            if let t = DitadoReviewEngine.replaceNear(in: inputText, original: a.replacement, with: a.original, near: a.start) {
+                inputText = t
+            }
+            ditadoDismissed.insert(a.dismissKey)
+        }
+        ditadoReview.applied.removeAll { $0.kind == "formato" }
+    }
+
     func dismissUncertainWords() { ditadoReview.uncertainWords = [] }
 
     /// Botão "Limpar" dos achados: zera o texto, a captura de voz e a revisão.

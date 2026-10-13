@@ -34,6 +34,25 @@ final class DitadoReviewTests: XCTestCase {
         XCTAssertEqual((out.text as NSString).substring(with: NSRange(location: p.start, length: p.end - p.start)), "6")
     }
 
+    func testFormattingIsGroupedAndUndoable() async {
+        let vm = GenerateViewModel()
+        vm.inputText = "útero 37.4, por 31.4 centímetros. 50 por 100 intramural."
+        let t = vm.inputText as NSString
+        let a = t.range(of: "37.4, por 31.4 centímetros."), b = t.range(of: "50 por 100")
+        vm.ditadoReviewer = { _, _ in [
+            DitadoSuggestion(start: a.location, end: a.location + a.length, original: "37.4, por 31.4 centímetros.", replacement: "37,4 x 31,4 cm.", kind: "formato", confidence: 1, automatic: true),
+            DitadoSuggestion(start: b.location, end: b.location + b.length, original: "50 por 100", replacement: "50%", kind: "formato", confidence: 1, automatic: true),
+        ] }
+        vm.requestDitadoReview()
+        try? await Task.sleep(nanoseconds: 200_000_000)
+        XCTAssertEqual(vm.inputText, "útero 37,4 x 31,4 cm. 50% intramural.")
+        XCTAssertEqual(vm.ditadoReview.formatted.count, 2)
+        XCTAssertTrue(vm.ditadoReview.corrected.isEmpty)
+        vm.undoAllFormatting()
+        XCTAssertEqual(vm.inputText, "útero 37.4, por 31.4 centímetros. 50 por 100 intramural.")
+        XCTAssertTrue(vm.ditadoReview.applied.isEmpty)
+    }
+
     func testSkipsAutomaticWhenTextDoesNotMatch() {
         let out = DitadoReviewEngine.apply([s(0, 3, "C e", "sem", "negacao", auto: true)], to: "Sem nódulos", uncertainWords: [])
         XCTAssertEqual(out.text, "Sem nódulos")

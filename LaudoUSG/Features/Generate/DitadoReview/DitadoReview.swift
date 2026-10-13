@@ -33,6 +33,8 @@ struct DitadoReviewState: Equatable, Sendable {
         var start: Int
         /// Desfeita, não volta a ser aplicada na próxima revisão.
         let dismissKey: String
+        /// "formato" (número/medida/unidade) aparece agrupado numa linha só.
+        var kind: String = ""
     }
     var applied: [Applied] = []
     var pending: [DitadoSuggestion] = []
@@ -40,6 +42,10 @@ struct DitadoReviewState: Equatable, Sendable {
     var uncertainWords: [String] = []
 
     var isEmpty: Bool { applied.isEmpty && pending.isEmpty && warnings.isEmpty && uncertainWords.isEmpty }
+    /// Trocas de formato (número/medida) — uma linha só na faixa.
+    var formatted: [Applied] { applied.filter { $0.kind == "formato" } }
+    /// Demais correções automáticas, uma linha cada.
+    var corrected: [Applied] { applied.filter { $0.kind != "formato" } }
     var toReviewCount: Int { pending.count + warnings.count }
 }
 
@@ -65,7 +71,7 @@ enum DitadoReviewEngine {
                   let rep = s.replacement else { continue }
             out = out.replacingCharacters(in: range, with: rep) as NSString
             deltas.append((s.start, (rep as NSString).length - (s.original as NSString).length))
-            state.applied.append(.init(id: s.id, original: s.original, replacement: rep, start: s.start, dismissKey: s.dismissKey))
+            state.applied.append(.init(id: s.id, original: s.original, replacement: rep, start: s.start, dismissKey: s.dismissKey, kind: s.kind))
         }
         // as trocas foram de trás para frente: as posições anteriores continuam valendo,
         // mas as sugestões depois de uma troca andam o tamanho da diferença

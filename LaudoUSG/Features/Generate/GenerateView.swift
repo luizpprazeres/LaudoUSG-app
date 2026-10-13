@@ -135,6 +135,7 @@ struct GenerateView: View {
                                 onAccept: { vm.acceptDitadoSuggestion($0) },
                                 onDismiss: { vm.dismissDitadoSuggestion($0) },
                                 onUndo: { vm.undoDitadoCorrection($0) },
+                                onUndoFormatting: { vm.undoAllFormatting() },
                                 onDismissUncertain: { vm.dismissUncertainWords() }
                             )
                             Color.clear.frame(height: 120)

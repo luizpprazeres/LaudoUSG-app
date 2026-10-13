@@ -9,6 +9,7 @@ struct DitadoReviewStrip: View {
     let onAccept: (DitadoSuggestion) -> Void
     let onDismiss: (DitadoSuggestion) -> Void
     let onUndo: (DitadoReviewState.Applied) -> Void
+    var onUndoFormatting: () -> Void = {}
     let onDismissUncertain: () -> Void
 
     #if DEBUG
@@ -58,7 +59,15 @@ struct DitadoReviewStrip: View {
                                 pill("Ok") { onDismiss(s) }
                             }
                         }
-                        ForEach(state.applied) { a in
+                        if !state.formatted.isEmpty {
+                            row(icon: "number", tint: BrandColor.primary,
+                                text: state.formatted.count == 1
+                                    ? "Formatado: “\(state.formatted[0].original)” → “\(state.formatted[0].replacement)”"
+                                    : "Números e medidas formatados (\(state.formatted.count))") {
+                                pill("Desfazer") { onUndoFormatting() }
+                            }
+                        }
+                        ForEach(state.corrected) { a in
                             let p = DitadoReviewEngine.phrase(original: a.replacement, replacement: nil, near: a.start, in: text)
                             row(icon: "checkmark", tint: BrandColor.primary,
                                 text: "Corrigido: “\(a.original)” → “\(p.from)”") {
@@ -83,7 +92,8 @@ struct DitadoReviewStrip: View {
 
     private var summary: String {
         var parts: [String] = []
-        if !state.applied.isEmpty { parts.append(state.applied.count == 1 ? "1 corrigido" : "\(state.applied.count) corrigidos") }
+        if !state.corrected.isEmpty { parts.append(state.corrected.count == 1 ? "1 corrigido" : "\(state.corrected.count) corrigidos") }
+        if !state.formatted.isEmpty { parts.append("medidas formatadas") }
         if state.toReviewCount > 0 { parts.append("\(state.toReviewCount) para conferir") }
         if parts.isEmpty, !state.uncertainWords.isEmpty { parts.append("palavras incertas") }
         return "Revisão do ditado · " + parts.joined(separator: " · ")
