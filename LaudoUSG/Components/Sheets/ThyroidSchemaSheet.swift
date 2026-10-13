@@ -9,6 +9,10 @@ struct ThyroidSchemaSheet: View {
     var reportId: String? = nil
     let onInsert: (String) -> Void
     let onDismiss: () -> Void
+    /// Rascunho do mesmo laudo (fechar e reabrir não perde as marcações). Vazio = começa vazio.
+    var initialFindings: [ThyroidFinding] = []
+    /// Devolve cada mudança para o rascunho guardado no GenerateViewModel.
+    var onFindingsChange: (([ThyroidFinding]) -> Void)? = nil
 
     @State private var findings: [ThyroidFinding] = []
     @State private var lastImportCount: Int? = nil
@@ -79,6 +83,8 @@ struct ThyroidSchemaSheet: View {
             .padding(.vertical, Spacing.md)
         }
         .background(AppSurface.background.ignoresSafeArea())
+        .onAppear { if findings.isEmpty, !initialFindings.isEmpty { findings = initialFindings } }
+        .onChange(of: findings) { _, novo in onFindingsChange?(novo) }
         .navigationTitle("Esquema tireoidiano")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: Binding(

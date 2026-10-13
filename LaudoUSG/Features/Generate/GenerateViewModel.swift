@@ -226,6 +226,11 @@ final class GenerateViewModel {
     var isPaywallPresented = false
     var isMiomaEditorPresented = false
     var isVenousSchemaPresented = false
+    var isBreastSchemaPresented = false
+    var isThyroidSchemaPresented = false
+    /// Rascunhos dos esquemas manuais do laudo atual (somem ao gerar outro laudo).
+    var breastSchemaDraft: [BreastFinding] = []
+    var thyroidSchemaDraft: [ThyroidFinding] = []
 
     // MARK: Ajustar laudo (edição incremental via /api/edit)
 
@@ -786,6 +791,8 @@ final class GenerateViewModel {
         lastWarning = nil
         sanityIssues = []
         ditadoReview = DitadoReviewState()
+        breastSchemaDraft = []
+        thyroidSchemaDraft = []
         clearCategoryRoute()
         requestedCategory = requested
         phase = .generating

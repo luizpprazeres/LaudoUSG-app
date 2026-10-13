@@ -1,173 +1,98 @@
 import SwiftUI
 
-/// Esquema mamário (bilateral) com marcadores por tipo, hora e distância do mamilo.
-/// Porta `components/mamas/BreastSchemaDisplay.tsx` da web — desenho puro nesta etapa.
-///
-/// Coordenadas lógicas: 640 × 310 (mesmo viewBox da web). A view escala
-/// proporcionalmente ao tamanho disponível mantendo aspect ratio 640/310.
+/// Esquema mamário bilateral sobre o cartograma v5 da web (`apps/web/public/schemas/breast/frontal-v5.svg`),
+/// com a MESMA geometria (`breastGeometry.ts`) e os mesmos glifos P&B (`BreastSchema.tsx`).
+/// Coordenadas lógicas: 1608 × 1240 (a anatomia ocupa 1608 × 1138; a legenda fica embaixo).
+/// Achado: hora no relógio + distância do mamilo (0–6 cm). Arrastar reposiciona e devolve hora/distância.
 struct BreastSchemaView: View {
     let findings: [BreastFinding]
-    /// Callback chamado ao soltar um marcador arrastado. Quando `nil`, marcadores não são arrastáveis.
+    /// Chamado ao soltar um marcador arrastado. `nil` = sem arraste (exportação).
     var onMove: ((String, Int, Double) -> Void)? = nil
 
-    @State private var draggingId: String? = nil
-    @State private var dragPosLogical: CGPoint? = nil
+    @State private var drag: (id: String, point: CGPoint)?
 
-    private var isDraggable: Bool { onMove != nil }
+    static let logicalWidth: CGFloat = 1608
+    static let logicalHeight: CGFloat = 1240
+    static let anatomyHeight: CGFloat = 1138
+    static let cy: CGFloat = 686
+    static let rightCx: CGFloat = 435
+    static let leftCx: CGFloat = 1208
+    static let rx: CGFloat = 300
+    static let ry: CGFloat = 325
+    static let maxCm: Double = 6
+    static let limit: Double = 0.94
+    static let ink = Color(hex: "111827")
 
     var body: some View {
         GeometryReader { geo in
             let scale = min(geo.size.width / Self.logicalWidth, geo.size.height / Self.logicalHeight)
-            let canvasW = Self.logicalWidth * scale
-            let canvasH = Self.logicalHeight * scale
-            let offsetX = (geo.size.width - canvasW) / 2
-            let offsetY = (geo.size.height - canvasH) / 2
-
+            let w = Self.logicalWidth * scale, h = Self.logicalHeight * scale
+            let positions = Self.positions(for: findings)
             ZStack(alignment: .topLeading) {
                 Color.white
-
-                // Títulos
-                title("MAMA DIREITA", at: CGPoint(x: Self.rightCx, y: 18), scale: scale)
-                title("MAMA ESQUERDA", at: CGPoint(x: Self.leftCx, y: 18), scale: scale)
-
-                // Linha central tracejada
-                centralDivider(scale: scale, canvasH: canvasH)
-
-                // Outline mama direita
-                BreastOutline(center: CGPoint(x: Self.rightCx, y: Self.cy), side: .direita, scale: scale)
-                // Outline mama esquerda
-                BreastOutline(center: CGPoint(x: Self.leftCx, y: Self.cy), side: .esquerda, scale: scale)
-
-                // Marcadores — durante drag, posição vai pro dragPosLogical do arrastado,
-                // os demais usam spread sem o arrastado pra não pularem
-                let positions = computePositions()
-                ForEach(findings) { finding in
-                    if let pos = positions[finding.id] {
-                        markerWithGesture(finding: finding, pos: pos, scale: scale)
+                Image("BreastFrontalV5")
+                    .resizable()
+                    .frame(width: w, height: Self.anatomyHeight * scale)
+                Canvas { ctx, _ in
+                    ctx.scaleBy(x: scale, y: scale)
+                    let maximum = max(1, findings.compactMap(\.sizeMax).max() ?? 1)
+                    for (index, f) in findings.enumerated() {
+                        let p = (drag?.id == f.id ? drag?.point : nil) ?? positions[f.id] ?? Self.point(for: f)
+                        let r = Self.radius(for: f, max: maximum)
+                        Self.drawGlyph(f.type, at: p, r: r, in: &ctx)
+                        ctx.draw(Text("\(index + 1)").font(.system(size: 22, weight: .bold)).foregroundColor(Self.ink),
+                                 at: CGPoint(x: p.x, y: p.y - r - 18))
+                    }
+                    Self.drawLegend(in: &ctx)
+                    if let d = drag, let f = findings.first(where: { $0.id == d.id }) {
+                        let pos = Self.position(side: f.side, x: d.point.x, y: d.point.y, centerHour: f.hora ?? 12)
+                        let label = "\(pos.hora) h · \(String(format: "%.1f", pos.dist).replacingOccurrences(of: ".", with: ",")) cm do mamilo"
+                        let fx = d.point.x + 42 + 320 <= Self.logicalWidth ? d.point.x + 42 : d.point.x - 362
+                        let fy = max(18, d.point.y - 98)
+                        ctx.fill(Path(roundedRect: CGRect(x: fx, y: fy, width: 320, height: 58), cornerRadius: 12), with: .color(Self.ink))
+                        ctx.draw(Text(label).font(.system(size: 25, weight: .bold)).foregroundColor(.white), at: CGPoint(x: fx + 16, y: fy + 29), anchor: .leading)
                     }
                 }
+                .frame(width: w, height: h)
+                .allowsHitTesting(false)
 
-                if isDraggable && !findings.isEmpty && draggingId == nil {
-                    Text("Arraste os marcadores para reposicionar")
-                        .font(.system(size: 7.5 * scale))
-                        .foregroundStyle(Color(hex: "9CA3AF"))
-                        .position(x: 320 * scale, y: 300 * scale)
+                if onMove != nil {
+                    ForEach(findings) { f in
+                        let p = (drag?.id == f.id ? drag?.point : nil) ?? positions[f.id] ?? Self.point(for: f)
+                        Circle()
+                            .fill(Color.white.opacity(0.001))
+                            .frame(width: 88 * scale + 24, height: 88 * scale + 24)
+                            .position(x: p.x * scale, y: p.y * scale)
+                            .gesture(
+                                DragGesture(minimumDistance: 2)
+                                    .onChanged { v in
+                                        let raw = CGPoint(x: v.location.x / scale, y: v.location.y / scale)
+                                        let pos = Self.position(side: f.side, x: raw.x, y: raw.y, centerHour: f.hora ?? 12)
+                                        drag = (f.id, pos.point)
+                                    }
+                                    .onEnded { v in
+                                        let raw = CGPoint(x: v.location.x / scale, y: v.location.y / scale)
+                                        let pos = Self.position(side: f.side, x: raw.x, y: raw.y, centerHour: f.hora ?? 12)
+                                        drag = nil
+                                        onMove?(f.id, pos.hora, pos.dist)
+                                    }
+                            )
+                            .accessibilityLabel("Achado \((findings.firstIndex(of: f) ?? 0) + 1), mama \(f.side.rawValue)")
+                    }
                 }
             }
-            .frame(width: canvasW, height: canvasH, alignment: .topLeading)
-            .offset(x: offsetX, y: offsetY)
-            .coordinateSpace(name: Self.coordinateSpace)
+            .frame(width: w, height: h, alignment: .topLeading)
+            .offset(x: (geo.size.width - w) / 2, y: (geo.size.height - h) / 2)
         }
         .aspectRatio(Self.logicalWidth / Self.logicalHeight, contentMode: .fit)
     }
 
-    @ViewBuilder
-    private func markerWithGesture(finding: BreastFinding, pos: CGPoint, scale: CGFloat) -> some View {
-        let isDragging = draggingId == finding.id
-        let radius = Self.markerRadius(for: finding, in: findings)
+    // MARK: - Geometria (porta de breastGeometry.ts)
 
-        ZStack {
-            // Halo durante drag
-            if isDragging {
-                Circle()
-                    .stroke(Color(hex: "6366F1"), lineWidth: 1.5)
-                    .frame(width: (radius * 2 + 10) * scale, height: (radius * 2 + 10) * scale)
-                    .opacity(0.7)
-            }
-            // Tap area ampliada (16 lógicos de raio = 32 lógicos de diâmetro)
-            Circle()
-                .fill(Color.clear)
-                .frame(width: 32 * scale, height: 32 * scale)
-                .contentShape(Circle())
-            // Marker
-            BreastMarkerView(
-                finding: finding,
-                radius: radius,
-                scale: scale
-            )
-        }
-        .scaleEffect(isDragging ? 1.25 : 1.0)
-        .animation(isDragging ? nil : .snappy(duration: 0.15), value: isDragging)
-        .position(x: pos.x * scale, y: pos.y * scale)
-        .gesture(isDraggable ? dragGesture(for: finding, scale: scale) : nil)
-    }
+    static func center(_ side: BreastFinding.Side) -> CGFloat { side == .direita ? rightCx : leftCx }
 
-    private func dragGesture(for finding: BreastFinding, scale: CGFloat) -> some Gesture {
-        DragGesture(minimumDistance: 2, coordinateSpace: .named(Self.coordinateSpace))
-            .onChanged { value in
-                if draggingId == nil { Haptics.tap() }
-                draggingId = finding.id
-                dragPosLogical = CGPoint(
-                    x: value.location.x / scale,
-                    y: value.location.y / scale
-                )
-            }
-            .onEnded { value in
-                let logical = CGPoint(
-                    x: value.location.x / scale,
-                    y: value.location.y / scale
-                )
-                let result = Self.xyToFinding(x: Double(logical.x), y: Double(logical.y), side: finding.side)
-                Haptics.success()
-                onMove?(finding.id, result.hora, result.distMamilo)
-                draggingId = nil
-                dragPosLogical = nil
-            }
-    }
-
-    /// Calcula posições lógicas dos marcadores. Durante drag, exclui o arrastado do spread
-    /// pra ele não pular, e sobrescreve sua posição pelo `dragPosLogical`.
-    private func computePositions() -> [String: CGPoint] {
-        let dragId = draggingId
-        let others = dragId == nil ? findings : findings.filter { $0.id != dragId }
-        var positions = Self.spreadOverlapping(findings: others)
-        if let id = dragId, let pos = dragPosLogical {
-            positions[id] = pos
-        }
-        return positions
-    }
-
-    // MARK: - Subviews
-
-    private func title(_ text: String, at point: CGPoint, scale: CGFloat) -> some View {
-        Text(text)
-            .font(.system(size: 11 * scale, weight: .bold, design: .default))
-            .foregroundStyle(Color(hex: "374151"))
-            .position(x: point.x * scale, y: point.y * scale)
-    }
-
-    private func centralDivider(scale: CGFloat, canvasH: CGFloat) -> some View {
-        Path { path in
-            path.move(to: CGPoint(x: 320 * scale, y: 20 * scale))
-            path.addLine(to: CGPoint(x: 320 * scale, y: 300 * scale))
-        }
-        .stroke(Color(hex: "E5E7EB"), style: StrokeStyle(lineWidth: 1, dash: [5, 4]))
-    }
-
-    // MARK: - Geometry constants (logical 640×310)
-
-    static let logicalWidth: CGFloat = 640
-    static let logicalHeight: CGFloat = 310
-    static let rightCx: CGFloat = 168
-    static let leftCx: CGFloat = 472
-    static let cy: CGFloat = 165
-    static let rx: CGFloat = 108
-    static let ry: CGFloat = 111
-    static let clockRadius: CGFloat = 108
-    static let labelRadius: CGFloat = 130
-    static let maxDistCm: Double = 6
-    static let markerMaxRadius: CGFloat = 14
-    static let markerMinRadius: CGFloat = 5
-    static let coordinateSpace: String = "breast_schema"
-
-    // MARK: - Coordinate math
-
-    static func horaToAngle(_ hora: Int) -> Double {
-        (Double(hora) / 12.0) * 2 * .pi - .pi / 2
-    }
-
-    static func quadrantFallbackHora(_ finding: BreastFinding) -> Int {
-        guard let q = finding.quadrant else { return 6 }
+    static func quadrantFallbackHora(_ finding: BreastFinding) -> Int? {
+        guard let q = finding.quadrant else { return nil }
         switch (finding.side, q) {
         case (.direita, .qsl): return 10
         case (.direita, .qsm): return 2
@@ -180,263 +105,106 @@ struct BreastSchemaView: View {
         }
     }
 
-    /// Converte coordenadas lógicas (xy) de volta para hora + distância do mamilo,
-    /// dado o lado da mama. Espelha `xyToFinding` da web.
-    static func xyToFinding(x: Double, y: Double, side: BreastFinding.Side) -> (hora: Int, distMamilo: Double) {
-        let cx = Double(side == .direita ? rightCx : leftCx)
-        let cyVal = Double(cy)
-        let dx = x - cx
-        let dy = y - cyVal
-        let angle = atan2(dy, dx)
-        let adjustedAngle = angle + .pi / 2
-        let normalized = adjustedAngle < 0 ? adjustedAngle + 2 * .pi : adjustedAngle
-        var hora = Int(round((normalized / (2 * .pi)) * 12))
-        if hora == 0 { hora = 12 }
-        if hora > 12 { hora = 12 }
-        if hora < 1 { hora = 1 }
-        let dist = sqrt(dx * dx + dy * dy)
-        let distCm = (dist / Double(clockRadius)) * maxDistCm
-        let clamped = min(distCm, maxDistCm)
-        let rounded = (clamped * 10).rounded() / 10
-        return (hora: hora, distMamilo: rounded)
+    static func point(for f: BreastFinding) -> CGPoint {
+        let hour = Double(f.hora ?? quadrantFallbackHora(f) ?? 12)
+        let distance = f.distMamilo ?? 3.3
+        let radius = min(max(distance, 0) / maxCm, 1) * limit
+        let angle = hour / 12 * .pi * 2 - .pi / 2
+        return CGPoint(x: center(f.side) + CGFloat(radius * cos(angle)) * rx, y: cy + CGFloat(radius * sin(angle)) * ry)
     }
 
-    /// Converte um finding para coordenadas lógicas (640×310).
-    static func findingToXY(_ finding: BreastFinding) -> CGPoint {
-        let cx = finding.side == .direita ? rightCx : leftCx
-        let hora = finding.hora ?? quadrantFallbackHora(finding)
-        let angle = horaToAngle(hora)
-        let distFraction: Double
-        if let d = finding.distMamilo {
-            distFraction = min(d / maxDistCm, 0.95)
-        } else {
-            distFraction = 0.55
-        }
-        let r = distFraction * Double(clockRadius)
-        return CGPoint(
-            x: cx + CGFloat(r * cos(angle)),
-            y: cy + CGFloat(r * sin(angle))
-        )
+    /// Ponto → (ponto limitado à mama, hora, distância). Igual a `breastPositionFromPoint`.
+    static func position(side: BreastFinding.Side, x: CGFloat, y: CGFloat, centerHour: Int = 12) -> (point: CGPoint, hora: Int, dist: Double) {
+        let cx = center(side)
+        let dx = Double(x - cx), dy = Double(y - cy)
+        let er = hypot(dx / Double(rx), dy / Double(ry))
+        let s = er > limit ? limit / er : 1
+        let bounded = CGPoint(x: cx + CGFloat(dx * s), y: cy + CGFloat(dy * s))
+        let clock = (atan2(dy / Double(ry), dx / Double(rx)) + .pi / 2 + .pi * 2).truncatingRemainder(dividingBy: .pi * 2)
+        let rounded = Int((clock * 12 / (.pi * 2)).rounded()) % 12
+        let hora = er < 0.001 ? centerHour : (rounded == 0 ? 12 : rounded)
+        let dist = (min(er / limit, 1) * maxCm * 10).rounded() / 10
+        return (bounded, hora, dist)
     }
 
-    /// Raio do marcador proporcional ao maior sizeMax do conjunto.
-    static func markerRadius(for finding: BreastFinding, in all: [BreastFinding]) -> CGFloat {
-        let maxSize = max(all.compactMap { $0.sizeMax }.max() ?? 1, 1)
-        let ratio = (finding.sizeMax ?? 1) / maxSize
-        return markerMinRadius + CGFloat(ratio) * (markerMaxRadius - markerMinRadius)
-    }
-
-    /// Aplica spread anti-sobreposição entre marcadores próximos.
-    /// Posições em coordenadas lógicas (640×310).
-    static func spreadOverlapping(findings: [BreastFinding]) -> [String: CGPoint] {
-        var positions: [String: CGPoint] = [:]
+    /// Achados na mesma hora/distância não se sobrepõem (espalha como a web).
+    static func positions(for findings: [BreastFinding]) -> [String: CGPoint] {
+        var buckets: [String: [BreastFinding]] = [:]
+        var order: [String] = []
         for f in findings {
-            positions[f.id] = findingToXY(f)
+            let key = "\(f.side.rawValue):\(f.hora.map(String.init) ?? "-"):\(f.distMamilo.map { String($0) } ?? "-")"
+            if buckets[key] == nil { order.append(key) }
+            buckets[key, default: []].append(f)
         }
-        for i in 0..<findings.count {
-            for j in (i + 1)..<findings.count {
-                let a = findings[i]
-                let b = findings[j]
-                guard let posA = positions[a.id], let posB = positions[b.id] else { continue }
-                let dx = posB.x - posA.x
-                let dy = posB.y - posA.y
-                let dist = sqrt(dx * dx + dy * dy)
-                let minDist = markerRadius(for: b, in: findings) * 2.5
-                if dist < minDist {
-                    let angle = atan2(dy, dx) + .pi / 6
-                    let pushDist = minDist
-                    positions[b.id] = CGPoint(
-                        x: posA.x + pushDist * cos(angle),
-                        y: posA.y + pushDist * sin(angle)
-                    )
-                }
+        var out: [String: CGPoint] = [:]
+        for key in order {
+            for (i, f) in (buckets[key] ?? []).enumerated() {
+                let base = point(for: f)
+                let off = i == 0 ? CGPoint.zero : CGPoint(x: CGFloat((i % 3) - 1) * 45, y: CGFloat((i + 2) / 3) * 40)
+                out[f.id] = position(side: f.side, x: base.x + off.x, y: base.y + off.y).point
             }
         }
-        return positions
+        return out
     }
-}
 
-// MARK: - Breast outline (elipse + mamilo + cruz + horas + quadrantes)
+    static func radius(for f: BreastFinding, max: Double) -> CGFloat {
+        guard let size = f.sizeMax else { return 20 }
+        return 12 + CGFloat(min(size / max, 1)) * 24
+    }
 
-private struct BreastOutline: View {
-    let center: CGPoint
-    let side: BreastFinding.Side
-    let scale: CGFloat
+    // MARK: - Glifos P&B (iguais à web) e legenda
 
-    var body: some View {
-        ZStack(alignment: .topLeading) {
-            // Elipse externa
-            Ellipse()
-                .fill(Color.white)
-                .frame(width: BreastSchemaView.rx * 2 * scale, height: BreastSchemaView.ry * 2 * scale)
-                .overlay(
-                    Ellipse().stroke(Color(hex: "111827"), lineWidth: 2)
-                )
-                .position(x: center.x * scale, y: center.y * scale)
-
-            // Cruz tracejada (eixos horizontal e vertical)
-            Path { path in
-                let cx = center.x * scale
-                let cy = center.y * scale
-                let rx = BreastSchemaView.rx * scale
-                let ry = BreastSchemaView.ry * scale
-                path.move(to: CGPoint(x: cx - rx, y: cy))
-                path.addLine(to: CGPoint(x: cx + rx, y: cy))
-                path.move(to: CGPoint(x: cx, y: cy - ry))
-                path.addLine(to: CGPoint(x: cx, y: cy + ry))
+    static func drawGlyph(_ type: BreastFinding.FindingType, at p: CGPoint, r: CGFloat, in ctx: inout GraphicsContext) {
+        switch type {
+        case .cyst:
+            let rect = CGRect(x: p.x - r, y: p.y - r, width: r * 2, height: r * 2)
+            ctx.fill(Path(ellipseIn: rect), with: .color(.white))
+            ctx.stroke(Path(ellipseIn: rect), with: .color(ink), lineWidth: 2)
+        case .calcification:
+            for (dx, dy, rr) in [(-0.55, -0.25, 0.28), (0.5, -0.45, 0.22), (0.2, 0.45, 0.3), (-0.45, 0.5, 0.18)] {
+                let c = CGPoint(x: p.x + r * dx, y: p.y + r * dy), rad = r * rr
+                ctx.fill(Path(ellipseIn: CGRect(x: c.x - rad, y: c.y - rad, width: rad * 2, height: rad * 2)), with: .color(ink))
             }
-            .stroke(Color(hex: "374151"), style: StrokeStyle(lineWidth: 0.5, dash: [4, 3]))
-
-            // Mamilo (areola + papila)
-            Circle()
-                .fill(Color.white)
-                .frame(width: 40 * scale, height: 40 * scale)
-                .overlay(Circle().stroke(Color(hex: "111827"), lineWidth: 2))
-                .position(x: center.x * scale, y: center.y * scale)
-            Circle()
-                .fill(Color(hex: "111827"))
-                .frame(width: 14 * scale, height: 14 * scale)
-                .position(x: center.x * scale, y: center.y * scale)
-
-            // Números das horas (1-12)
-            ForEach(1...12, id: \.self) { h in
-                let angle = BreastSchemaView.horaToAngle(h)
-                let lx = center.x + BreastSchemaView.labelRadius * CGFloat(cos(angle))
-                let ly = center.y + BreastSchemaView.labelRadius * CGFloat(sin(angle))
-                Text(String(format: "%02d", h))
-                    .font(.system(size: 9 * scale, weight: .regular))
-                    .foregroundStyle(Color(hex: "6B7280"))
-                    .position(x: lx * scale, y: ly * scale)
-            }
-
-            // Quadrantes (QSL, QSM, QIL, QIM)
-            ForEach(quadrantLabels, id: \.label) { q in
-                Text(q.label)
-                    .font(.system(size: 7 * scale, weight: .regular))
-                    .foregroundStyle(Color(hex: "9CA3AF"))
-                    .position(x: q.x * scale, y: q.y * scale)
-            }
+        case .solidLobulated:
+            ctx.fill(polygon(48, around: p) { a, _ in r * (1 + 0.22 * sin(4 * a)) }, with: .color(ink))
+        case .solidSpiculated:
+            ctx.fill(polygon(32, around: p) { _, i in i % 2 == 0 ? r * 1.45 : r * 0.78 }, with: .color(ink))
+        case .lymphNode:
+            // periferia hipoecoica (preta) com hilo hiperecoico (branco) central
+            let outer = CGRect(x: p.x - r * 1.35, y: p.y - r * 0.85, width: r * 2.7, height: r * 1.7)
+            ctx.fill(Path(ellipseIn: outer), with: .color(ink))
+            let inner = CGRect(x: p.x - r * 0.55, y: p.y - r * 0.35, width: r * 1.1, height: r * 0.7)
+            ctx.fill(Path(ellipseIn: inner), with: .color(.white))
+        case .solid:
+            ctx.fill(Path(ellipseIn: CGRect(x: p.x - r, y: p.y - r, width: r * 2, height: r * 2)), with: .color(ink))
         }
     }
 
-    private var quadrantLabels: [(label: String, x: CGFloat, y: CGFloat)] {
-        let qOffset: CGFloat = 54
-        let cx = center.x
-        let cy = center.y
-        if side == .direita {
-            return [
-                ("Q.S.L.", cx - qOffset, cy - qOffset),
-                ("Q.S.M.", cx + qOffset, cy - qOffset),
-                ("Q.I.L.", cx - qOffset, cy + qOffset),
-                ("Q.I.M.", cx + qOffset, cy + qOffset),
-            ]
-        } else {
-            return [
-                ("Q.S.M.", cx - qOffset, cy - qOffset),
-                ("Q.S.L.", cx + qOffset, cy - qOffset),
-                ("Q.I.M.", cx - qOffset, cy + qOffset),
-                ("Q.I.L.", cx + qOffset, cy + qOffset),
-            ]
-        }
-    }
-}
-
-// MARK: - Marker por tipo
-
-private struct BreastMarkerView: View {
-    let finding: BreastFinding
-    let radius: CGFloat
-    let scale: CGFloat
-
-    var body: some View {
-        let r = radius * scale
-        let ink = Color(hex: "111827")
-        let opacity: Double = finding.approximate ? 0.5 : 1.0
-
-        Group {
-            switch finding.type {
-            case .calcification:
-                Rectangle()
-                    .fill(ink)
-                    .frame(width: r * 1.4, height: r * 1.4)
-                    .rotationEffect(.degrees(45))
-
-            case .cyst:
-                Circle()
-                    .fill(Color.white)
-                    .overlay(Circle().stroke(ink, lineWidth: 1.5))
-                    .frame(width: r * 2, height: r * 2)
-
-            case .lymphNode:
-                ZStack {
-                    Ellipse()
-                        .fill(Color.white)
-                        .overlay(Ellipse().stroke(ink, lineWidth: 1.5))
-                        .frame(width: r * 3, height: r * 1.7)
-                    Ellipse()
-                        .fill(ink)
-                        .frame(width: r * 1.1, height: r * 0.9)
-                }
-
-            case .solidLobulated:
-                LobulatedShape(lobes: 4, amplitude: 0.22)
-                    .fill(ink)
-                    .frame(width: r * 2, height: r * 2)
-
-            case .solid:
-                Circle()
-                    .fill(ink)
-                    .frame(width: r * 2, height: r * 2)
-            }
-        }
-        .opacity(opacity)
-    }
-}
-
-private struct LobulatedShape: Shape {
-    let lobes: Int
-    let amplitude: Double
-
-    func path(in rect: CGRect) -> Path {
+    private static func polygon(_ n: Int, around p: CGPoint, radius: (CGFloat, Int) -> CGFloat) -> Path {
         var path = Path()
-        let cx = rect.midX
-        let cy = rect.midY
-        let r = min(rect.width, rect.height) / 2
-        let amp = r * amplitude
-        let steps = 60
-
-        for i in 0...steps {
-            let angle = (Double(i) / Double(steps)) * 2 * .pi - .pi / 2
-            let radius = r + amp * sin(Double(lobes) * angle)
-            let x = cx + radius * CGFloat(cos(angle))
-            let y = cy + radius * CGFloat(sin(angle))
-            if i == 0 {
-                path.move(to: CGPoint(x: x, y: y))
-            } else {
-                path.addLine(to: CGPoint(x: x, y: y))
-            }
+        for i in 0..<n {
+            let a = CGFloat(i) / CGFloat(n) * .pi * 2
+            let rr = radius(a, i)
+            let pt = CGPoint(x: p.x + rr * cos(a), y: p.y + rr * sin(a))
+            if i == 0 { path.move(to: pt) } else { path.addLine(to: pt) }
         }
         path.closeSubpath()
         return path
     }
-}
 
-// MARK: - Preview
+    static let legend: [(BreastFinding.FindingType, String)] = [
+        (.cyst, "Cisto"), (.solid, "Nódulo"), (.solidLobulated, "Lobulado"), (.solidSpiculated, "Espiculado"), (.calcification, "Calcificação"),
+    ]
 
-#Preview("Vazio") {
-    BreastSchemaView(findings: [])
-        .padding()
-        .background(Color.gray.opacity(0.1))
-}
-
-#Preview("Achados de exemplo") {
-    BreastSchemaView(findings: [
-        BreastFinding(side: .direita, type: .solid, hora: 2, sizeMax: 8, distMamilo: 3),
-        BreastFinding(side: .direita, type: .cyst, hora: 10, sizeMax: 12, distMamilo: 4),
-        BreastFinding(side: .esquerda, type: .calcification, hora: 12, sizeMax: 4, distMamilo: 2),
-        BreastFinding(side: .esquerda, type: .lymphNode, hora: 11, sizeMax: 6, distMamilo: 5),
-        BreastFinding(side: .esquerda, type: .solidLobulated, hora: 7, sizeMax: 15, distMamilo: 3.5),
-    ])
-    .padding()
-    .background(Color.gray.opacity(0.1))
+    static func drawLegend(in ctx: inout GraphicsContext) {
+        var line = Path()
+        line.move(to: CGPoint(x: 96, y: 1148)); line.addLine(to: CGPoint(x: logicalWidth - 96, y: 1148))
+        ctx.stroke(line, with: .color(Color(hex: "D1D5DB")), lineWidth: 1.5)
+        ctx.draw(Text("LEGENDA").font(.system(size: 19, weight: .bold)).foregroundColor(Color(hex: "374151")), at: CGPoint(x: 98, y: 1181), anchor: .leading)
+        for (i, item) in legend.enumerated() {
+            let x = 270 + CGFloat(i) * 260
+            drawGlyph(item.0, at: CGPoint(x: x, y: 1180), r: 14, in: &ctx)
+            ctx.draw(Text(item.1).font(.system(size: 18, weight: .semibold)).foregroundColor(Color(hex: "374151")), at: CGPoint(x: x + 28, y: 1181), anchor: .leading)
+        }
+    }
 }

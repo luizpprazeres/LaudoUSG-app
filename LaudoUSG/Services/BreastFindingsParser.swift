@@ -141,6 +141,7 @@ enum BreastFindingsParser {
         if regexMatches(#"calcifica[çc][aã]o|microcalcifica[çc][aã]o"#, in: text) { return .calcification }
         if regexMatches(#"anec[oó]ic[ao]|conte[úu]do\s+l[ií]quido|cisto\b"#, in: text) { return .cyst }
         if regexMatches(#"linfonodo|linfonode|gângl|gangl|intramamár"#, in: text) { return .lymphNode }
+        if regexMatches(#"espicula|espiculad[ao]"#, in: text) { return .solidSpiculated }
         if regexMatches(#"(lóbulo|lobulad[ao]|lobula[çc])"#, in: text) { return .solidLobulated }
         return .solid
     }

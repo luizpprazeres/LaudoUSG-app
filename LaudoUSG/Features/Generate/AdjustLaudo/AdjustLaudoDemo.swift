@@ -72,6 +72,23 @@ enum AdjustLaudoDemo {
         vm.saveStatus = .saved
         vm.activeTab = .laudo
         if state == "ditado" { prepareDitado(vm) }
+        if state == "mama" {
+            vm.category = .mamaria
+            vm.breastSchemaDraft = [
+                BreastFinding(side: .direita, type: .solid, hora: 10, sizeMax: 12, distMamilo: 3),
+                BreastFinding(side: .direita, type: .cyst, hora: 2, sizeMax: 8, distMamilo: 2),
+                BreastFinding(side: .esquerda, type: .solidSpiculated, hora: 2, sizeMax: 15, distMamilo: 4),
+                BreastFinding(side: .esquerda, type: .calcification, hora: 7, sizeMax: 5, distMamilo: 1.5),
+            ]
+        }
+        if state == "tireoide" {
+            vm.category = .tireoide
+            vm.thyroidSchemaDraft = [
+                ThyroidFinding(side: .direito, tercio: .medio, type: .solid, sizeMax: 14, tiRads: 4),
+                ThyroidFinding(side: .esquerdo, tercio: .inferior, type: .cystic, sizeMax: 6),
+                ThyroidFinding(side: .istmo, type: .mixed, sizeMax: 9),
+            ]
+        }
         if state == "avisos" {
             vm.sanityIssues = [LocalSanityIssue(code: "servidor-1", severity: "warning",
                 message: "O volume do ovário esquerdo foi ditado (9,9 cm³), mas não aparece no laudo.", range: nil)]
@@ -110,6 +127,12 @@ enum AdjustLaudoDemo {
         let rimIndex = laudo.components(separatedBy: "\n").firstIndex(of: rimLinha)
         let anchor: String? = rimLinha
         switch state {
+        case "mama":
+            await pause(0.8)
+            vm.isBreastSchemaPresented = true
+        case "tireoide":
+            await pause(0.8)
+            vm.isThyroidSchemaPresented = true
         case "ditado":
             await pause(0.4)
             vm.requestDitadoReview()

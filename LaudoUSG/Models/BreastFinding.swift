@@ -16,6 +16,7 @@ struct BreastFinding: Identifiable, Equatable, Hashable {
     enum FindingType: String, Sendable, CaseIterable, Identifiable {
         case solid              // nódulo sólido (círculo preto)
         case solidLobulated     // nódulo lobulado (path com 4 lóbulos)
+        case solidSpiculated    // nódulo espiculado (estrela de espículas curtas) — igual à web v5
         case cyst               // cisto (círculo branco com borda)
         case lymphNode          // linfonodo (elipse com núcleo)
         case calcification      // calcificação (quadrado rotacionado 45°)
@@ -26,6 +27,7 @@ struct BreastFinding: Identifiable, Equatable, Hashable {
             switch self {
             case .solid: return "Nódulo"
             case .solidLobulated: return "Nódulo lobulado"
+            case .solidSpiculated: return "Nódulo espiculado"
             case .cyst: return "Cisto"
             case .lymphNode: return "Linfonodo"
             case .calcification: return "Calcificação"

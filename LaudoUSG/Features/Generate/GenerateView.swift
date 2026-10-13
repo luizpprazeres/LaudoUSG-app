@@ -246,6 +246,32 @@ struct GenerateView: View {
                 onDismiss: { vm.isVenousSchemaPresented = false }
             )
         }
+        .sheet(isPresented: Binding(get: { vm.isBreastSchemaPresented }, set: { vm.isBreastSchemaPresented = $0 })) {
+            NavigationStack {
+                BreastSchemaSheet(
+                    reportText: vm.editedLaudoText.isEmpty ? nil : vm.editedLaudoText,
+                    reportId: vm.lastReportId,
+                    onInsert: { vm.insertSnippet($0) },
+                    onDismiss: { vm.isBreastSchemaPresented = false },
+                    initialFindings: vm.breastSchemaDraft,
+                    onFindingsChange: { vm.breastSchemaDraft = $0 }
+                )
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Fechar") { vm.isBreastSchemaPresented = false } } }
+            }
+        }
+        .sheet(isPresented: Binding(get: { vm.isThyroidSchemaPresented }, set: { vm.isThyroidSchemaPresented = $0 })) {
+            NavigationStack {
+                ThyroidSchemaSheet(
+                    reportText: vm.editedLaudoText.isEmpty ? nil : vm.editedLaudoText,
+                    reportId: vm.lastReportId,
+                    onInsert: { vm.insertSnippet($0) },
+                    onDismiss: { vm.isThyroidSchemaPresented = false },
+                    initialFindings: vm.thyroidSchemaDraft,
+                    onFindingsChange: { vm.thyroidSchemaDraft = $0 }
+                )
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Fechar") { vm.isThyroidSchemaPresented = false } } }
+            }
+        }
         .sheet(isPresented: Binding(get: { vm.isPaywallPresented }, set: { vm.isPaywallPresented = $0 })) {
             PaywallSheet(
                 store: app.store,
@@ -1198,6 +1224,8 @@ struct GenerateView: View {
 
     private var hasVisualSchema: Bool {
         vm.category == .pelveFeminina
+            || vm.category == .mamaria
+            || vm.category == .tireoide
             || vm.category == .dopplerVenosoMmii
             || (vm.category == .dopplerVenosoMmiiMedidas && vm.latestVenousScheme != nil)
     }
@@ -1205,6 +1233,10 @@ struct GenerateView: View {
     private func openVisualSchema() {
         if vm.category == .pelveFeminina {
             vm.isMiomaEditorPresented = true
+        } else if vm.category == .mamaria {
+            vm.isBreastSchemaPresented = true
+        } else if vm.category == .tireoide {
+            vm.isThyroidSchemaPresented = true
         } else {
             vm.isVenousSchemaPresented = true
         }

@@ -251,6 +251,8 @@ struct BreastSchemaEditor: View {
 
     static let toolbarConfig: [ToolbarConfig] = [
         .init(type: .solid, label: "Nódulo", color: BrandColor.primary),
+        .init(type: .solidLobulated, label: "Lobulado", color: BrandColor.primary),
+        .init(type: .solidSpiculated, label: "Espiculado", color: BrandColor.primary),
         .init(type: .cyst, label: "Cisto", color: Color(hex: "0EA5E9")),
         .init(type: .lymphNode, label: "Linfonodo", color: Color(hex: "F59E0B")),
         .init(type: .calcification, label: "Calcificação", color: Color(hex: "6B7280")),

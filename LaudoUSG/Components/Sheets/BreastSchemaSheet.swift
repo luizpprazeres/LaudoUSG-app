@@ -9,6 +9,10 @@ struct BreastSchemaSheet: View {
     var reportId: String? = nil
     let onInsert: (String) -> Void
     let onDismiss: () -> Void
+    /// Rascunho do mesmo laudo (fechar e reabrir não perde as marcações). Vazio = começa vazio.
+    var initialFindings: [BreastFinding] = []
+    /// Devolve cada mudança para o rascunho guardado no GenerateViewModel.
+    var onFindingsChange: (([BreastFinding]) -> Void)? = nil
 
     @State private var findings: [BreastFinding] = []
     @State private var lastImportCount: Int? = nil
@@ -24,7 +28,7 @@ struct BreastSchemaSheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.lg) {
-                Text("Marque os achados focais por lado, tipo, hora e tamanho. Arraste qualquer marcador para reposicionar.")
+                Text("Marque os achados focais por lado, tipo, hora e distância do mamilo. Arraste o marcador para reposicionar.")
                     .font(TextStyle.body)
                     .foregroundStyle(AppSurface.textSecondary)
                     .padding(.horizontal, Spacing.md)
@@ -49,11 +53,9 @@ struct BreastSchemaSheet: View {
                         .transition(.opacity)
                 }
 
+                // A legenda agora faz parte do próprio esquema (igual à web v5).
                 if findings.isEmpty {
                     emptyHint
-                        .padding(.horizontal, Spacing.md)
-                } else {
-                    legend
                         .padding(.horizontal, Spacing.md)
                 }
 
@@ -78,6 +80,8 @@ struct BreastSchemaSheet: View {
             .padding(.vertical, Spacing.md)
         }
         .background(AppSurface.background.ignoresSafeArea())
+        .onAppear { if findings.isEmpty, !initialFindings.isEmpty { findings = initialFindings } }
+        .onChange(of: findings) { _, novo in onFindingsChange?(novo) }
         .navigationTitle("Esquema mamário")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: Binding(
