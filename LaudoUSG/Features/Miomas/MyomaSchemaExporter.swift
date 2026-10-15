@@ -66,44 +66,17 @@ struct MyomaExportLayout: View {
     }
 }
 
-/// Render do esquema pra PNG (exibir) e PDF (paisagem A4, maximizado + margem).
+/// Render do esquema: a folha A4 (retrato) com as três vistas e a legenda M1, M2… — PNG (exibir na Sala) e PDF (baixar/imprimir).
 @MainActor
 enum MyomaSchemaExporter {
-    private static let layoutSize = CGSize(width: 820, height: 560)
+    static func items(_ findings: [MyomaFinding]) -> [MyomaSheetItem] { findings.map(MyomaSheetItem.init) }
 
     static func renderPNG(_ findings: [MyomaFinding]) -> Data? {
-        let r = ImageRenderer(content:
-            MyomaExportLayout(findings: findings).frame(width: layoutSize.width, height: layoutSize.height)
-        )
-        r.scale = 2
-        return r.uiImage?.pngData()
+        MyomaSheetRenderer.render(items(findings), scale: 0.5)?.pngData()   // 1240 × 1754 px
     }
 
     static func renderPDF(_ findings: [MyomaFinding]) -> Data? {
-        let r = ImageRenderer(content:
-            MyomaExportLayout(findings: findings).frame(width: layoutSize.width, height: layoutSize.height)
-        )
-        r.scale = 3
-        guard let img = r.uiImage else { return nil }
-
-        // A4 paisagem; imagem maximizada na folha mantendo margem de segurança.
-        let pageW: CGFloat = 842, pageH: CGFloat = 595, margin: CGFloat = 22
-        let availW = pageW - 2 * margin, availH = pageH - 2 * margin
-        let aspect = img.size.width / img.size.height
-        var dw = availW, dh = availW / aspect
-        if dh > availH { dh = availH; dw = availH * aspect }
-        let ox = (pageW - dw) / 2, oy = (pageH - dh) / 2
-
-        let fmt = UIGraphicsPDFRendererFormat()
-        fmt.documentInfo = [
-            kCGPDFContextCreator as String: "LaudoUSG",
-            kCGPDFContextTitle as String: "Esquema de miomas (FIGO)",
-        ]
-        let pdf = UIGraphicsPDFRenderer(bounds: CGRect(x: 0, y: 0, width: pageW, height: pageH), format: fmt)
-        return pdf.pdfData { ctx in
-            ctx.beginPage()
-            img.draw(in: CGRect(x: ox, y: oy, width: dw, height: dh))
-        }
+        MyomaSheetRenderer.renderPDF(items(findings))
     }
 }
 

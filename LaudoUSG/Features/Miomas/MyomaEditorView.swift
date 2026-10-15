@@ -17,7 +17,7 @@ struct MyomaEditorScreen: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                MyomaSchematicView(findings: $myomas)
+                MyomaSheetPreview(findings: myomas)
 
                 HStack {
                     Text("Nódulos (\(myomas.count))").font(TextStyle.bodyLargeMedium)
@@ -32,7 +32,7 @@ struct MyomaEditorScreen: View {
                 }
 
                 ForEach($myomas) { $m in
-                    MyomaRow(myoma: $m) {
+                    MyomaRow(numero: (myomas.firstIndex { $0.id == m.id } ?? 0) + 1, myoma: $m) {
                         withAnimation { myomas.removeAll { $0.id == m.id } }
                     }
                 }
@@ -85,14 +85,18 @@ struct MyomaEditorScreen: View {
 
 /// Linha editável de um mioma.
 private struct MyomaRow: View {
+    /// Posição na descrição do laudo (M1, M2…), a mesma da folha A4.
+    var numero: Int
     @Binding var myoma: MyomaFinding
     var onDelete: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Circle().fill(myoma.family?.color ?? Color.secondary).frame(width: 22, height: 22)
-                    .overlay(Text(myoma.figo.map(String.init) ?? "?").font(.system(size: 12, weight: .bold)).foregroundStyle(.white))
+                Text("M\(numero)")
+                    .font(.system(size: 12, weight: .bold)).foregroundStyle(.white)
+                    .padding(.horizontal, 7).frame(height: 22)
+                    .background(Capsule().fill(myoma.family?.color ?? Color.secondary))
                 Text(myoma.figo.flatMap { value in FigoCategory.all.first(where: { $0.figo == value })?.titulo } ?? "Classificação pendente")
                     .font(.system(size: 14, weight: .semibold))
                 Spacer()
@@ -139,6 +143,49 @@ private struct MyomaRow: View {
         }
         .padding(12)
         .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color(.secondarySystemBackground)))
+    }
+}
+
+/// Prévia da folha A4 (as três vistas + legenda M1, M2…), refeita quando os miomas mudam, e o PDF para compartilhar.
+private struct MyomaSheetPreview: View {
+    var findings: [MyomaFinding]
+    @State private var imagem: UIImage?
+    @State private var pdf: URL?
+
+    private var itens: [MyomaSheetItem] { findings.map(MyomaSheetItem.init) }
+
+    var body: some View {
+        VStack(spacing: 10) {
+            Group {
+                if let imagem {
+                    Image(uiImage: imagem).resizable().aspectRatio(contentMode: .fit)
+                } else {
+                    Color.white.aspectRatio(MyomaSheetRenderer.pageSize.width / MyomaSheetRenderer.pageSize.height, contentMode: .fit)
+                        .overlay(ProgressView())
+                }
+            }
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .shadow(color: .black.opacity(0.15), radius: 8, y: 2)
+            .accessibilityLabel("Folha A4 com o esquema dos miomas")
+
+            if let pdf {
+                ShareLink(item: pdf) {
+                    Label("Compartilhar PDF", systemImage: "square.and.arrow.up")
+                        .font(.system(size: 14, weight: .semibold))
+                }
+            }
+        }
+        .task(id: itens) {
+            try? await Task.sleep(for: .milliseconds(250))   // espera o médico parar de digitar
+            guard !Task.isCancelled else { return }
+            let atual = itens
+            imagem = MyomaSheetRenderer.render(atual, scale: 0.4)
+            if let data = MyomaSheetRenderer.renderPDF(atual) {
+                let url = FileManager.default.temporaryDirectory.appendingPathComponent("Mapa de miomas.pdf")
+                if (try? data.write(to: url, options: .atomic)) != nil { pdf = url }
+            }
+        }
     }
 }
 

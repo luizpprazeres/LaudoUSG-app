@@ -95,6 +95,8 @@ struct MyomaFinding: Identifiable {
     var sizeMaxMm: Double? = nil
     var localizacao: MyomaLocation = .notInformed
     var ecotextura: MyomaEcho? = nil
+    /// Eixos lidos do laudo (mm, até 3) — a legenda da folha A4 mostra todos.
+    var dimsMm: [Double]? = nil
     /// Override explícito de posição (Step 3 = drag); senão usa o canônico.
     var sagPoint: CGPoint? = nil
     var axPoint: CGPoint? = nil

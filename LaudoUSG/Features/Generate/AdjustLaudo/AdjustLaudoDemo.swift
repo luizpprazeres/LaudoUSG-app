@@ -89,6 +89,11 @@ enum AdjustLaudoDemo {
                 ThyroidFinding(side: .istmo, type: .mixed, sizeMax: 9),
             ]
         }
+        if state == "miomas" {
+            vm.category = .pelveFeminina
+            let t = "ULTRASSONOGRAFIA PÉLVICA TRANSVAGINAL\n\nOS SEGUINTES ASPECTOS FORAM OBSERVADOS:\nÚtero em anteversão, medindo 11,2 x 6,1 x 7,4 cm.\nMiométrio apresentando quatro imagens hipoecoicas e heterogêneas, com margens regulares, assim descritas:\n(M1) - medindo 2,6 x 2,4 x 2,2 cm, situada na parede lateral direita, com calcificações.\n(M2) - medindo 4,2 x 3,8 x 3,5 cm, situada em região fúndica.\n(M3) - medindo 2,5 x 2,2 x 2,0 cm, situada na parede posterior.\n(M4) - medindo 6,0 x 5,2 x 4,8 cm, situada na parede lateral esquerda.\n\nCONCLUSÃO:\n1) Miométrio apresentando quatro imagens sólidas, que têm como diagnóstico mais provável nódulos miomatosos: M1 - subseroso com mais de 50% intramural (categoria FIGO 5), M2 - intramural (categoria FIGO 4), M3 - submucoso com menos de 50% intramural (categoria FIGO 1) e M4 - subseroso pediculado (categoria FIGO 7)."
+            vm.streamedOutput = t; vm.displayedOutput = t; vm.editedLaudoText = t
+        }
         if state == "avisos" {
             vm.sanityIssues = [LocalSanityIssue(code: "servidor-1", severity: "warning",
                 message: "O volume do ovário esquerdo foi ditado (9,9 cm³), mas não aparece no laudo.", range: nil)]
@@ -127,6 +132,9 @@ enum AdjustLaudoDemo {
         let rimIndex = laudo.components(separatedBy: "\n").firstIndex(of: rimLinha)
         let anchor: String? = rimLinha
         switch state {
+        case "miomas":
+            await pause(0.8)
+            vm.isMiomaEditorPresented = true
         case "mama":
             await pause(0.8)
             vm.isBreastSchemaPresented = true

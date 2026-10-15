@@ -10,6 +10,9 @@ enum MyomaFindingsParser {
 
     static func parse(_ text: String) -> [MyomaFinding] {
         guard !text.isEmpty else { return [] }
+        // Laudo com miomas numerados (M1, M2…): corpo "(M1) - medindo …" + conclusão "M1 - … (categoria FIGO N)".
+        let numerados = parseNumbered(text)
+        if !numerados.isEmpty { return numerados }
         let explicit = explicitFigos(text)
         let blocks = miomaBlocks(text)
 
@@ -30,6 +33,63 @@ enum MyomaFindingsParser {
             out = explicit.map { MyomaFinding(figo: $0) }
         }
         return out
+    }
+
+    // MARK: - Miomas numerados (M1, M2…)
+
+    /// Corpo: uma linha por mioma, "(M1) - medindo 2,6 x 2,4 x 2,2 cm, situada na parede lateral direita."
+    /// Conclusão: "…nódulos miomatosos: M1 - subseroso com mais de 50% intramural (categoria FIGO 5), M2 - …".
+    /// A numeração casa corpo e conclusão sem depender da ordem das frases.
+    static func parseNumbered(_ text: String) -> [MyomaFinding] {
+        let ns = text as NSString
+        guard let reCorpo = try? NSRegularExpression(pattern: #"(?m)^\s*\(M(\d{1,2})\)\s*[-–—]?\s*(.+)$"#) else { return [] }
+        var corpo: [Int: String] = [:]
+        for m in reCorpo.matches(in: text, range: NSRange(location: 0, length: ns.length)) {
+            if let n = Int(ns.substring(with: m.range(at: 1))), corpo[n] == nil { corpo[n] = ns.substring(with: m.range(at: 2)) }
+        }
+        guard !corpo.isEmpty else { return [] }
+
+        // Conclusão: trecho de cada "Mn - …" até o próximo "Mk -" ou o fim da frase.
+        var conclusao: [Int: String] = [:]
+        if let reId = try? NSRegularExpression(pattern: #"(?<![\w(])M(\d{1,2})\s*[-–—]\s*"#) {
+            let ms = reId.matches(in: text, range: NSRange(location: 0, length: ns.length))
+            for (i, m) in ms.enumerated() {
+                guard let n = Int(ns.substring(with: m.range(at: 1))) else { continue }
+                let ini = m.range.location + m.range.length
+                var fim = i + 1 < ms.count ? ms[i + 1].range.location : ns.length
+                let resto = ns.substring(with: NSRange(location: ini, length: fim - ini))
+                if let corte = resto.range(of: #"\.(\s|$)|\n"#, options: .regularExpression) {
+                    fim = ini + resto.distance(from: resto.startIndex, to: corte.lowerBound)
+                }
+                conclusao[n] = ns.substring(with: NSRange(location: ini, length: fim - ini))
+            }
+        }
+
+        return corpo.keys.sorted().map { n in
+            let b = corpo[n] ?? ""
+            let c = conclusao[n] ?? ""
+            let dims = axesMm(b)
+            return MyomaFinding(
+                figo: figoInline(c) ?? figoInline(b) ?? figoFromUnambiguousAnatomy(c) ?? figoFromUnambiguousAnatomy(b),
+                sizeMaxMm: dims?.max() ?? maxAxisMm(b),
+                localizacao: location(b) ?? location(c) ?? .notInformed,
+                ecotextura: echo(b) ?? echo(c),
+                dimsMm: dims
+            )
+        }
+    }
+
+    /// Todos os eixos (mm) da 1ª medida "a x b x c cm".
+    static func axesMm(_ s: String) -> [Double]? {
+        let ns = s as NSString
+        let multi = #"(\d+(?:,\d+)?)\s*(?:x|por|×)\s*(\d+(?:,\d+)?)(?:\s*(?:x|por|×)\s*(\d+(?:,\d+)?))?\s*(cm|mm)"#
+        guard let re = try? NSRegularExpression(pattern: multi, options: [.caseInsensitive]),
+              let m = re.firstMatch(in: s, range: NSRange(location: 0, length: ns.length)) else { return nil }
+        let fator: Double = ns.substring(with: m.range(at: 4)).lowercased() == "cm" ? 10 : 1
+        let dims = (1...3).compactMap { i -> Double? in
+            m.range(at: i).location == NSNotFound ? nil : num(ns.substring(with: m.range(at: i))) * fator
+        }
+        return dims.isEmpty ? nil : dims.map { ($0 * 10).rounded() / 10 }
     }
 
     // MARK: - Blocos
